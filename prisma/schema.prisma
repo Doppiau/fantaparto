@@ -1,0 +1,140 @@
+// ============================================================
+// FantaParto — Prisma Schema
+// Provider: PostgreSQL (Supabase)
+// URL configurato in prisma.config.ts via DIRECT_URL / DATABASE_URL
+// ============================================================
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// USER (Mamma)
+// id corrisponde all'UUID di Supabase Auth (auth.users.id)
+// ============================================================
+
+model User {
+  id        String   @id @db.Uuid
+  email     String   @unique
+  nome      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  events Event[]
+
+  @@map("users")
+}
+
+// ============================================================
+// EVENT (Il FantaParto)
+// ============================================================
+
+model Event {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+
+  // Anagrafica
+  nomeBimbo         String?  @map("nome_bimbo")
+  dataPresuntaParto DateTime @map("data_presunta_parto")
+
+  // Condivisione e stato
+  // stato: "ATTIVO" | "CONCLUSO" — validato via Zod a livello applicativo
+  codiceCondivisione  String @unique @map("codice_condivisione")
+  stato               String @default("ATTIVO")
+  visualizzazioniLink Int    @default(0) @map("visualizzazioni_link")
+
+  // Piano
+  isPremium Boolean @default(false) @map("is_premium")
+
+  // Toggle pronostici (tutti attivi per default)
+  sessoAttivo     Boolean @default(true) @map("sesso_attivo")
+  dataAttiva      Boolean @default(true) @map("data_attiva")
+  pesoAttivo      Boolean @default(true) @map("peso_attivo")
+  lunghezzaAttiva Boolean @default(true) @map("lunghezza_attiva")
+  oraAttiva       Boolean @default(true) @map("ora_attiva")
+  capelliAttivo   Boolean @default(true) @map("capelli_attivo")
+  occhiAttivo     Boolean @default(true) @map("occhi_attivo")
+
+  // Domande custom JSON (solo utenti Premium)
+  customQuestions Json? @map("custom_questions")
+
+  // Risultati reali — compilati dalla mamma post-parto
+  // sesso: "MASCHIO" | "FEMMINA"
+  // capelli: "LISCI" | "RICCI" | "CALVO"
+  // occhi: "CHIARI" | "SCURI"
+  realeSesso         String?   @map("reale_sesso")
+  realeData          DateTime? @map("reale_data")
+  realePeso          Int?      @map("reale_peso")      // grammi
+  realeLunghezza     Int?      @map("reale_lunghezza") // mm
+  realeOra           String?   @map("reale_ora")       // es. "14:32"
+  realeCapelli       String?   @map("reale_capelli")
+  realeOcchi         String?   @map("reale_occhi")
+  realeCustomAnswers Json?     @map("reale_custom_answers")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  predictions Prediction[]
+
+  @@index([userId])
+  @@index([codiceCondivisione])
+  @@map("events")
+}
+
+// ============================================================
+// PREDICTION (Il Voto dell'Invitato)
+// ============================================================
+
+model Prediction {
+  id      String @id @default(uuid()) @db.Uuid
+  eventId String @map("event_id") @db.Uuid
+
+  // Dati invitato
+  nomeInvitato      String  @map("nome_invitato")
+  emailInvitato     String? @map("email_invitato")
+  messaggioAugurio  String? @map("messaggio_augurio") @db.Text
+  deviceFingerprint String  @map("device_fingerprint")
+
+  // Pronostici — valori validati via Zod a livello applicativo
+  votoSesso         String?   @map("voto_sesso")
+  votoData          DateTime? @map("voto_data")
+  votoPeso          Int?      @map("voto_peso")      // grammi
+  votoLunghezza     Int?      @map("voto_lunghezza") // mm
+  votoOra           String?   @map("voto_ora")       // es. "08:15"
+  votoCapelli       String?   @map("voto_capelli")
+  votoOcchi         String?   @map("voto_occhi")
+  votoCustomAnswers Json?     @map("voto_custom_answers")
+
+  // Null finché l'evento non è CONCLUSO e il calcolo non viene eseguito
+  punteggioOttenuto Int? @map("punteggio_ottenuto")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([deviceFingerprint])
+  @@map("predictions")
+}
+
+// ============================================================
+// AUDIT LOG (Per la Dashboard Admin Segreta)
+// ============================================================
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  adminId   String   @map("admin_id")
+  azione    String
+  dettagli  String   @db.Text
+  timestamp DateTime @default(now())
+
+  @@index([adminId])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
