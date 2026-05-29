@@ -1,13 +1,26 @@
 "use client";
 
-import { useActionState } from "react";
+import { useFormState, useFormStatus } from "react-dom";
 import { loginAction, type AuthActionState } from "@/app/auth/actions";
 import Link from "next/link";
 
 const initialState: AuthActionState = {};
 
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full bg-pink-500 hover:bg-pink-600 disabled:opacity-60 text-white font-semibold rounded-lg py-2 text-sm transition-colors"
+    >
+      {pending ? "Accesso in corso…" : "Accedi"}
+    </button>
+  );
+}
+
 export default function LoginPage() {
-  const [state, formAction, pending] = useActionState(loginAction, initialState);
+  const [state, formAction] = useFormState(loginAction, initialState);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -50,13 +63,7 @@ export default function LoginPage() {
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={pending}
-            className="w-full bg-pink-500 hover:bg-pink-600 disabled:opacity-60 text-white font-semibold rounded-lg py-2 text-sm transition-colors"
-          >
-            {pending ? "Accesso in corso…" : "Accedi"}
-          </button>
+          <SubmitButton />
         </form>
 
         <p className="text-sm text-center text-gray-500 mt-6">
