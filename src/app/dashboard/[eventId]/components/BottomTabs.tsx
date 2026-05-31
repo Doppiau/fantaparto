@@ -38,9 +38,9 @@ interface BottomTabsProps {
 }
 
 const TABS = [
-  { id: "regole",  label: "Controllo", emoji: "⚙️" },
+  { id: "regole",  label: "Regole",    emoji: "⚙️" },
   { id: "giuria",  label: "Giuria",    emoji: "👥" },
-  { id: "giorno",  label: "Il Giorno", emoji: "🍼" },
+  { id: "giorno",  label: "Il Grande Giorno", emoji: "🏁" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -56,47 +56,40 @@ export default function BottomTabs({
   const [activeTab, setActiveTab] = useState<TabId>("regole");
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Tab switcher pill */}
-      <div
-        className="flex gap-1 p-1.5 rounded-[20px]"
-        style={{ background: "rgba(44,44,46,0.06)" }}
-      >
+    <div className="clay-card p-6 sm:p-8 space-y-6">
+      {/* Tab bar with underline style */}
+      <div className="flex border-b-2 border-[#F1ECE4] gap-4 md:gap-8 overflow-x-auto pb-0.5">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-[14px] text-[13px] font-bold transition-all duration-200"
-              style={
-                isActive
-                  ? {
-                      background: "white",
-                      color: "#FF6B6B",
-                      boxShadow: "0 4px 14px -6px rgba(255,107,107,0.30), 0 1px 4px -2px rgba(44,44,46,0.12)",
-                    }
-                  : {
-                      background: "transparent",
-                      color: "rgba(44,44,46,0.42)",
-                    }
-              }
+              className="pb-4 text-xs sm:text-sm font-extrabold tracking-wider uppercase border-b-4 transition-all shrink-0 flex items-center gap-2"
+              style={{
+                borderBottomColor: isActive ? "#FF6B6B" : "transparent",
+                color: isActive ? "#FF6B6B" : "rgba(44,44,46,0.38)",
+              }}
             >
-              <span className="text-base leading-none">{tab.emoji}</span>
-              <span className="hidden sm:inline">{tab.label}</span>
+              <span>{tab.emoji}</span>
+              <span>{tab.label}</span>
+              {tab.id === "giuria" && partecipanti.length > 0 && (
+                <span
+                  className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                  style={{ background: "#FFD166", color: "#2C2C2E" }}
+                >
+                  {partecipanti.length}
+                </span>
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* Pannello attivo */}
+      {/* Tab content */}
       <div>
         {activeTab === "regole" && (
-          <TabRegole
-            eventId={eventId}
-            isPremium={isPremium}
-            toggles={toggles}
-          />
+          <TabRegole eventId={eventId} isPremium={isPremium} toggles={toggles} />
         )}
         {activeTab === "giuria" && (
           <TabGiuria partecipanti={partecipanti} eventId={eventId} />
@@ -106,6 +99,7 @@ export default function BottomTabs({
             eventId={eventId}
             stato={stato}
             risultatiEsistenti={risultatiEsistenti}
+            partecipanti={partecipanti}
           />
         )}
       </div>
