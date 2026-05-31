@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { logoutAction } from "@/app/auth/actions";
 import { prisma } from "@/lib/prisma";
@@ -67,9 +68,10 @@ export default async function DashboardPage() {
         ) : (
           <div className="space-y-4">
             {eventi.map((ev: EventoItem) => (
-              <div
+              <Link
                 key={ev.id}
-                className="bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between"
+                href={`/dashboard/${ev.id}`}
+                className="bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer block"
               >
                 <div>
                   <p className="font-semibold text-gray-800">
@@ -103,7 +105,7 @@ export default async function DashboardPage() {
                     {ev._count.predictions === 1 ? "o" : "i"}
                   </p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
