@@ -14,8 +14,16 @@
 
 | Dominio | Scopo | Hosting |
 |---|---|---|
-| `fantaparto.com` | Sito pubblico, Landing Page, interfaccia di voto per gli invitati | Vercel |
+| `fantaparto.com` | Sito pubblico, Landing Page, dashboard mamme, interfaccia di voto | Vercel (Next.js) |
 | `fantaparto.app` | Backend, Database e API per l'app mobile | Supabase |
+
+### Supabase Project
+- **Project ID:** `dvznrowaptxdnnitxvsd`
+- **Supabase URL:** `https://dvznrowaptxdnnitxvsd.supabase.co`
+- **Site URL configurato:** `https://fantaparto.com`
+- **Redirect URLs autorizzati:**
+  - `https://fantaparto.com/auth/callback`
+  - `http://localhost:3000/auth/callback`
 
 ---
 
@@ -60,8 +68,30 @@
 
 ---
 
-## 6. Note per le Sessioni Future
+## 6. Autenticazione — Flusso Implementato
+
+### Email/Password
+- `loginAction` / `signupAction` in `src/app/auth/actions.ts`
+- Usa `supabase.auth.signInWithPassword` / `signUp`
+
+### Google OAuth
+- Handler client: `handleGoogleLogin()` in `src/app/auth/AuthPageClient.tsx`
+  - Chiama `supabase.auth.signInWithOAuth({ provider: "google", redirectTo: origin/auth/callback })`
+- Callback route: `src/app/auth/callback/route.ts`
+  - Scambia il `code` con `exchangeCodeForSession()`
+  - Fa **upsert** del record in Prisma `users` (necessario perché Google bypassa la signup action)
+  - Redirige a `/dashboard`
+- Google OAuth abilitato in Supabase → Sign In / Providers → Google ✅
+
+### Nota critica sull'upsert utente
+Quando una mamma si registra con email/password, la `signupAction` NON crea il record Prisma `users` — esiste solo l'utente Supabase Auth. Il record Prisma viene creato solo se necessario (es. da un trigger DB o manualmente). La callback Google gestisce l'upsert. Verificare che esista un trigger Supabase `on auth.users insert → insert into public.users` oppure gestirlo esplicitamente.
+
+---
+
+## 7. Note per le Sessioni Future
 
 - Ricordare di non mescolare la logica dell'app mobile con questo repository.
 - Ogni nuova feature deve passare per validazione Zod sia in input che in output.
 - Non introdurre sistemi di autenticazione alternativi a Supabase Auth per le mamme.
+- Il dominio `fantaparto.app` è solo Supabase — non ha pagine Next.js. Tutti i redirect OAuth usano `fantaparto.com`.
+- Per testare in locale usare sempre `http://localhost:3000` — è nell'allowlist Supabase.
