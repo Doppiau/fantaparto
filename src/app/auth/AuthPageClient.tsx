@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { loginAction, signupAction, type AuthActionState } from "./actions";
+import { createClient } from "@/lib/supabase/client";
 
 /* ── Icons ──────────────────────────────────────────────────── */
 function StorkMark() {
@@ -94,6 +95,17 @@ function SubmitButton({ isSignup }: { isSignup: boolean }) {
   );
 }
 
+/* ── Google OAuth ───────────────────────────────────────────── */
+async function handleGoogleLogin() {
+  const supabase = createClient();
+  await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    },
+  });
+}
+
 /* ── Auth card ──────────────────────────────────────────────── */
 function AuthCard({ initialTab }: { initialTab: "signup" | "login" }) {
   const [tab, setTab] = useState<"signup" | "login">(initialTab);
@@ -135,7 +147,7 @@ function AuthCard({ initialTab }: { initialTab: "signup" | "login" }) {
         </div>
 
         {/* Google */}
-        <button type="button" className="gbtn">
+        <button type="button" className="gbtn" onClick={handleGoogleLogin}>
           <GoogleG />
           {isSignup ? "Registrati con Google" : "Accedi con Google"}
         </button>
