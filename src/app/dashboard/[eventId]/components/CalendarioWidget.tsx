@@ -24,7 +24,7 @@ export default function CalendarioWidget({
   const formatKey = (d: number) =>
     `${anno}-${String(mese + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
-  const getHeatStyle = (count: number): React.CSSProperties => {
+  const getHeatStyle = (count: number) => {
     if (count === 0)
       return { background: "transparent", color: "rgba(44,44,46,0.28)" };
     const intensity = count / maxVoti;
