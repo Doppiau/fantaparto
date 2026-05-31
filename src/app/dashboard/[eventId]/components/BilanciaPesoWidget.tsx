@@ -32,7 +32,7 @@ export default function BilanciaPesoWidget({
       <div
         className="pointer-events-none absolute -bottom-8 -right-8 w-32 h-32 rounded-full"
         style={{
-          background: "radial-gradient(circle, rgba(212,175,55,0.14), transparent 70%)",
+          background: "radial-gradient(circle, rgba(255,107,107,0.12), transparent 70%)",
         }}
       />
 
@@ -65,8 +65,8 @@ export default function BilanciaPesoWidget({
             >
               <defs>
                 <linearGradient id="gaugeGradPremium" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#D4AF37" />
-                  <stop offset="100%" stopColor="#C08A3E" />
+                  <stop offset="0%" stopColor="#FF6B6B" />
+                  <stop offset="100%" stopColor="#FF8787" />
                 </linearGradient>
               </defs>
 
@@ -100,12 +100,12 @@ export default function BilanciaPesoWidget({
                   y1={CY}
                   x2={CX}
                   y2={CY - R + 16}
-                  stroke="#C08A3E"
+                  stroke="#FF8787"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                 />
                 {/* Punta ago */}
-                <circle cx={CX} cy={CY - R + 16} r="3" fill="#D4AF37" />
+                <circle cx={CX} cy={CY - R + 16} r="3" fill="#FF6B6B" />
               </g>
 
               {/* Perno centrale */}
@@ -114,7 +114,7 @@ export default function BilanciaPesoWidget({
                 cy={CY}
                 r="6"
                 fill="white"
-                stroke="#D4AF37"
+                stroke="#FF6B6B"
                 strokeWidth="2.5"
               />
 
@@ -185,7 +185,7 @@ export default function BilanciaPesoWidget({
             <div className="text-center">
               <p
                 className="text-[14px] font-black tabular-nums"
-                style={{ color: "#D4AF37" }}
+                style={{ color: "var(--salmon)" }}
               >
                 {totVotiPeso}
               </p>

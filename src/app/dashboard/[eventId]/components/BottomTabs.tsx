@@ -73,8 +73,8 @@ export default function BottomTabs({
                 isActive
                   ? {
                       background: "white",
-                      color: "#C08A3E",
-                      boxShadow: "0 2px 10px -4px rgba(44,44,46,0.18)",
+                      color: "#FF6B6B",
+                      boxShadow: "0 4px 14px -6px rgba(255,107,107,0.30), 0 1px 4px -2px rgba(44,44,46,0.12)",
                     }
                   : {
                       background: "transparent",

@@ -7,6 +7,7 @@ interface NestHeaderProps {
   dataPresuntaParto: Date;
   codiceCondivisione: string;
   totVoti: number;
+  visualizzazioniLink: number;
 }
 
 export default function NestHeader({
@@ -14,13 +15,14 @@ export default function NestHeader({
   dataPresuntaParto,
   codiceCondivisione,
   totVoti,
+  visualizzazioniLink,
 }: NestHeaderProps) {
   const [copied, setCopied] = useState(false);
 
   const dpp = new Date(dataPresuntaParto);
   const today = new Date();
   const start = new Date(dpp);
-  start.setDate(start.getDate() - 280); // inizio gravidanza ~40 settimane prima
+  start.setDate(start.getDate() - 280);
 
   const totalDays = Math.max(1, Math.round((dpp.getTime() - start.getTime()) / 86_400_000));
   const elapsed = Math.max(0, Math.round((today.getTime() - start.getTime()) / 86_400_000));
@@ -48,30 +50,30 @@ export default function NestHeader({
 
   return (
     <div
-      className="fp-card-warm relative overflow-hidden p-6 flex flex-col gap-5"
+      className="relative overflow-hidden p-6 flex flex-col gap-5"
+      style={{
+        background: "linear-gradient(145deg, #FFFFFF 0%, #FFF6F6 100%)",
+        border: "1px solid #F1ECE4",
+        borderRadius: 28,
+        boxShadow: "0 24px 60px -16px rgba(255,107,107,0.16), 0 8px 24px -8px rgba(44,44,46,0.07)",
+      }}
     >
-      {/* Ambient glow decorativo */}
+      {/* Ambient glows */}
       <div
-        className="pointer-events-none absolute -top-12 -right-12 w-48 h-48 rounded-full"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(212,175,55,0.18) 0%, transparent 70%)",
-        }}
+        className="pointer-events-none absolute -top-12 -right-12 w-52 h-52 rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(255,107,107,0.14) 0%, transparent 68%)" }}
       />
       <div
-        className="pointer-events-none absolute -bottom-16 -left-10 w-40 h-40 rounded-full"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(192,138,62,0.10) 0%, transparent 70%)",
-        }}
+        className="pointer-events-none absolute -bottom-16 -left-10 w-44 h-44 rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(255,135,135,0.08) 0%, transparent 68%)" }}
       />
 
-      {/* Riga superiore: nome + badge voti */}
+      {/* Riga superiore: nome + stats monospace */}
       <div className="relative flex items-start justify-between gap-3">
         <div>
           <p
             className="text-[11px] font-bold uppercase tracking-[0.12em] mb-1"
-            style={{ color: "rgba(44,44,46,0.40)" }}
+            style={{ color: "rgba(44,44,46,0.38)" }}
           >
             Il tuo FantaParto
           </p>
@@ -81,7 +83,7 @@ export default function NestHeader({
           >
             {name}
           </h1>
-          <p className="mt-1 text-[13px] font-medium" style={{ color: "rgba(44,44,46,0.55)" }}>
+          <p className="mt-1 text-[13px] font-medium" style={{ color: "rgba(44,44,46,0.50)" }}>
             {remaining > 0
               ? `Settimana ${week} · ${remaining} giorni al grande momento`
               : remaining === 0
@@ -94,26 +96,43 @@ export default function NestHeader({
         <div
           className="flex-shrink-0 flex flex-col items-center rounded-2xl px-3.5 py-2.5"
           style={{
-            background: "rgba(212,175,55,0.10)",
-            border: "1.5px solid rgba(212,175,55,0.22)",
+            background: "var(--salmon-10)",
+            border: "1.5px solid rgba(255,107,107,0.20)",
           }}
         >
           <span
             className="text-[32px] font-black leading-none"
-            style={{
-              color: "#D4AF37",
-              fontFamily: "var(--font-fredoka, sans-serif)",
-            }}
+            style={{ color: "var(--salmon)", fontFamily: "var(--font-fredoka, sans-serif)" }}
           >
             {totVoti}
           </span>
           <span
             className="text-[10px] font-bold uppercase tracking-wide mt-0.5"
-            style={{ color: "rgba(44,44,46,0.40)" }}
+            style={{ color: "rgba(44,44,46,0.38)" }}
           >
             {totVoti === 1 ? "voto" : "voti"}
           </span>
         </div>
+      </div>
+
+      {/* Contatore visite • voti (monospace) */}
+      <div
+        className="relative flex items-center gap-2 px-3.5 py-2 rounded-xl self-start"
+        style={{ background: "rgba(44,44,46,0.04)" }}
+      >
+        <span
+          className="text-[12px] font-semibold tabular-nums"
+          style={{ fontFamily: "var(--font-mono, monospace)", color: "rgba(44,44,46,0.50)" }}
+        >
+          {visualizzazioniLink.toLocaleString("it-IT")} visite
+        </span>
+        <span style={{ color: "rgba(44,44,46,0.22)", fontSize: 10 }}>•</span>
+        <span
+          className="text-[12px] font-semibold tabular-nums"
+          style={{ fontFamily: "var(--font-mono, monospace)", color: "rgba(44,44,46,0.50)" }}
+        >
+          {totVoti} voti
+        </span>
       </div>
 
       {/* Timeline gravidanza */}
@@ -121,13 +140,13 @@ export default function NestHeader({
         <div className="flex justify-between items-center">
           <span
             className="text-[11px] font-semibold"
-            style={{ color: "rgba(44,44,46,0.45)" }}
+            style={{ color: "rgba(44,44,46,0.42)" }}
           >
             Giorno {Math.min(elapsed, totalDays)} di {totalDays}
           </span>
           <span
-            className="text-[12px] font-black"
-            style={{ color: "#D4AF37" }}
+            className="text-[12px] font-black tabular-nums"
+            style={{ color: "var(--salmon)", fontFamily: "var(--font-mono, monospace)" }}
           >
             {progress}%
           </span>
@@ -136,24 +155,23 @@ export default function NestHeader({
         {/* Barra progresso */}
         <div
           className="relative h-3 rounded-full overflow-visible"
-          style={{ background: "#EDE4D5" }}
+          style={{ background: "#F0E8E8" }}
         >
           <div
             className="absolute inset-y-0 left-0 rounded-full"
             style={{
               width: `${progress}%`,
-              background: "linear-gradient(90deg, #D4AF37 0%, #C08A3E 100%)",
+              background: "linear-gradient(90deg, #FF6B6B 0%, #FF8787 100%)",
               transition: "width 1s cubic-bezier(0.34,1.56,0.64,1)",
             }}
           />
-          {/* Knob */}
           {progress > 2 && progress < 98 && (
             <div
               className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white border-2"
               style={{
                 left: `calc(${progress}% - 10px)`,
-                borderColor: "#D4AF37",
-                boxShadow: "0 2px 10px rgba(212,175,55,0.50)",
+                borderColor: "#FF6B6B",
+                boxShadow: "0 2px 10px rgba(255,107,107,0.45)",
                 transition: "left 1s cubic-bezier(0.34,1.56,0.64,1)",
               }}
             />
@@ -162,59 +180,53 @@ export default function NestHeader({
 
         <div
           className="flex justify-between text-[10px] font-medium"
-          style={{ color: "rgba(44,44,46,0.38)" }}
+          style={{ color: "rgba(44,44,46,0.35)" }}
         >
           <span>
-            {start.toLocaleDateString("it-IT", {
-              day: "numeric",
-              month: "short",
-            })}
+            {start.toLocaleDateString("it-IT", { day: "numeric", month: "short" })}
           </span>
           <span>
-            DPP ·{" "}
-            {dpp.toLocaleDateString("it-IT", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
+            DPP · {dpp.toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}
           </span>
         </div>
       </div>
 
-      {/* Codice condivisione */}
-      <div
-        className="relative flex items-center justify-between px-4 py-2.5 rounded-2xl"
-        style={{ background: "rgba(212,175,55,0.07)", border: "1px solid rgba(212,175,55,0.15)" }}
-      >
-        <span className="text-[11px] font-semibold" style={{ color: "rgba(44,44,46,0.45)" }}>
-          Codice
-        </span>
-        <span
-          className="text-[15px] font-black tracking-[0.18em]"
-          style={{ color: "#C08A3E", fontFamily: "var(--font-fredoka, sans-serif)" }}
+      {/* Codice + bottone copia */}
+      <div className="flex items-center gap-3">
+        <div
+          className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl flex-1 min-w-0"
+          style={{ background: "rgba(44,44,46,0.04)", border: "1px solid rgba(44,44,46,0.06)" }}
         >
-          {codiceCondivisione}
-        </span>
-      </div>
+          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "rgba(44,44,46,0.38)" }}>
+            Codice
+          </span>
+          <span
+            className="text-[15px] font-black tracking-[0.18em] truncate"
+            style={{ color: "var(--ink)", fontFamily: "var(--font-mono, monospace)" }}
+          >
+            {codiceCondivisione}
+          </span>
+        </div>
 
-      {/* Bottone copia link */}
-      <button
-        onClick={copyLink}
-        className="relative w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-[15px] transition-all duration-300 active:scale-[0.97]"
-        style={{
-          background: copied
-            ? "linear-gradient(100deg, #34C759 0%, #5BD97A 100%)"
-            : "linear-gradient(100deg, #D4AF37 0%, #C08A3E 100%)",
-          color: "white",
-          boxShadow: copied
-            ? "0 12px 30px -8px rgba(52,199,89,0.45)"
-            : "0 12px 30px -8px rgba(212,175,55,0.42)",
-          fontFamily: "var(--font-jakarta, sans-serif)",
-        }}
-      >
-        <span className="text-lg leading-none">{copied ? "✓" : "🔗"}</span>
-        {copied ? "Link copiato negli appunti!" : "Copia Link Invitati"}
-      </button>
+        <button
+          onClick={copyLink}
+          className="flex-shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-[14px] transition-all duration-300 active:scale-[0.96]"
+          style={{
+            background: copied
+              ? "linear-gradient(100deg, #34C759 0%, #5BD97A 100%)"
+              : "linear-gradient(100deg, #FF6B6B 0%, #FF8787 100%)",
+            color: "white",
+            boxShadow: copied
+              ? "0 10px 26px -8px rgba(52,199,89,0.45)"
+              : "0 10px 26px -8px rgba(255,107,107,0.42)",
+            fontFamily: "var(--font-jakarta, sans-serif)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span className="text-base leading-none">{copied ? "✓" : "🔗"}</span>
+          {copied ? "Copiato!" : "Copia Link"}
+        </button>
+      </div>
     </div>
   );
 }

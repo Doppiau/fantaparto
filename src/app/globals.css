@@ -3,25 +3,29 @@
 :root {
   --cream: #FDFBF7;
   --salmon: #FF6B6B;
-  --honey: #FFB830;
+  --salmon-light: #FF8787;
+  --salmon-10: rgba(255,107,107,0.10);
+  --salmon-20: rgba(255,107,107,0.20);
+  --shadow-salmon: 0 16px 40px -12px rgba(255,107,107,0.38);
+  --honey: #FFD166;
+  --honey-warm: #FF9F45;
+  --ink: #2C2C2E;
   --ink-45: rgba(44,44,46,0.45);
   --ink-60: rgba(44,44,46,0.6);
   --border: #F1ECE4;
-  --salmon-light: #FF8787;
   --gold: #FFD166;
-  --ink: #2C2C2E;
   --white: #FFFFFF;
   --boy: #6FA8DC;
   --girl: #F296C2;
   --shadow-card: 0 30px 60px -28px rgba(255,107,107,0.30), 0 16px 40px -24px rgba(44,44,46,0.14);
   --shadow-soft: 0 14px 30px -18px rgba(44,44,46,0.18);
-  /* Premium dashboard gold palette */
+  --shadow-dashboard: 0 8px 28px -8px rgba(44,44,46,0.09);
+  /* Premium gold palette (feature gates, calendar, premium CTAs) */
   --gold-rich: #D4AF37;
   --cinnamon: #C08A3E;
   --gold-rich-10: rgba(212,175,55,0.10);
   --gold-rich-20: rgba(212,175,55,0.20);
   --shadow-gold: 0 16px 40px -12px rgba(212,175,55,0.38);
-  --shadow-dashboard: 0 8px 28px -8px rgba(44,44,46,0.09);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

@@ -19,12 +19,14 @@ interface TabGiuriaProps {
   eventId: string;
 }
 
+const FREE_LIMIT = 20;
+
 const AVATAR_COLORS = [
-  ["#D4AF37", "#C08A3E"],
+  ["#FF6B6B", "#FF8787"],
   ["#6FA8DC", "#4A87BB"],
   ["#F296C2", "#D070A0"],
   ["#5BD97A", "#34C759"],
-  ["#FF9F2F", "#FF6B6B"],
+  ["#FF9F45", "#FF6B6B"],
 ];
 
 function getAvatarGradient(name: string): [string, string] {
@@ -51,15 +53,10 @@ export default function TabGiuria({ partecipanti: iniziali, eventId }: TabGiuria
       <div className="fp-card-plain p-10 flex flex-col items-center gap-4 text-center">
         <div className="text-5xl select-none">🎪</div>
         <div>
-          <p
-            className="text-[15px] font-bold text-[var(--ink)]"
-          >
+          <p className="text-[15px] font-bold text-[var(--ink)]">
             Nessun giocatore ancora
           </p>
-          <p
-            className="text-[13px] mt-1"
-            style={{ color: "rgba(44,44,46,0.50)" }}
-          >
+          <p className="text-[13px] mt-1" style={{ color: "rgba(44,44,46,0.50)" }}>
             Condividi il link per far votare i tuoi cari!
           </p>
         </div>
@@ -67,16 +64,52 @@ export default function TabGiuria({ partecipanti: iniziali, eventId }: TabGiuria
     );
   }
 
+  const atLimit = lista.length >= FREE_LIMIT;
+
   return (
     <div className="flex flex-col gap-2">
-      {/* Contatore */}
-      <p
-        className="px-1 text-[11px] font-bold uppercase tracking-[0.1em]"
-        style={{ color: "rgba(44,44,46,0.40)" }}
-      >
-        {lista.length} giocator{lista.length === 1 ? "e" : "i"}
-      </p>
+      {/* Contatore + indicatore soglia */}
+      <div className="px-1 flex items-center justify-between">
+        <p
+          className="text-[11px] font-bold uppercase tracking-[0.1em]"
+          style={{ color: "rgba(44,44,46,0.40)" }}
+        >
+          {lista.length} giocator{lista.length === 1 ? "e" : "i"}
+        </p>
+        <span
+          className="text-[11px] font-bold tabular-nums px-2.5 py-1 rounded-full"
+          style={{
+            background: atLimit ? "rgba(255,107,107,0.12)" : "rgba(44,44,46,0.06)",
+            color: atLimit ? "#CC3333" : "rgba(44,44,46,0.42)",
+            fontFamily: "var(--font-mono, monospace)",
+          }}
+        >
+          {lista.length} / {FREE_LIMIT}
+        </span>
+      </div>
 
+      {/* Avviso limite raggiunto */}
+      {atLimit && (
+        <div
+          className="mx-1 px-4 py-3 rounded-2xl flex items-center gap-3"
+          style={{
+            background: "rgba(255,107,107,0.07)",
+            border: "1px solid rgba(255,107,107,0.16)",
+          }}
+        >
+          <span className="text-xl select-none">🔒</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-bold" style={{ color: "#CC3333" }}>
+              Limite raggiunto
+            </p>
+            <p className="text-[11px] mt-0.5" style={{ color: "rgba(44,44,46,0.50)" }}>
+              Sblocca Premium per partecipanti illimitati
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Lista partecipanti */}
       {lista.map((p) => {
         const [c1, c2] = getAvatarGradient(p.nomeInvitato);
         return (
@@ -115,8 +148,7 @@ export default function TabGiuria({ partecipanti: iniziali, eventId }: TabGiuria
                         p.votoSesso === "MASCHIO"
                           ? "rgba(111,168,220,0.14)"
                           : "rgba(242,150,194,0.14)",
-                      color:
-                        p.votoSesso === "MASCHIO" ? "#4A87BB" : "#C060A0",
+                      color: p.votoSesso === "MASCHIO" ? "#4A87BB" : "#C060A0",
                     }}
                   >
                     {p.votoSesso === "MASCHIO" ? "💙 Maschio" : "🩷 Femmina"}
@@ -126,8 +158,8 @@ export default function TabGiuria({ partecipanti: iniziali, eventId }: TabGiuria
                   <span
                     className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
                     style={{
-                      background: "rgba(212,175,55,0.10)",
-                      color: "#9A7000",
+                      background: "rgba(255,107,107,0.10)",
+                      color: "#CC3333",
                     }}
                   >
                     ⚖️ {(p.votoPeso / 1000).toFixed(2).replace(".", ",")} kg
@@ -153,7 +185,7 @@ export default function TabGiuria({ partecipanti: iniziali, eventId }: TabGiuria
                   className="text-[11px] italic truncate mt-1"
                   style={{ color: "rgba(44,44,46,0.50)" }}
                 >
-                  "{p.messaggioAugurio}"
+                  &ldquo;{p.messaggioAugurio}&rdquo;
                 </p>
               )}
             </div>
@@ -169,8 +201,7 @@ export default function TabGiuria({ partecipanti: iniziali, eventId }: TabGiuria
                 (e.currentTarget as HTMLButtonElement).style.color = "#E5484D";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color =
-                  "rgba(44,44,46,0.32)";
+                (e.currentTarget as HTMLButtonElement).style.color = "rgba(44,44,46,0.32)";
               }}
             >
               <svg

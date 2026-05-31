@@ -63,8 +63,8 @@ export default function CalendarioWidget({
           <span
             className="text-[11px] font-bold px-2.5 py-1 rounded-full"
             style={{
-              background: "rgba(212,175,55,0.11)",
-              color: "#9A7000",
+              background: "rgba(255,107,107,0.09)",
+              color: "#CC3333",
             }}
           >
             {dpp.toLocaleDateString("it-IT", {

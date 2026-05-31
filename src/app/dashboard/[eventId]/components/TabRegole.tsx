@@ -66,7 +66,7 @@ export default function TabRegole({
             className="fp-toggle flex-shrink-0"
             style={{
               background: t.attivo
-                ? "linear-gradient(100deg, #D4AF37, #C08A3E)"
+                ? "linear-gradient(100deg, #FF6B6B, #FF8787)"
                 : "#DED5C8",
             }}
           >
@@ -75,7 +75,7 @@ export default function TabRegole({
               style={{
                 transform: t.attivo ? "translateX(22px)" : "translateX(3px)",
                 boxShadow: t.attivo
-                  ? "0 2px 8px rgba(212,175,55,0.42)"
+                  ? "0 2px 8px rgba(255,107,107,0.40)"
                   : "0 2px 6px rgba(44,44,46,0.18)",
               }}
             />

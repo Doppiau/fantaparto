@@ -86,7 +86,7 @@ export default async function EventDashboardPage({ params }: PageProps) {
             </svg>
             <span className="text-sm font-semibold text-[var(--ink)]">Dashboard</span>
           </Link>
-          <span className="text-sm font-bold" style={{ color: "var(--honey)", fontFamily: "var(--font-fredoka, sans-serif)" }}>
+          <span className="text-sm font-bold" style={{ color: "var(--salmon)", fontFamily: "var(--font-fredoka, sans-serif)" }}>
             FantaParto
           </span>
           <form action={logoutAction}>
@@ -105,6 +105,7 @@ export default async function EventDashboardPage({ params }: PageProps) {
           dataPresuntaParto={event.dataPresuntaParto}
           codiceCondivisione={event.codiceCondivisione}
           totVoti={totVoti}
+          visualizzazioniLink={event.visualizzazioniLink}
         />
 
         {/* Widget row */}

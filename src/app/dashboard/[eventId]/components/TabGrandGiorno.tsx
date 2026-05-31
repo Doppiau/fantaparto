@@ -19,7 +19,7 @@ type Step = 0 | 1 | 2 | 3 | 4;
 async function lanciaConfetti() {
   const confetti = (await import("canvas-confetti")).default;
   const opts = {
-    colors: ["#D4AF37", "#C08A3E", "#FFD166", "#FF6B6B", "#6FA8DC", "#F296C2", "#34C759"],
+    colors: ["#FF6B6B", "#FF8787", "#FFD166", "#6FA8DC", "#F296C2", "#34C759", "#FF9F45"],
   };
   confetti({ particleCount: 120, spread: 80, origin: { y: 0.55 }, ...opts });
   setTimeout(() => confetti({ particleCount: 80, spread: 110, origin: { y: 0.45, x: 0.3 }, ...opts }), 350);
@@ -120,9 +120,9 @@ export default function TabGrandGiorno({
           onClick={lanciaConfetti}
           className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-[14px] transition-all active:scale-95"
           style={{
-            background: "linear-gradient(100deg, #D4AF37, #C08A3E)",
+            background: "linear-gradient(100deg, #FF6B6B, #FF8787)",
             color: "white",
-            boxShadow: "0 12px 28px -8px rgba(212,175,55,0.45)",
+            boxShadow: "0 12px 28px -8px rgba(255,107,107,0.40)",
           }}
         >
           🎊 Rivivi il momento
@@ -166,9 +166,9 @@ export default function TabGrandGiorno({
           onClick={openWizard}
           className="relative z-10 w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-[16px] transition-all duration-300 active:scale-[0.97]"
           style={{
-            background: "linear-gradient(100deg, #D4AF37 0%, #C08A3E 100%)",
+            background: "linear-gradient(100deg, #FF6B6B 0%, #FF8787 100%)",
             color: "white",
-            boxShadow: "0 16px 36px -10px rgba(212,175,55,0.50)",
+            boxShadow: "0 16px 36px -10px rgba(255,107,107,0.45)",
             fontFamily: "var(--font-fredoka, sans-serif)",
           }}
         >
@@ -224,9 +224,9 @@ export default function TabGrandGiorno({
                   style={{
                     background:
                       s === step
-                        ? "#D4AF37"
+                        ? "#FF6B6B"
                         : s < step
-                        ? "rgba(212,175,55,0.40)"
+                        ? "rgba(255,107,107,0.35)"
                         : "rgba(44,44,46,0.12)",
                     width: s === step ? 24 : 8,
                   }}
@@ -341,7 +341,7 @@ export default function TabGrandGiorno({
                   {peso && Number(peso) >= 500 && (
                     <p
                       className="text-[13px] font-bold text-center"
-                      style={{ color: "#D4AF37" }}
+                      style={{ color: "var(--salmon)" }}
                     >
                       = {(Number(peso) / 1000).toFixed(3).replace(".", ",")} kg
                     </p>
@@ -379,7 +379,7 @@ export default function TabGrandGiorno({
                   disabled={!canNext}
                   className="flex-1 py-3.5 rounded-2xl font-bold text-[14px] text-white transition-all disabled:opacity-40 active:scale-[0.97]"
                   style={{
-                    background: "linear-gradient(100deg, #D4AF37, #C08A3E)",
+                    background: "linear-gradient(100deg, #FF6B6B, #FF8787)",
                     boxShadow: canNext
                       ? "0 10px 24px -8px rgba(212,175,55,0.45)"
                       : "none",
@@ -393,7 +393,7 @@ export default function TabGrandGiorno({
                   disabled={isPending}
                   className="flex-1 py-3.5 rounded-2xl font-bold text-[14px] text-white transition-all disabled:opacity-50 active:scale-[0.97]"
                   style={{
-                    background: "linear-gradient(100deg, #D4AF37, #C08A3E)",
+                    background: "linear-gradient(100deg, #FF6B6B, #FF8787)",
                     boxShadow: "0 10px 24px -8px rgba(212,175,55,0.45)",
                     fontFamily: "var(--font-fredoka, sans-serif)",
                     fontSize: "1rem",
