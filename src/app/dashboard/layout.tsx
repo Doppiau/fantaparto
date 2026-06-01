@@ -21,7 +21,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   ]);
 
   return (
-    <div style={{ background: "#FDFBF7", minHeight: "100vh" }}>
+    <div style={{ background: "#fbf9f5", minHeight: "100vh" }}>
       <Sidebar
         eventi={eventi}
         user={{

@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { logoutAction } from "@/app/auth/actions";
 
 interface EventoSidebar {
-  id:               string;
-  nomeBimbo:        string | null;
-  stato:            string;
+  id:                string;
+  nomeBimbo:         string | null;
+  stato:             string;
   dataPresuntaParto: Date;
 }
 
@@ -22,54 +23,64 @@ interface SidebarProps {
 }
 
 const NAV = [
-  { href: "/dashboard", icon: "home",               label: "Home",         disabled: false },
-  { href: "/dashboard/stats",    icon: "leaderboard",     label: "Statistiche", disabled: true },
-  { href: "/dashboard/persone",  icon: "group",           label: "Persone",     disabled: true },
-  { href: "/dashboard/settings", icon: "settings",        label: "Impostazioni",disabled: true },
-  { href: "/dashboard/premium",  icon: "workspace_premium",label: "Premium",    disabled: true },
+  { href: "/dashboard",          icon: "dashboard",         label: "Panoramica",    disabled: false },
+  { href: "/dashboard/stats",    icon: "analytics",         label: "Statistiche",   disabled: true  },
+  { href: "/dashboard/invitati", icon: "group",             label: "Invitati",      disabled: true  },
+  { href: "/dashboard/settings", icon: "settings",          label: "Configurazione",disabled: true  },
+  { href: "/dashboard/rivelazione", icon: "celebration",    label: "Rivelazione",   disabled: true  },
 ] as const;
 
-// Palette colori per le pool (ciclica)
-const POOL_COLORS = ["#FFD166", "#FF6B6B", "#6FA8DC", "#34C759", "#FF9F45"];
+// Primary color palette
+const P = {
+  bg:        "#fbf9f5",
+  primary:   "#874e58",
+  priCont:   "#f4acb7",
+  priFixed:  "#ffd9de",
+  onSurf:    "#1b1c1a",
+  onSurfVar: "#514345",
+  outline:   "#d6c2c3",
+  surfCont:  "#efeeea",
+} as const;
 
 export default function Sidebar({ eventi, user }: SidebarProps) {
   const pathname = usePathname();
 
-  const attivi  = eventi.filter((e) => e.stato !== "CONCLUSO");
+  const attivi   = eventi.filter((e) => e.stato !== "CONCLUSO");
   const initiali = (user.nome ?? user.email).slice(0, 2).toUpperCase();
 
   return (
     <aside
-      className="h-screen w-64 fixed left-0 top-0 flex flex-col py-6 z-50"
+      className="h-screen w-64 fixed left-0 top-0 flex flex-col z-50"
       style={{
-        background:  "#1A1A2E",
-        color:       "#FFD166",
-        boxShadow:   "inset -4px 0 12px rgba(0,0,0,0.20)",
+        background: P.bg,
+        borderRight: `1px solid ${P.outline}`,
+        boxShadow: "12px 0 32px rgba(135,78,88,0.05)",
+        fontFamily: "var(--font-vietnam, sans-serif)",
       }}
     >
       {/* Logo */}
-      <div className="px-6 mb-8 flex items-center gap-3">
+      <div className="flex items-center gap-3 px-6 py-6 mb-2">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: "linear-gradient(135deg, #FF6B6B, #FF8787)", boxShadow: "0 4px 12px rgba(255,107,107,0.35)" }}
+          className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden"
+          style={{ background: "linear-gradient(135deg, #f4acb7, #874e58)", boxShadow: "0 8px 20px rgba(135,78,88,0.28)" }}
         >
-          <span className="text-white text-lg font-black" style={{ fontFamily: "var(--font-fredoka)" }}>F</span>
+          <span className="text-white text-xl font-black" style={{ fontFamily: "var(--font-quicksand, sans-serif)" }}>F</span>
         </div>
         <div>
           <h1
-            className="leading-none font-black text-xl"
-            style={{ fontFamily: "var(--font-fredoka)", color: "#FFD166", letterSpacing: "-0.01em" }}
+            className="text-[22px] font-bold leading-tight"
+            style={{ fontFamily: "var(--font-quicksand, sans-serif)", color: P.primary }}
           >
             FantaParto
           </h1>
-          <p className="text-[9px] uppercase tracking-widest mt-0.5" style={{ color: "rgba(255,209,102,0.45)" }}>
-            Pregnancy Betting
+          <p className="text-[11px] font-semibold" style={{ color: P.onSurfVar }}>
+            La Gioiosa Attesa
           </p>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 space-y-0.5 px-3 overflow-y-auto">
+      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
         {NAV.map(({ href, icon, label, disabled }) => {
           const isActive = disabled
             ? false
@@ -82,56 +93,52 @@ export default function Sidebar({ eventi, user }: SidebarProps) {
               key={href}
               href={disabled ? "#" : href}
               aria-disabled={disabled}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all group"
+              className="flex items-center gap-3 px-4 py-3 rounded-full transition-all"
               style={{
-                background:    isActive ? "rgba(255,209,102,0.18)" : "transparent",
-                color:         isActive ? "#FFD166" : "rgba(255,209,102,0.55)",
+                background:    isActive ? P.priFixed : "transparent",
+                color:         isActive ? P.primary  : disabled ? `${P.onSurfVar}70` : P.onSurfVar,
                 pointerEvents: disabled ? "none" : "auto",
-                boxShadow:     isActive ? "inset 2px 2px 4px rgba(0,0,0,0.25)" : "none",
+                fontWeight:    isActive ? "700" : "600",
               }}
             >
               <span className="material-symbols-outlined text-[22px]">{icon}</span>
-              <span className="text-sm font-bold">{label}</span>
+              <span className="text-[14px] tracking-[0.03em]">{label}</span>
             </Link>
           );
         })}
 
-        {/* Active Pools */}
+        {/* Active events list */}
         {attivi.length > 0 && (
-          <div className="pt-5 pb-2 px-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "rgba(255,209,102,0.40)" }}>
+          <div className="pt-5 pb-2">
+            <p
+              className="text-[11px] font-bold uppercase tracking-widest px-4 mb-3"
+              style={{ color: P.outline }}
+            >
               I tuoi FantaParto
             </p>
-            <div className="space-y-2">
-              {attivi.map((ev, i) => {
-                const isActive  = pathname.includes(ev.id);
+            <div className="space-y-1">
+              {attivi.map((ev) => {
+                const isActive = pathname.includes(ev.id);
                 const remaining = Math.max(0, Math.round(
                   (new Date(ev.dataPresuntaParto).getTime() - Date.now()) / 86_400_000,
                 ));
-                const color = POOL_COLORS[i % POOL_COLORS.length];
-
                 return (
                   <Link
                     key={ev.id}
                     href={`/dashboard/${ev.id}`}
-                    className="flex items-center gap-3 p-3 rounded-2xl transition-all"
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-full transition-all"
                     style={{
-                      background: isActive ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
-                      border:     isActive ? "1px solid rgba(255,255,255,0.12)" : "1px solid transparent",
+                      background: isActive ? P.priFixed : "transparent",
+                      color: isActive ? P.primary : P.onSurfVar,
                     }}
                   >
-                    <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-base"
-                      style={{ background: color, boxShadow: "inset 0 1px 3px rgba(0,0,0,0.20)" }}
-                    >
-                      🍼
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold truncate" style={{ color: "#FFD166" }}>
+                    <span className="text-base flex-shrink-0">🍼</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-bold truncate" style={{ color: isActive ? P.primary : P.onSurf }}>
                         {ev.nomeBimbo ? `Baby ${ev.nomeBimbo}` : "Bimbo/a"}
                       </p>
-                      <p className="text-[11px]" style={{ color: "rgba(255,209,102,0.50)" }}>
-                        {remaining > 0 ? `${remaining} giorni al parto` : "Oggi!"}
+                      <p className="text-[10px] font-medium" style={{ color: P.onSurfVar }}>
+                        {remaining > 0 ? `${remaining}g al parto` : "Oggi!"}
                       </p>
                     </div>
                   </Link>
@@ -142,41 +149,50 @@ export default function Sidebar({ eventi, user }: SidebarProps) {
         )}
       </nav>
 
-      {/* Bottom */}
-      <div className="px-4 mt-4 space-y-3">
+      {/* CTA + user */}
+      <div className="px-4 pb-5 pt-3 space-y-3">
         <button
-          className="w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-95"
-          style={{ background: "#FFD166", color: "#1A1A2E", boxShadow: "0 4px 0 rgba(0,0,0,0.15)" }}
+          className="w-full py-3.5 rounded-full text-[15px] font-bold transition-all active:scale-95"
+          style={{
+            background: P.primary,
+            color: "#ffffff",
+            boxShadow: "0 12px 32px rgba(135,78,88,0.22)",
+            fontFamily: "var(--font-quicksand, sans-serif)",
+          }}
         >
-          ⭐ Upgrade Premium
+          Nuova Sfida
         </button>
 
         <div
-          className="flex items-center gap-3 p-2 rounded-2xl"
-          style={{ background: "rgba(255,255,255,0.05)" }}
+          className="flex items-center gap-2.5 px-3 py-2 rounded-full"
+          style={{ background: P.surfCont }}
         >
           {user.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={user.avatarUrl} alt="avatar" className="w-9 h-9 rounded-full border-2" style={{ borderColor: "rgba(255,209,102,0.30)" }} />
+            <img src={user.avatarUrl} alt="avatar" className="w-8 h-8 rounded-full flex-shrink-0" />
           ) : (
             <div
-              className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
-              style={{ background: "rgba(255,209,102,0.20)", color: "#FFD166" }}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
+              style={{ background: P.priFixed, color: P.primary }}
             >
               {initiali}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold truncate" style={{ color: "#FFD166" }}>
+            <p className="text-[12px] font-bold truncate" style={{ color: P.onSurf }}>
               {user.nome ?? user.email.split("@")[0]}
             </p>
-            <p className="text-[10px] truncate" style={{ color: "rgba(255,209,102,0.45)" }}>
-              {user.email}
-            </p>
           </div>
-          <span className="material-symbols-outlined text-[18px]" style={{ color: "rgba(255,209,102,0.40)" }}>
-            more_vert
-          </span>
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              title="Logout"
+              className="rounded-full p-1 transition-colors"
+              style={{ color: P.onSurfVar }}
+            >
+              <span className="material-symbols-outlined text-[18px]">logout</span>
+            </button>
+          </form>
         </div>
       </div>
     </aside>
