@@ -10,137 +10,221 @@ interface EventoSidebar {
   stato:             string;
   dataPresuntaParto: Date;
 }
-
 interface UserSidebar {
   nome:      string | null;
   avatarUrl: string | null;
   email:     string;
 }
-
 interface SidebarProps {
   eventi: EventoSidebar[];
   user:   UserSidebar;
 }
 
-const NAV = [
-  { href: "/dashboard",          icon: "dashboard",         label: "Panoramica",    disabled: false },
-  { href: "/dashboard/stats",    icon: "analytics",         label: "Statistiche",   disabled: true  },
-  { href: "/dashboard/invitati", icon: "group",             label: "Invitati",      disabled: true  },
-  { href: "/dashboard/settings", icon: "settings",          label: "Configurazione",disabled: true  },
-  { href: "/dashboard/rivelazione", icon: "celebration",    label: "Rivelazione",   disabled: true  },
-] as const;
-
-// Primary color palette
-const P = {
-  bg:        "#fbf9f5",
-  primary:   "#874e58",
-  priCont:   "#f4acb7",
-  priFixed:  "#ffd9de",
-  onSurf:    "#1b1c1a",
-  onSurfVar: "#514345",
-  outline:   "#d6c2c3",
-  surfCont:  "#efeeea",
+// ── Dark theme tokens ─────────────────────────────────────────────────────────
+const S = {
+  bg:        "#18101a",          // quasi-nero con tono caldo viola-rosato
+  surface:   "#231520",          // surface slightly lighter
+  surfHov:   "#2c1c28",          // hover state
+  border:    "rgba(244,172,183,0.10)",
+  primary:   "#f4acb7",          // light pink text on dark
+  priDim:    "#c47886",
+  onSurf:    "#f5eaed",          // testo principale
+  muted:     "#9a7480",          // testo secondario
+  dim:       "#5a3d48",          // testo disabilitato
+  green:     "#4ade80",
+  greenDim:  "rgba(74,222,128,0.12)",
 } as const;
+
+const QS = "var(--font-quicksand, sans-serif)";
+const VN = "var(--font-vietnam, sans-serif)";
+
+const NAV = [
+  { href: "/dashboard",             icon: "dashboard",   label: "Panoramica",     disabled: false },
+  { href: "/dashboard/stats",       icon: "analytics",   label: "Statistiche",    disabled: true  },
+  { href: "/dashboard/invitati",    icon: "group",       label: "Invitati",       disabled: true  },
+  { href: "/dashboard/settings",    icon: "settings",    label: "Configurazione", disabled: true  },
+  { href: "/dashboard/rivelazione", icon: "celebration", label: "Rivelazione",    disabled: true  },
+] as const;
 
 export default function Sidebar({ eventi, user }: SidebarProps) {
   const pathname = usePathname();
-
   const attivi   = eventi.filter((e) => e.stato !== "CONCLUSO");
   const initiali = (user.nome ?? user.email).slice(0, 2).toUpperCase();
 
   return (
     <aside
-      className="h-screen w-64 fixed left-0 top-0 flex flex-col z-50"
       style={{
-        background: P.bg,
-        borderRight: `1px solid ${P.outline}`,
-        boxShadow: "12px 0 32px rgba(135,78,88,0.05)",
-        fontFamily: "var(--font-vietnam, sans-serif)",
+        position: "fixed", left: 0, top: 0, height: "100vh", width: 256,
+        background: S.bg, display: "flex", flexDirection: "column", zIndex: 50,
+        borderRight: `1px solid ${S.border}`,
+        fontFamily: VN,
       }}
     >
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-6 mb-2">
-        <div
-          className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden"
-          style={{ background: "linear-gradient(135deg, #f4acb7, #874e58)", boxShadow: "0 8px 20px rgba(135,78,88,0.28)" }}
-        >
-          <span className="text-white text-xl font-black" style={{ fontFamily: "var(--font-quicksand, sans-serif)" }}>F</span>
-        </div>
-        <div>
-          <h1
-            className="text-[22px] font-bold leading-tight"
-            style={{ fontFamily: "var(--font-quicksand, sans-serif)", color: P.primary }}
+
+      {/* ── Brand ─────────────────────────────────────────────────────────── */}
+      <div
+        style={{
+          padding: "24px 20px 20px",
+          borderBottom: `1px solid ${S.border}`,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Logo mark con glow */}
+          <div
+            style={{
+              width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+              background: "linear-gradient(135deg, #f4acb7 0%, #874e58 100%)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 0 20px rgba(244,172,183,0.35), 0 8px 16px rgba(135,78,88,0.4)",
+            }}
           >
-            FantaParto
-          </h1>
-          <p className="text-[11px] font-semibold" style={{ color: P.onSurfVar }}>
-            La Gioiosa Attesa
-          </p>
+            <span style={{ color: "#fff", fontWeight: 900, fontSize: 19, fontFamily: QS }}>F</span>
+          </div>
+          <div>
+            <p style={{ fontSize: 19, fontWeight: 700, color: S.onSurf, fontFamily: QS, margin: 0, lineHeight: 1.1 }}>
+              FantaParto
+            </p>
+            <p style={{ fontSize: 10, fontWeight: 600, color: S.muted, margin: "3px 0 0", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+              La Gioiosa Attesa
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
-        {NAV.map(({ href, icon, label, disabled }) => {
-          const isActive = disabled
-            ? false
-            : href === "/dashboard"
-              ? pathname === "/dashboard" || pathname.startsWith("/dashboard/")
-              : pathname.startsWith(href);
+      {/* ── Nav ───────────────────────────────────────────────────────────── */}
+      <nav style={{ flex: 1, padding: "10px", overflowY: "auto" }}>
 
-          return (
-            <Link
-              key={href}
-              href={disabled ? "#" : href}
-              aria-disabled={disabled}
-              className="flex items-center gap-3 px-4 py-3 rounded-full transition-all"
-              style={{
-                background:    isActive ? P.priFixed : "transparent",
-                color:         isActive ? P.primary  : disabled ? `${P.onSurfVar}70` : P.onSurfVar,
-                pointerEvents: disabled ? "none" : "auto",
-                fontWeight:    isActive ? "700" : "600",
-              }}
-            >
-              <span className="material-symbols-outlined text-[22px]">{icon}</span>
-              <span className="text-[14px] tracking-[0.03em]">{label}</span>
-            </Link>
-          );
-        })}
+        {/* Link principali */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {NAV.map(({ href, icon, label, disabled }) => {
+            const isActive = !disabled && (
+              href === "/dashboard"
+                ? pathname === "/dashboard" || pathname.startsWith("/dashboard/")
+                : pathname.startsWith(href)
+            );
 
-        {/* Active events list */}
+            return (
+              <Link
+                key={href}
+                href={disabled ? "#" : href}
+                aria-disabled={disabled}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "9px 12px", borderRadius: 10,
+                  textDecoration: "none", transition: "all 150ms",
+                  background:    isActive ? "rgba(244,172,183,0.12)" : "transparent",
+                  color:         isActive ? S.primary : disabled ? S.dim : S.muted,
+                  pointerEvents: disabled ? "none" : "auto",
+                  border:        isActive ? `1px solid rgba(244,172,183,0.18)` : "1px solid transparent",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive && !disabled) {
+                    e.currentTarget.style.background = S.surfHov;
+                    e.currentTarget.style.color = S.onSurf;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive && !disabled) {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.color = S.muted;
+                  }
+                }}
+              >
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: 20, flexShrink: 0, color: isActive ? S.primary : "inherit" }}
+                >
+                  {icon}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: isActive ? 700 : 500, letterSpacing: "0.01em" }}>
+                  {label}
+                </span>
+                {disabled && (
+                  <span
+                    style={{
+                      marginLeft: "auto", fontSize: 9, fontWeight: 700,
+                      color: S.dim, textTransform: "uppercase", letterSpacing: "0.05em",
+                      border: `1px solid ${S.dim}`, borderRadius: 999, padding: "1px 6px",
+                    }}
+                  >
+                    Presto
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Separatore eventi */}
         {attivi.length > 0 && (
-          <div className="pt-5 pb-2">
+          <div style={{ marginTop: 20 }}>
             <p
-              className="text-[11px] font-bold uppercase tracking-widest px-4 mb-3"
-              style={{ color: P.outline }}
+              style={{
+                fontSize: 10, fontWeight: 700, textTransform: "uppercase",
+                letterSpacing: "0.08em", color: S.dim, padding: "0 12px",
+                marginBottom: 8,
+              }}
             >
               I tuoi FantaParto
             </p>
-            <div className="space-y-1">
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {attivi.map((ev) => {
-                const isActive = pathname.includes(ev.id);
-                const remaining = Math.max(0, Math.round(
+                const isActive  = pathname.includes(ev.id);
+                const giorni    = Math.max(0, Math.round(
                   (new Date(ev.dataPresuntaParto).getTime() - Date.now()) / 86_400_000,
                 ));
+                const nome = ev.nomeBimbo ? `Baby ${ev.nomeBimbo}` : "Bimbo/a";
+
                 return (
                   <Link
                     key={ev.id}
                     href={`/dashboard/${ev.id}`}
-                    className="flex items-center gap-3 px-4 py-2.5 rounded-full transition-all"
                     style={{
-                      background: isActive ? P.priFixed : "transparent",
-                      color: isActive ? P.primary : P.onSurfVar,
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "10px 12px", borderRadius: 10,
+                      textDecoration: "none", transition: "all 150ms",
+                      background:    isActive ? "rgba(244,172,183,0.12)" : "transparent",
+                      border:        isActive ? `1px solid rgba(244,172,183,0.18)` : "1px solid transparent",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) e.currentTarget.style.background = S.surfHov;
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) e.currentTarget.style.background = "transparent";
                     }}
                   >
-                    <span className="text-base flex-shrink-0">🍼</span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-bold truncate" style={{ color: isActive ? P.primary : P.onSurf }}>
-                        {ev.nomeBimbo ? `Baby ${ev.nomeBimbo}` : "Bimbo/a"}
+                    {/* Dot verde pulsante */}
+                    <div style={{ position: "relative", flexShrink: 0, width: 8, height: 8 }}>
+                      <div
+                        style={{
+                          width: 8, height: 8, borderRadius: "50%",
+                          background: S.green,
+                          boxShadow: `0 0 6px ${S.green}`,
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 13, fontWeight: isActive ? 700 : 500, color: isActive ? S.primary : S.onSurf, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {nome}
                       </p>
-                      <p className="text-[10px] font-medium" style={{ color: P.onSurfVar }}>
-                        {remaining > 0 ? `${remaining}g al parto` : "Oggi!"}
+                      <p style={{ fontSize: 10, color: S.muted, margin: "1px 0 0" }}>
+                        {giorni > 0 ? `${giorni}g al parto` : "🎉 Oggi!"}
                       </p>
                     </div>
+
+                    {/* Giorni pill */}
+                    <span
+                      style={{
+                        fontSize: 10, fontWeight: 700, flexShrink: 0,
+                        padding: "2px 7px", borderRadius: 999,
+                        background: isActive ? "rgba(244,172,183,0.20)" : S.surface,
+                        color: isActive ? S.primary : S.muted,
+                      }}
+                    >
+                      -{giorni}g
+                    </span>
                   </Link>
                 );
               })}
@@ -149,54 +233,91 @@ export default function Sidebar({ eventi, user }: SidebarProps) {
         )}
       </nav>
 
-      {/* CTA + user */}
-      <div className="px-4 pb-5 pt-3 space-y-3">
+      {/* ── Bottom ────────────────────────────────────────────────────────── */}
+      <div
+        style={{
+          padding: "12px 12px 16px",
+          borderTop: `1px solid ${S.border}`,
+          display: "flex", flexDirection: "column", gap: 8,
+        }}
+      >
+        {/* CTA Nuova Sfida */}
         <Link
           href="/dashboard/nuovo-evento"
-          className="block w-full py-3.5 rounded-full text-[15px] font-bold text-center transition-all active:scale-95 hover:opacity-90"
           style={{
-            background: P.primary,
-            color: "#ffffff",
-            boxShadow: "0 12px 32px rgba(135,78,88,0.22)",
-            fontFamily: "var(--font-quicksand, sans-serif)",
-            textDecoration: "none",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            gap: 8, padding: "11px 16px", borderRadius: 12,
+            textDecoration: "none", fontWeight: 700, fontSize: 14, fontFamily: VN,
+            color: "#fff",
+            background: "linear-gradient(135deg, #874e58 0%, #5e2d3a 100%)",
+            boxShadow: "0 4px 16px rgba(135,78,88,0.45), inset 0 1px 0 rgba(255,255,255,0.10)",
+            transition: "opacity 150ms",
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
         >
+          <span style={{ fontSize: 16, fontWeight: 400 }}>+</span>
           Nuova Sfida
         </Link>
 
+        {/* User card */}
         <div
-          className="flex items-center gap-2.5 px-3 py-2 rounded-full"
-          style={{ background: P.surfCont }}
+          style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "10px 12px", borderRadius: 12,
+            background: S.surface, border: `1px solid ${S.border}`,
+          }}
         >
           {user.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={user.avatarUrl} alt="avatar" className="w-8 h-8 rounded-full flex-shrink-0" />
+            <img
+              src={user.avatarUrl}
+              alt="avatar"
+              style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, border: `2px solid ${S.border}` }}
+            />
           ) : (
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
-              style={{ background: P.priFixed, color: P.primary }}
+              style={{
+                width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+                background: "linear-gradient(135deg, #874e58, #5e2d3a)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 11, fontWeight: 900, color: "#fff",
+                border: `2px solid rgba(244,172,183,0.25)`,
+              }}
             >
               {initiali}
             </div>
           )}
-          <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-bold truncate" style={{ color: P.onSurf }}>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: S.onSurf, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {user.nome ?? user.email.split("@")[0]}
             </p>
+            <p style={{ fontSize: 10, color: S.muted, margin: "1px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {user.email}
+            </p>
           </div>
+
           <form action={logoutAction}>
             <button
               type="submit"
               title="Logout"
-              className="rounded-full p-1 transition-colors"
-              style={{ color: P.onSurfVar }}
+              style={{
+                border: "none", background: "none", cursor: "pointer",
+                color: S.muted, padding: 4, borderRadius: 8, flexShrink: 0,
+                transition: "color 150ms",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = S.primary)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = S.muted)}
             >
-              <span className="material-symbols-outlined text-[18px]">logout</span>
+              <span className="material-symbols-outlined" style={{ fontSize: 18, display: "block" }}>
+                logout
+              </span>
             </button>
           </form>
         </div>
       </div>
+
     </aside>
   );
 }
