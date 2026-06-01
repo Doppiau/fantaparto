@@ -11,7 +11,7 @@ type EventRow = {
   isPremium: boolean;
   visualizzazioniLink: number;
   createdAt: Date;
-  user: { nome: string; email: string };
+  user: { nome: string | null; email: string };
   _count: { predictions: number };
 };
 
@@ -23,7 +23,7 @@ export function EventiTable({ eventi }: { eventi: EventRow[] }) {
   const filtrati = eventi.filter((e) => {
     const q = query.toLowerCase();
     return (
-      e.user.nome.toLowerCase().includes(q) ||
+      (e.user.nome ?? "").toLowerCase().includes(q) ||
       e.user.email.toLowerCase().includes(q) ||
       e.id.toLowerCase().includes(q) ||
       (e.nomeBimbo ?? "").toLowerCase().includes(q)
@@ -101,7 +101,7 @@ export function EventiTable({ eventi }: { eventi: EventRow[] }) {
                 onMouseLeave={(ev) => ((ev.currentTarget as HTMLElement).style.background = "transparent")}
               >
                 <td style={td}>
-                  <span style={{ display: "block", fontWeight: 600, color: "#f1f5f9" }}>{e.user.nome}</span>
+                  <span style={{ display: "block", fontWeight: 600, color: "#f1f5f9" }}>{e.user.nome ?? "—"}</span>
                   <span style={{ color: "#64748b", fontSize: "0.75rem" }}>{e.user.email}</span>
                 </td>
                 <td style={td}>{e.nomeBimbo ?? <span style={{ color: "#475569" }}>—</span>}</td>
