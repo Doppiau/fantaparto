@@ -6,25 +6,28 @@ import CopyLinkButton from "@/components/dashboard/CopyLinkButton";
 
 export const dynamic = "force-dynamic";
 
-// ── Design tokens ────────────────────────────────────────────────────────────
+// ── Tokens ────────────────────────────────────────────────────────────────────
 const C = {
-  surface:       "#fbf9f5",
-  surfContLow:   "#f5f3ef",
-  surfCont:      "#efeeea",
-  surfContHigh:  "#eae8e4",
-  white:         "#ffffff",
-  primary:       "#874e58",
-  primaryCont:   "#f4acb7",
-  primaryFixed:  "#ffd9de",
-  onPriCont:     "#733d47",
-  secondary:     "#40627b",
-  secCont:       "#bee1ff",
-  onSecCont:     "#42647e",
-  onSurf:        "#1b1c1a",
-  onSurfVar:     "#514345",
-  outlineVar:    "#d6c2c3",
-  shadow:        "0px 12px 32px rgba(135,78,88,0.08)",
-  shadowSec:     "0px 8px 24px rgba(64,98,123,0.07)",
+  bg:        "#fbf9f5",
+  white:     "#ffffff",
+  border:    "#e8e4e1",
+  borderHov: "#d6c2c3",
+  primary:   "#874e58",
+  priLight:  "#f4acb7",
+  priXLight: "#ffd9de",
+  onPri:     "#733d47",
+  secondary: "#40627b",
+  secLight:  "#bee1ff",
+  onSec:     "#42647e",
+  onSurf:    "#1b1c1a",
+  onSurfVar: "#6b5b5d",
+  muted:     "#b0a0a2",
+  green:     "#166534",
+  greenBg:   "#f0fdf4",
+  greenBrd:  "#bbf7d0",
+  amber:     "#92400e",
+  amberBg:   "#fffbeb",
+  amberBrd:  "#fde68a",
 } as const;
 
 const QS = "var(--font-quicksand, sans-serif)";
@@ -37,59 +40,64 @@ function calcolaGiorni(dpp: Date) {
 function formatDPP(d: Date) {
   return d.toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
 }
+function calcolaSettimana(giorni: number) {
+  return Math.max(0, 40 - Math.ceil(giorni / 7));
+}
 
-// ── Componenti server-side inline ─────────────────────────────────────────────
+// ── Componenti server ─────────────────────────────────────────────────────────
 
-function FeatureCard({
-  icon, title, desc, accent,
-}: { icon: string; title: string; desc: string; accent: string }) {
+/** Barra progress thin e pulita */
+function Bar({ pct, color }: { pct: number; color: string }) {
   return (
     <div
-      className="rounded-[2rem] p-6 flex flex-col gap-3"
-      style={{ background: accent, boxShadow: C.shadow }}
+      style={{
+        height: 6, width: "100%", borderRadius: 999,
+        background: C.border, overflow: "hidden",
+      }}
     >
-      <span className="text-3xl leading-none">{icon}</span>
-      <h3 className="text-[17px] font-bold leading-snug" style={{ fontFamily: QS, color: C.onSurf }}>
-        {title}
-      </h3>
-      <p className="text-[13px] font-normal leading-relaxed" style={{ color: C.onSurfVar }}>
-        {desc}
-      </p>
-    </div>
-  );
-}
-
-function StepBadge({ n, label, desc }: { n: string; label: string; desc: string }) {
-  return (
-    <div className="flex items-start gap-4">
       <div
-        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-[15px] font-black"
-        style={{ background: C.primaryFixed, color: C.primary, fontFamily: QS }}
-      >
-        {n}
-      </div>
-      <div className="pt-0.5">
-        <p className="text-[15px] font-bold" style={{ color: C.onSurf, fontFamily: QS }}>{label}</p>
-        <p className="text-[13px] font-normal mt-0.5" style={{ color: C.onSurfVar }}>{desc}</p>
-      </div>
-    </div>
-  );
-}
-
-function ProgressBar({ pct, color }: { pct: number; color: string }) {
-  return (
-    <div className="h-2.5 w-full rounded-full overflow-hidden" style={{ background: C.surfContHigh }}>
-      <div
-        className="h-full rounded-full"
-        style={{ width: `${pct}%`, background: color, transition: "width 600ms ease" }}
+        style={{
+          height: "100%", width: `${Math.min(100, pct)}%`,
+          borderRadius: 999, background: color,
+        }}
       />
     </div>
   );
 }
 
-// ── Stato attivo — card evento principale ─────────────────────────────────────
+/** KPI card — stile clean con solo border */
+function Kpi({
+  label, value, unit, sub, accent,
+}: {
+  label: string; value: string | number; unit?: string;
+  sub?: string; accent?: string;
+}) {
+  return (
+    <div
+      style={{
+        background: C.white, border: `1px solid ${C.border}`,
+        borderRadius: 14, padding: "20px 24px",
+        display: "flex", flexDirection: "column", gap: 4,
+        fontFamily: VN,
+      }}
+    >
+      <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: C.muted }}>
+        {label}
+      </p>
+      <p style={{ fontSize: 30, fontWeight: 700, lineHeight: 1, fontFamily: QS, color: accent ?? C.onSurf }}>
+        {value}
+        {unit && (
+          <span style={{ fontSize: 14, fontWeight: 600, color: C.onSurfVar, marginLeft: 4 }}>
+            {unit}
+          </span>
+        )}
+      </p>
+      {sub && <p style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{sub}</p>}
+    </div>
+  );
+}
 
-type EventoCard = {
+type EventRow = {
   id: string;
   nomeBimbo: string | null;
   codiceCondivisione: string;
@@ -100,265 +108,261 @@ type EventoCard = {
   _count: { predictions: number };
 };
 
-function EventoFeatured({
+/** Card evento principale — layout professionale a sezioni */
+function EventoCard({
   ev, maschio, femmina,
-}: { ev: EventoCard; maschio: number; femmina: number }) {
+}: {
+  ev: EventRow; maschio: number; femmina: number;
+}) {
   const dpp      = new Date(ev.dataPresuntaParto);
   const giorni   = calcolaGiorni(dpp);
+  const settimana = calcolaSettimana(giorni);
   const voti     = ev._count.predictions;
   const maxVoti  = ev.isPremium ? null : 20;
-  const pctVoti  = maxVoti ? Math.min(100, Math.round((voti / maxVoti) * 100)) : 0;
+  const pctVoti  = maxVoti ? Math.round((voti / maxVoti) * 100) : 0;
   const totSesso = maschio + femmina;
   const pctM     = totSesso > 0 ? Math.round((maschio / totSesso) * 100) : 0;
-  const pctF     = totSesso > 0 ? Math.round((femmina / totSesso) * 100) : 0;
-  const nomeEvento = ev.nomeBimbo ? `Baby ${ev.nomeBimbo}` : "Bimbo/a in arrivo";
+  const pctF     = 100 - pctM;
+  const nome     = ev.nomeBimbo ? `Baby ${ev.nomeBimbo}` : "Bimbo/a in arrivo";
 
-  const statoStyle =
-    ev.stato === "IN_CORSO"
-      ? { bg: "rgba(52,199,89,0.1)", color: "#15803d", dot: "#15803d" }
-      : ev.stato === "PRONTO_RIVELAZIONE"
-      ? { bg: "rgba(251,191,36,0.12)", color: "#d97706", dot: "#d97706" }
-      : { bg: C.primaryFixed, color: C.primary, dot: C.primary };
-
-  const statoLabel =
-    ev.stato === "IN_CORSO" ? "In corso" : ev.stato === "PRONTO_RIVELAZIONE" ? "In rivelazione" : "Concluso";
+  const statoMap: Record<string, { label: string; bg: string; brd: string; color: string }> = {
+    IN_CORSO:           { label: "In corso",       bg: C.greenBg,  brd: C.greenBrd,  color: C.green  },
+    PRONTO_RIVELAZIONE: { label: "In rivelazione", bg: C.amberBg,  brd: C.amberBrd,  color: C.amber  },
+    CONCLUSO:           { label: "Concluso",        bg: C.priXLight,brd: C.priLight,  color: C.onPri  },
+  };
+  const stato = statoMap[ev.stato] ?? statoMap.IN_CORSO;
 
   return (
     <div
-      className="rounded-[2rem] overflow-hidden"
-      style={{ background: C.white, boxShadow: C.shadow }}
+      style={{
+        background: C.white, border: `1px solid ${C.border}`,
+        borderRadius: 16, overflow: "hidden", fontFamily: VN,
+      }}
     >
-      {/* Top accent bar */}
+      {/* Accent bar */}
+      <div style={{ height: 3, background: `linear-gradient(90deg, ${C.primary} 0%, ${C.priLight} 60%, ${C.secLight} 100%)` }} />
+
+      {/* Header */}
       <div
-        className="h-1.5 w-full"
-        style={{ background: `linear-gradient(to right, ${C.primary}, ${C.primaryCont}, ${C.secCont})` }}
-      />
-
-      <div className="p-8 flex flex-col xl:flex-row gap-8">
-
-        {/* ── Colonna sinistra — identità evento ── */}
-        <div className="flex-1 flex flex-col gap-5">
-          <div className="flex items-center gap-3 flex-wrap">
-            <span
-              className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold"
-              style={{ background: statoStyle.bg, color: statoStyle.color }}
-            >
-              <span
-                className="w-1.5 h-1.5 rounded-full inline-block"
-                style={{ background: statoStyle.dot }}
-              />
-              {statoLabel}
-            </span>
-            {ev.isPremium && (
-              <span
-                className="rounded-full px-2.5 py-1 text-[11px] font-bold"
-                style={{ background: "#ffd9de", color: "#6b3741" }}
-              >
-                ✨ Premium
-              </span>
-            )}
-          </div>
-
-          <div>
-            <h2
-              className="text-[26px] font-bold leading-tight"
-              style={{ fontFamily: QS, color: C.onSurf }}
-            >
-              {nomeEvento}
-            </h2>
-            <p className="text-[13px] font-medium mt-1" style={{ color: C.onSurfVar }}>
-              DPP: {formatDPP(dpp)}
-            </p>
-          </div>
-
-          {/* Countdown */}
-          <div
-            className="flex items-center gap-5 rounded-[1.5rem] p-5"
-            style={{ background: C.primaryFixed }}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "20px 28px", borderBottom: `1px solid ${C.border}`, flexWrap: "wrap", gap: 12,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: C.onSurf, fontFamily: QS, margin: 0 }}>
+            {nome}
+          </h2>
+          <span
+            style={{
+              fontSize: 11, fontWeight: 700, padding: "3px 10px",
+              borderRadius: 999, border: `1px solid ${stato.brd}`,
+              background: stato.bg, color: stato.color,
+            }}
           >
-            <div className="text-center">
-              <p
-                className="text-[56px] font-black leading-none"
-                style={{ fontFamily: QS, color: C.primary }}
-              >
-                {giorni}
-              </p>
-              <p
-                className="text-[11px] font-bold uppercase tracking-widest mt-1"
-                style={{ color: C.onPriCont }}
-              >
-                giorni al parto
-              </p>
-            </div>
-            <div className="w-px h-16 flex-shrink-0" style={{ background: C.primaryCont }} />
-            <div className="text-center">
-              <p
-                className="text-[32px] font-bold leading-none"
-                style={{ fontFamily: QS, color: C.secondary }}
-              >
-                {Math.round(40 - Math.ceil(giorni / 7))}
-              </p>
-              <p
-                className="text-[11px] font-bold uppercase tracking-widest mt-1"
-                style={{ color: C.onPriCont }}
-              >
-                settimana
-              </p>
-            </div>
-            <div className="w-px h-16 flex-shrink-0" style={{ background: C.primaryCont }} />
-            <div className="text-center">
-              <p
-                className="text-[32px] font-bold leading-none"
-                style={{ fontFamily: QS, color: C.onSurf }}
-              >
-                {ev.visualizzazioniLink}
-              </p>
-              <p
-                className="text-[11px] font-bold uppercase tracking-widest mt-1"
-                style={{ color: C.onPriCont }}
-              >
-                visite link
-              </p>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <Link
-              href={`/dashboard/${ev.id}`}
-              className="flex items-center gap-2 rounded-full px-6 py-2.5 text-[14px] font-semibold text-white transition-all active:scale-95 hover:opacity-90"
-              style={{ background: C.primary, boxShadow: "0 8px 24px rgba(135,78,88,0.22)", fontFamily: VN }}
+            {stato.label}
+          </span>
+          {ev.isPremium && (
+            <span
+              style={{
+                fontSize: 11, fontWeight: 700, padding: "3px 10px",
+                borderRadius: 999, background: C.priXLight, color: C.onPri,
+              }}
             >
-              Apri dashboard →
-            </Link>
-            <CopyLinkButton codice={ev.codiceCondivisione} />
+              ✨ Premium
+            </span>
+          )}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <CopyLinkButton codice={ev.codiceCondivisione} />
+          <Link
+            href={`/dashboard/${ev.id}`}
+            style={{
+              fontSize: 13, fontWeight: 700, color: C.white,
+              background: C.primary, borderRadius: 999,
+              padding: "8px 20px", textDecoration: "none",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Apri dashboard →
+          </Link>
+        </div>
+      </div>
+
+      {/* Body — 3 colonne */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr 1fr",
+          padding: "28px",
+          gap: 0,
+        }}
+        className="max-md:grid-cols-1"
+      >
+        {/* Col 1 — Countdown */}
+        <div style={{ paddingRight: 28, borderRight: `1px solid ${C.border}` }}>
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: C.muted, marginBottom: 16 }}>
+            Countdown
+          </p>
+          <p style={{ fontSize: 52, fontWeight: 800, lineHeight: 1, fontFamily: QS, color: C.primary, marginBottom: 4 }}>
+            {giorni}
+          </p>
+          <p style={{ fontSize: 13, fontWeight: 600, color: C.onSurfVar, marginBottom: 12 }}>
+            giorni al parto
+          </p>
+          <div
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              background: C.priXLight, borderRadius: 999,
+              padding: "4px 12px",
+            }}
+          >
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.onPri }}>
+              Settimana {settimana}
+            </span>
           </div>
+          <p style={{ fontSize: 12, color: C.muted, marginTop: 8 }}>
+            DPP: {formatDPP(dpp)}
+          </p>
         </div>
 
-        {/* ── Colonna destra — dati & stats ── */}
-        <div
-          className="xl:w-72 flex flex-col gap-5 rounded-[1.5rem] p-6"
-          style={{ background: C.surfContLow }}
-        >
-          {/* Voti */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[12px] font-bold uppercase tracking-widest" style={{ color: C.onSurfVar }}>
-                Voti ricevuti
-              </p>
-              {maxVoti && (
-                <span
-                  className="text-[11px] font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: C.primaryFixed, color: C.primary }}
-                >
-                  {pctVoti}%
-                </span>
-              )}
-            </div>
-            <p className="text-[28px] font-bold mb-2" style={{ fontFamily: QS, color: C.secondary }}>
+        {/* Col 2 — Voti */}
+        <div style={{ padding: "0 28px", borderRight: `1px solid ${C.border}` }}>
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: C.muted, marginBottom: 16 }}>
+            Partecipazione
+          </p>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+            <p style={{ fontSize: 40, fontWeight: 800, lineHeight: 1, fontFamily: QS, color: C.secondary }}>
               {voti}
-              {maxVoti && (
-                <span className="text-[16px] font-semibold ml-1" style={{ color: C.onSurfVar }}>
-                  /{maxVoti}
-                </span>
-              )}
             </p>
             {maxVoti && (
-              <ProgressBar
-                pct={pctVoti}
-                color={`linear-gradient(to right, ${C.primary}, ${C.primaryCont})`}
-              />
+              <p style={{ fontSize: 18, fontWeight: 600, color: C.muted }}>
+                /{maxVoti}
+              </p>
             )}
           </div>
+          <p style={{ fontSize: 13, fontWeight: 600, color: C.onSurfVar, marginBottom: 16 }}>
+            {maxVoti ? `${pctVoti}% del limite` : "voti totali"}
+          </p>
+          {maxVoti && (
+            <>
+              <Bar pct={pctVoti} color={C.secondary} />
+              <p style={{ fontSize: 12, color: C.muted, marginTop: 8 }}>
+                {maxVoti - voti} posti rimasti · {ev.visualizzazioniLink} visite
+              </p>
+            </>
+          )}
+        </div>
 
-          <div className="h-px" style={{ background: C.outlineVar }} />
-
-          {/* Team challenge */}
-          <div>
-            <p className="text-[12px] font-bold uppercase tracking-widest mb-3" style={{ color: C.onSurfVar }}>
-              Team Challenge
-            </p>
-            <div className="flex flex-col gap-2.5">
+        {/* Col 3 — Team challenge */}
+        <div style={{ paddingLeft: 28 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: C.muted, marginBottom: 16 }}>
+            Team challenge
+          </p>
+          {totSesso > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-[13px] font-semibold" style={{ color: C.secondary }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: C.secondary }}>
                     🔵 Team Azzurro
                   </span>
-                  <span className="text-[13px] font-bold" style={{ color: C.secondary }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: C.secondary }}>
                     {pctM}%
                   </span>
                 </div>
-                <ProgressBar pct={pctM} color={C.secondary} />
+                <Bar pct={pctM} color={C.secondary} />
+                <p style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{maschio} voti</p>
               </div>
               <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-[13px] font-semibold" style={{ color: C.primary }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: C.primary }}>
                     🌸 Team Rosa
                   </span>
-                  <span className="text-[13px] font-bold" style={{ color: C.primary }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: C.primary }}>
                     {pctF}%
                   </span>
                 </div>
-                <ProgressBar pct={pctF} color={C.primary} />
+                <Bar pct={pctF} color={C.primary} />
+                <p style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{femmina} voti</p>
               </div>
             </div>
-            {totSesso === 0 && (
-              <p className="text-[12px] mt-2" style={{ color: C.outlineVar }}>
-                Nessun voto sul sesso ancora
+          ) : (
+            <div style={{ paddingTop: 8 }}>
+              <p style={{ fontSize: 14, color: C.muted }}>
+                Nessun voto sul sesso ancora.
               </p>
-            )}
-          </div>
+              <p style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
+                Condividi il link per iniziare!
+              </p>
+              <a
+                href={`/vota/${ev.codiceCondivisione}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-block", marginTop: 12, fontSize: 12,
+                  fontWeight: 700, color: C.primary, textDecoration: "none",
+                }}
+              >
+                Vai alla pagina voto →
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-// ── Evento secondario (card compatta) ─────────────────────────────────────────
-
-function EventoSmall({ ev }: { ev: EventoCard }) {
+/** Card compatta per altri eventi */
+function EventoCompact({ ev }: { ev: EventRow }) {
   const giorni     = calcolaGiorni(new Date(ev.dataPresuntaParto));
   const isConcluso = ev.stato === "CONCLUSO";
   const nome       = ev.nomeBimbo ? `Baby ${ev.nomeBimbo}` : "Bimbo/a in arrivo";
+
   return (
     <Link
       href={`/dashboard/${ev.id}`}
-      className="block rounded-[1.5rem] p-5 flex flex-col gap-3 transition-all duration-300 hover:-translate-y-1"
-      style={{ background: C.white, boxShadow: C.shadow, textDecoration: "none" }}
+      style={{
+        display: "block", background: C.white, border: `1px solid ${C.border}`,
+        borderRadius: 12, padding: "16px 20px", textDecoration: "none",
+        transition: "border-color 150ms",
+      }}
     >
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-[16px] font-bold" style={{ fontFamily: QS, color: C.onSurf }}>
-          {nome}
-        </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+        <div>
+          <p style={{ fontSize: 14, fontWeight: 700, color: C.onSurf, fontFamily: QS }}>{nome}</p>
+          <p style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>#{ev.codiceCondivisione}</p>
+        </div>
         <span
-          className="text-[10px] font-bold px-2.5 py-1 rounded-full flex-shrink-0"
-          style={
-            isConcluso
-              ? { background: C.surfContHigh, color: C.onSurfVar }
-              : { background: "rgba(52,199,89,0.1)", color: "#15803d" }
-          }
+          style={{
+            fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999,
+            background: isConcluso ? "#f0f0ef" : C.greenBg,
+            color: isConcluso ? C.muted : C.green,
+            flexShrink: 0,
+          }}
         >
-          {isConcluso ? "Concluso" : "● Attivo"}
+          {isConcluso ? "Concluso" : "Attivo"}
         </span>
       </div>
-      <div className="flex gap-4" style={{ color: C.onSurfVar }}>
-        <div className="text-center">
-          <p className="text-[20px] font-bold" style={{ fontFamily: QS, color: isConcluso ? C.onSurfVar : C.primary }}>
-            {isConcluso ? "✓" : giorni}
+      <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
+        <div>
+          <p style={{ fontSize: 18, fontWeight: 700, fontFamily: QS, color: isConcluso ? C.muted : C.primary, lineHeight: 1 }}>
+            {isConcluso ? "—" : giorni}
           </p>
-          <p className="text-[9px] font-bold uppercase tracking-wide">{isConcluso ? "Chiuso" : "Giorni"}</p>
+          <p style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: C.muted, marginTop: 2 }}>
+            {isConcluso ? "Chiuso" : "Giorni"}
+          </p>
         </div>
-        <div className="w-px self-stretch" style={{ background: C.outlineVar }} />
-        <div className="text-center">
-          <p className="text-[20px] font-bold" style={{ fontFamily: QS, color: C.secondary }}>
+        <div style={{ width: 1, background: C.border }} />
+        <div>
+          <p style={{ fontSize: 18, fontWeight: 700, fontFamily: QS, color: C.secondary, lineHeight: 1 }}>
             {ev._count.predictions}
           </p>
-          <p className="text-[9px] font-bold uppercase tracking-wide">Voti</p>
+          <p style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: C.muted, marginTop: 2 }}>
+            Voti
+          </p>
         </div>
       </div>
-      <p className="text-[11px] font-medium" style={{ color: C.outlineVar }}>
-        #{ev.codiceCondivisione}
-      </p>
     </Link>
   );
 }
@@ -384,7 +388,7 @@ export default async function DashboardPage() {
     }),
   ]);
 
-  const nomeMamma   = dbUser?.nome ?? "Mamma";
+  const nomeMamma    = dbUser?.nome ?? "Mamma";
   const eventoAttivo = eventi.find((e) => e.stato === "IN_CORSO") ?? eventi[0] ?? null;
   const altriEventi  = eventoAttivo ? eventi.filter((e) => e.id !== eventoAttivo.id) : [];
   const totVoti      = eventi.reduce((a, e) => a + e._count.predictions, 0);
@@ -396,239 +400,201 @@ export default async function DashboardPage() {
       ])
     : [0, 0];
 
-  const ora = new Date().getHours();
-  const saluto = ora < 12 ? "Buongiorno" : ora < 18 ? "Buon pomeriggio" : "Buonasera";
+  const giorni    = eventoAttivo ? calcolaGiorni(new Date(eventoAttivo.dataPresuntaParto)) : 0;
+  const settimana = calcolaSettimana(giorni);
 
   return (
-    <div className="min-h-screen" style={{ background: C.surface, fontFamily: VN }}>
-      <div className="px-8 py-8 max-w-[1200px]">
+    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: VN }}>
+      <div style={{ maxWidth: 1160, padding: "40px 40px 64px", margin: "0 auto" }}>
 
-        {/* ── Hero header ──────────────────────────────────────────────────── */}
-        <header
-          className="relative rounded-[2rem] overflow-hidden mb-8 p-8"
+        {/* ── Page header ─────────────────────────────────────────────────── */}
+        <div
           style={{
-            background: `linear-gradient(135deg, ${C.primaryFixed} 0%, ${C.white} 50%, ${C.secCont}55 100%)`,
-            border: `1px solid ${C.outlineVar}40`,
+            display: "flex", justifyContent: "space-between",
+            alignItems: "flex-start", gap: 24, marginBottom: 36, flexWrap: "wrap",
           }}
         >
-          {/* Decorative blobs */}
-          <div
-            className="absolute -top-8 -right-8 w-48 h-48 rounded-full opacity-20 pointer-events-none"
-            style={{ background: C.primaryCont }}
-          />
-          <div
-            className="absolute -bottom-10 right-24 w-32 h-32 rounded-full opacity-10 pointer-events-none"
-            style={{ background: C.secCont }}
-          />
-
-          <div className="relative flex items-center justify-between gap-6 flex-wrap">
-            <div>
-              <p
-                className="text-[11px] font-bold uppercase tracking-widest mb-2"
-                style={{ color: C.onSurfVar }}
-              >
-                Il tuo portale
-              </p>
-              <h1
-                className="text-[34px] font-bold leading-tight"
-                style={{ fontFamily: QS, color: C.onSurf, letterSpacing: "-0.02em" }}
-              >
-                {saluto}, {nomeMamma}! 👋
-              </h1>
-              <p className="text-[15px] font-normal mt-1 max-w-sm" style={{ color: C.onSurfVar }}>
-                {eventoAttivo
-                  ? "Tutto sotto controllo. Ecco i dati aggiornati del tuo evento."
-                  : "Crea il tuo primo FantaParto e inizia il conto alla rovescia."}
-              </p>
-            </div>
-
-            {/* Stat pills */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <div
-                className="text-center rounded-[1.25rem] px-5 py-3"
-                style={{ background: C.white, boxShadow: C.shadow }}
-              >
-                <p className="text-[26px] font-bold leading-none" style={{ fontFamily: QS, color: C.primary }}>
-                  {eventi.length}
-                </p>
-                <p className="text-[10px] font-bold uppercase tracking-widest mt-0.5" style={{ color: C.onSurfVar }}>
-                  Event{eventi.length === 1 ? "o" : "i"}
-                </p>
-              </div>
-              <div
-                className="text-center rounded-[1.25rem] px-5 py-3"
-                style={{ background: C.white, boxShadow: C.shadow }}
-              >
-                <p className="text-[26px] font-bold leading-none" style={{ fontFamily: QS, color: C.secondary }}>
-                  {totVoti}
-                </p>
-                <p className="text-[10px] font-bold uppercase tracking-widest mt-0.5" style={{ color: C.onSurfVar }}>
-                  Voti totali
-                </p>
-              </div>
-
-              {!eventoAttivo && (
-                <Link
-                  href="/dashboard/nuovo-evento"
-                  className="flex items-center gap-2 rounded-full px-6 py-3 text-[14px] font-semibold text-white transition-all active:scale-95 hover:opacity-90"
-                  style={{ background: C.primary, boxShadow: "0 12px 32px rgba(135,78,88,0.22)", fontFamily: VN }}
-                >
-                  ✨ Crea evento
-                </Link>
-              )}
-            </div>
+          <div>
+            <p
+              style={{
+                fontSize: 11, fontWeight: 700, textTransform: "uppercase",
+                letterSpacing: "0.08em", color: C.muted, marginBottom: 6,
+              }}
+            >
+              Panoramica
+            </p>
+            <h1
+              style={{
+                fontSize: 28, fontWeight: 700, color: C.onSurf,
+                fontFamily: QS, letterSpacing: "-0.02em", margin: 0, lineHeight: 1.2,
+              }}
+            >
+              Bentornata, {nomeMamma}
+            </h1>
+            <p style={{ fontSize: 14, color: C.onSurfVar, marginTop: 6 }}>
+              {eventoAttivo
+                ? "Ecco i dati aggiornati del tuo FantaParto."
+                : "Crea il tuo primo FantaParto per iniziare."}
+            </p>
           </div>
-        </header>
 
-        {/* ── Contenuto principale ─────────────────────────────────────────── */}
+          <Link
+            href="/dashboard/nuovo-evento"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              fontSize: 14, fontWeight: 700, color: C.white,
+              background: C.primary, borderRadius: 999,
+              padding: "10px 24px", textDecoration: "none",
+              flexShrink: 0, marginTop: 4,
+              boxShadow: "0 4px 14px rgba(135,78,88,0.20)",
+            }}
+          >
+            <span>+</span> Nuovo evento
+          </Link>
+        </div>
+
+        {/* ── KPI strip ───────────────────────────────────────────────────── */}
+        {eventoAttivo && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: 12, marginBottom: 28,
+            }}
+            className="max-md:grid-cols-2"
+          >
+            <Kpi label="Giorni al parto" value={giorni} accent={C.primary} sub={`Settimana ${settimana}`} />
+            <Kpi label="Voti ricevuti"   value={eventoAttivo._count.predictions} unit={eventoAttivo.isPremium ? undefined : `/ 20`} accent={C.secondary} />
+            <Kpi label="Visite link"     value={eventoAttivo.visualizzazioniLink} sub="link aperto dagli invitati" />
+            <Kpi label="Voti totali"     value={totVoti} sub={`${eventi.length} event${eventi.length === 1 ? "o" : "i"} totali`} />
+          </div>
+        )}
+
         {eventoAttivo === null ? (
 
           /* ─── EMPTY STATE ─── */
-          <div className="flex flex-col gap-8">
-
-            {/* Features grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <FeatureCard
-                icon="🎯"
-                title="Pronostici social"
-                desc="I tuoi cari votano sesso, peso, data e ora del parto. Chi si avvicina di più vince!"
-                accent={C.primaryFixed}
-              />
-              <FeatureCard
-                icon="🏆"
-                title="Classifica automatica"
-                desc="Al momento della nascita il sistema calcola i punteggi e genera la classifica finale."
-                accent={C.secCont}
-              />
-              <FeatureCard
-                icon="📄"
-                title="PDF ricordo"
-                desc="Un PDF personalizzato con la classifica e i momenti più belli dell'attesa."
-                accent={C.surfContHigh}
-              />
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Hero card */}
+            <div
+              style={{
+                background: C.white, border: `1px solid ${C.border}`,
+                borderRadius: 16, padding: "48px 40px", textAlign: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: 72, height: 72, borderRadius: "50%",
+                  background: C.priXLight, display: "flex",
+                  alignItems: "center", justifyContent: "center",
+                  fontSize: 32, margin: "0 auto 24px",
+                }}
+              >
+                🍼
+              </div>
+              <h2
+                style={{
+                  fontSize: 24, fontWeight: 700, color: C.onSurf,
+                  fontFamily: QS, margin: "0 0 12px",
+                }}
+              >
+                Nessun FantaParto ancora
+              </h2>
+              <p
+                style={{
+                  fontSize: 15, color: C.onSurfVar,
+                  maxWidth: 400, margin: "0 auto 32px", lineHeight: 1.6,
+                }}
+              >
+                Crea il tuo primo evento, condividi il link su WhatsApp e inizia a raccogliere i pronostici dei tuoi cari.
+              </p>
+              <Link
+                href="/dashboard/nuovo-evento"
+                style={{
+                  display: "inline-block", fontSize: 14, fontWeight: 700,
+                  color: C.white, background: C.primary, borderRadius: 999,
+                  padding: "12px 32px", textDecoration: "none",
+                  boxShadow: "0 4px 14px rgba(135,78,88,0.22)",
+                }}
+              >
+                ✨ Crea il tuo primo FantaParto
+              </Link>
             </div>
 
-            {/* Come funziona */}
+            {/* Feature list */}
             <div
-              className="rounded-[2rem] p-8"
-              style={{ background: C.white, boxShadow: C.shadow }}
+              style={{
+                display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
+                gap: 12,
+              }}
+              className="max-md:grid-cols-1"
             >
-              <p
-                className="text-[11px] font-bold uppercase tracking-widest mb-6"
-                style={{ color: C.onSurfVar }}
-              >
-                Come funziona
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                <StepBadge
-                  n="1"
-                  label="Crea il tuo FantaParto"
-                  desc="Configura i pronostici e personalizza il messaggio di benvenuto."
-                />
-                <StepBadge
-                  n="2"
-                  label="Condividi il link"
-                  desc="Invia il link su WhatsApp ai tuoi cari — nessuna registrazione richiesta."
-                />
-                <StepBadge
-                  n="3"
-                  label="Scopri chi ha vinto!"
-                  desc="Inserisci i dati reali del bambino e il sistema calcola tutto automaticamente."
-                />
-              </div>
-
-              <div className="mt-8 flex justify-center">
-                <Link
-                  href="/dashboard/nuovo-evento"
-                  className="flex items-center gap-2 rounded-full px-10 py-3.5 text-[15px] font-bold text-white transition-all active:scale-95 hover:opacity-90"
+              {[
+                { icon: "🎯", title: "Pronostici social", desc: "Sesso, peso, data e ora del parto. Chi indovina di più vince." },
+                { icon: "🏆", title: "Classifica automatica", desc: "Al momento della nascita il sistema calcola i punteggi in automatico." },
+                { icon: "📄", title: "PDF ricordo", desc: "Un documento personalizzato da conservare per sempre." },
+              ].map((f) => (
+                <div
+                  key={f.title}
                   style={{
-                    background: C.primary,
-                    boxShadow: "0 12px 32px rgba(135,78,88,0.25)",
-                    fontFamily: VN,
+                    background: C.white, border: `1px solid ${C.border}`,
+                    borderRadius: 12, padding: "20px 24px",
                   }}
                 >
-                  ✨ Crea il tuo primo FantaParto
-                </Link>
-              </div>
+                  <p style={{ fontSize: 22, marginBottom: 10 }}>{f.icon}</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: C.onSurf, marginBottom: 6, fontFamily: QS }}>{f.title}</p>
+                  <p style={{ fontSize: 13, color: C.onSurfVar, lineHeight: 1.5 }}>{f.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
 
         ) : (
 
           /* ─── ACTIVE STATE ─── */
-          <div className="flex flex-col gap-6">
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-            {/* Card evento principale */}
-            <EventoFeatured
-              ev={eventoAttivo}
-              maschio={maschio}
-              femmina={femmina}
-            />
+            <EventoCard ev={eventoAttivo} maschio={maschio} femmina={femmina} />
 
             {/* Altri eventi */}
             {altriEventi.length > 0 && (
               <div>
                 <p
-                  className="text-[11px] font-bold uppercase tracking-widest mb-4"
-                  style={{ color: C.onSurfVar }}
+                  style={{
+                    fontSize: 11, fontWeight: 700, textTransform: "uppercase",
+                    letterSpacing: "0.07em", color: C.muted, marginBottom: 10,
+                  }}
                 >
-                  Altri eventi ({altriEventi.length})
+                  Altri eventi · {altriEventi.length}
                 </p>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div
+                  style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}
+                  className="max-md:grid-cols-2"
+                >
                   {altriEventi.map((ev) => (
-                    <EventoSmall key={ev.id} ev={ev} />
+                    <EventoCompact key={ev.id} ev={ev} />
                   ))}
                 </div>
               </div>
             )}
-
-            {/* Quick action — nuovo evento */}
-            <div
-              className="rounded-[2rem] p-6 flex items-center gap-5"
-              style={{ background: C.surfContLow, border: `1.5px dashed ${C.outlineVar}` }}
-            >
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-[20px]"
-                style={{ background: C.primaryFixed }}
-              >
-                ➕
-              </div>
-              <div className="flex-1">
-                <p className="text-[15px] font-bold" style={{ color: C.onSurf, fontFamily: QS }}>
-                  Crea un nuovo FantaParto
-                </p>
-                <p className="text-[13px] font-normal" style={{ color: C.onSurfVar }}>
-                  Hai un&apos;altra gravidanza da festeggiare? Puoi gestire più eventi.
-                </p>
-              </div>
-              <Link
-                href="/dashboard/nuovo-evento"
-                className="flex-shrink-0 rounded-full px-5 py-2 text-[13px] font-semibold transition-all hover:opacity-80"
-                style={{
-                  background: C.white,
-                  color: C.primary,
-                  boxShadow: C.shadow,
-                  fontFamily: VN,
-                  textDecoration: "none",
-                }}
-              >
-                Crea →
-              </Link>
-            </div>
           </div>
         )}
 
         {/* Footer */}
-        <footer
-          className="mt-12 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-[12px] font-semibold"
-          style={{ borderTop: `1px solid ${C.outlineVar}`, color: C.outlineVar }}
+        <div
+          style={{
+            marginTop: 56, paddingTop: 24,
+            borderTop: `1px solid ${C.border}`,
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            flexWrap: "wrap", gap: 12,
+          }}
         >
-          <p>© 2026 FantaParto · La Gioiosa Attesa 🍼</p>
-          <div className="flex gap-5">
-            <a href="#" className="hover:opacity-70 transition-opacity" style={{ color: C.outlineVar }}>Privacy Policy</a>
-            <a href="#" className="hover:opacity-70 transition-opacity" style={{ color: C.outlineVar }}>Termini di Utilizzo</a>
+          <p style={{ fontSize: 12, color: C.muted }}>© 2026 FantaParto · La Gioiosa Attesa</p>
+          <div style={{ display: "flex", gap: 20 }}>
+            {["Privacy Policy", "Termini di Utilizzo"].map((l) => (
+              <a key={l} href="#" style={{ fontSize: 12, color: C.muted, textDecoration: "none" }}>{l}</a>
+            ))}
           </div>
-        </footer>
+        </div>
 
       </div>
     </div>
