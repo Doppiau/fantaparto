@@ -151,17 +151,19 @@ export default function Sidebar({ eventi, user }: SidebarProps) {
 
       {/* CTA + user */}
       <div className="px-4 pb-5 pt-3 space-y-3">
-        <button
-          className="w-full py-3.5 rounded-full text-[15px] font-bold transition-all active:scale-95"
+        <Link
+          href="/dashboard/nuovo-evento"
+          className="block w-full py-3.5 rounded-full text-[15px] font-bold text-center transition-all active:scale-95 hover:opacity-90"
           style={{
             background: P.primary,
             color: "#ffffff",
             boxShadow: "0 12px 32px rgba(135,78,88,0.22)",
             fontFamily: "var(--font-quicksand, sans-serif)",
+            textDecoration: "none",
           }}
         >
           Nuova Sfida
-        </button>
+        </Link>
 
         <div
           className="flex items-center gap-2.5 px-3 py-2 rounded-full"

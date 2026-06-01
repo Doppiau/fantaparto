@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 import { CreateEventSchema } from "@/lib/validations";
 import { isPrismaError } from "@/lib/prisma-errors";
 
@@ -16,12 +17,22 @@ function generaCodiceCondivisione(): string {
   return codice;
 }
 
-// Schema wrapper: aggiunge userId (futuro: estratto dal JWT Supabase Auth)
+// Schema wrapper: aggiunge nomeMamma (aggiorna User.nome come side-effect)
 const PostBodySchema = CreateEventSchema.extend({
-  userId: z.string().uuid("userId deve essere un UUID valido"),
+  nomeMamma: z.string().min(2).max(50).optional(),
 });
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  // ── 0. Auth ──────────────────────────────────────────────────────────────────
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json(
+      { success: false, error: "Non autorizzato" },
+      { status: 401 }
+    );
+  }
+
   // ── 1. Parse e validazione input ────────────────────────────────────────────
   let body: unknown;
   try {
@@ -42,7 +53,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   const {
-    userId,
     nomeBimbo,
     dataPresuntaParto,
     isPremium,
@@ -54,7 +64,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     capelliAttivo,
     occhiAttivo,
     customQuestions,
+    nomeMamma,
   } = parsed.data;
+
+  const userId = user.id;
 
   try {
     // ── 2. Genera codice condivisione unico (max 5 tentativi) ─────────────────
@@ -79,7 +92,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // ── 3. Creazione evento ───────────────────────────────────────────────────
+    // ── 3a. Aggiorna nome mamma se fornito ────────────────────────────────────
+    if (nomeMamma) {
+      await prisma.user.upsert({
+        where:  { id: userId },
+        create: { id: userId, email: user.email ?? "", nome: nomeMamma },
+        update: { nome: nomeMamma },
+      });
+    }
+
+    // ── 3b. Creazione evento ──────────────────────────────────────────────────
     const evento = await prisma.event.create({
       data: {
         userId,
