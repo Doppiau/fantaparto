@@ -88,9 +88,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    if (evento.stato === "CONCLUSO") {
+    if (evento.stato !== "IN_CORSO") {
+      const msg =
+        evento.stato === "CONCLUSO"
+          ? "Questo FantaParto è chiuso, il bambino è già nato!"
+          : "La votazione è chiusa. I risultati saranno rivelati presto!";
       return NextResponse.json(
-        { success: false, error: "Questo FantaParto è chiuso, il bambino è già nato!" },
+        { success: false, error: msg },
         { status: 400 }
       );
     }

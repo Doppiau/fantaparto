@@ -22,7 +22,7 @@
 - **Supabase URL:** `https://dvznrowaptxdnnitxvsd.supabase.co`
 - **Site URL configurato:** `https://fantaparto.com`
 - **Redirect URLs autorizzati:**
-  - `https://fantaparto.com/auth/callback`
+  - `https://fantaparto.com/auth/calblback`
   - `http://localhost:3000/auth/callback`
 
 ---

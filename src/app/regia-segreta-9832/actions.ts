@@ -3,16 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { isPrismaError } from "@/lib/prisma-errors";
-
-// ID admin fisso per l'AuditLog — Fase 7: sostituire con Supabase Auth JWT
-const SYSTEM_ADMIN_ID = "regia-system";
+import { assertAdmin } from "@/lib/admin";
 
 // ── Chiudi evento ─────────────────────────────────────────────────────────────
 
 export async function closeEventAction(
-  eventId: string
+  eventId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const admin = await assertAdmin();
+
     await prisma.$transaction(async (tx) => {
       await tx.event.update({
         where: { id: eventId },
@@ -21,9 +21,9 @@ export async function closeEventAction(
 
       await tx.auditLog.create({
         data: {
-          adminId: SYSTEM_ADMIN_ID,
-          azione: "CHIUDI_EVENTO",
-          dettagli: `Evento ${eventId} forzato a CONCLUSO dalla Regia.`,
+          adminId: admin.id,
+          azione:  "CHIUDI_EVENTO",
+          dettagli: `Evento ${eventId} forzato a CONCLUSO dalla Regia (${admin.email}).`,
         },
       });
     });
@@ -34,28 +34,29 @@ export async function closeEventAction(
     if (isPrismaError(err, "P2025")) {
       return { success: false, error: "Evento non trovato." };
     }
-    console.error("[closeEventAction]", err);
-    return { success: false, error: "Errore interno." };
+    const msg = err instanceof Error ? err.message : "Errore interno.";
+    return { success: false, error: msg };
   }
 }
 
 // ── Elimina evento ────────────────────────────────────────────────────────────
 
 export async function deleteEventAction(
-  eventId: string
+  eventId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const admin = await assertAdmin();
+
     await prisma.$transaction(async (tx) => {
-      // AuditLog scritto prima della delete (cascade eliminerebbe i dati collegati)
       await tx.auditLog.create({
         data: {
-          adminId: SYSTEM_ADMIN_ID,
-          azione: "ELIMINA_EVENTO",
-          dettagli: `Evento ${eventId} eliminato dalla Regia.`,
+          adminId: admin.id,
+          azione:  "ELIMINA_EVENTO",
+          dettagli: `Evento ${eventId} eliminato dalla Regia (${admin.email}).`,
         },
       });
 
-      // onDelete: Cascade elimina automaticamente le Prediction associate
+      // onDelete: Cascade rimuove automaticamente le Prediction collegate
       await tx.event.delete({ where: { id: eventId } });
     });
 
@@ -65,7 +66,7 @@ export async function deleteEventAction(
     if (isPrismaError(err, "P2025")) {
       return { success: false, error: "Evento non trovato." };
     }
-    console.error("[deleteEventAction]", err);
-    return { success: false, error: "Errore interno." };
+    const msg = err instanceof Error ? err.message : "Errore interno.";
+    return { success: false, error: msg };
   }
 }

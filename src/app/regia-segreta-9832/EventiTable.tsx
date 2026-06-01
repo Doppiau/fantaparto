@@ -111,18 +111,7 @@ export function EventiTable({ eventi }: { eventi: EventRow[] }) {
                   </code>
                 </td>
                 <td style={td}>
-                  <span
-                    style={{
-                      padding: "2px 8px",
-                      borderRadius: 12,
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
-                      background: e.stato === "ATTIVO" ? "#14532d" : "#1e293b",
-                      color: e.stato === "ATTIVO" ? "#86efac" : "#94a3b8",
-                    }}
-                  >
-                    {e.stato}
-                  </span>
+                  <span style={statoBadgeStyle(e.stato)}>{e.stato}</span>
                 </td>
                 <td style={td}>
                   <span style={{ color: e.isPremium ? "#fbbf24" : "#64748b" }}>
@@ -137,7 +126,7 @@ export function EventiTable({ eventi }: { eventi: EventRow[] }) {
                   })}
                 </td>
                 <td style={{ ...td, whiteSpace: "nowrap" }}>
-                  {e.stato === "ATTIVO" && (
+                  {e.stato === "IN_CORSO" && (
                     <button
                       onClick={() => handleClose(e.id)}
                       disabled={isPending}
@@ -164,6 +153,23 @@ export function EventiTable({ eventi }: { eventi: EventRow[] }) {
 }
 
 // ── Stili inline (nessuna dipendenza Tailwind richiesta in questa fase) ────────
+
+function statoBadgeStyle(stato: string): React.CSSProperties {
+  const map: Record<string, { bg: string; color: string }> = {
+    IN_CORSO:           { bg: "#14532d", color: "#86efac" },
+    PRONTO_RIVELAZIONE: { bg: "#451a03", color: "#fbbf24" },
+    CONCLUSO:           { bg: "#1e293b", color: "#94a3b8" },
+  };
+  const { bg, color } = map[stato] ?? { bg: "#1e293b", color: "#94a3b8" };
+  return {
+    padding: "2px 8px",
+    borderRadius: 12,
+    fontSize: "0.75rem",
+    fontWeight: 600,
+    background: bg,
+    color,
+  };
+}
 
 const th: React.CSSProperties = {
   textAlign: "left",

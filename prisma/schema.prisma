@@ -21,7 +21,8 @@ datasource db {
 model User {
   id        String   @id @db.Uuid
   email     String   @unique
-  nome      String
+  nome      String?                        // nullable: Google OAuth non passa "nome" nativo
+  avatarUrl String?  @map("avatar_url")   // URL foto profilo — valorizzato da Google OAuth
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -43,9 +44,11 @@ model Event {
   dataPresuntaParto DateTime @map("data_presunta_parto")
 
   // Condivisione e stato
-  // stato: "ATTIVO" | "CONCLUSO" — validato via Zod a livello applicativo
+  // stato: "IN_CORSO" | "PRONTO_RIVELAZIONE" | "CONCLUSO"
+  // Validato via Zod (EventoStatoEnum) a livello applicativo, non come enum Prisma
+  // per flessibilità futura senza migrazioni breaking.
   codiceCondivisione  String @unique @map("codice_condivisione")
-  stato               String @default("ATTIVO")
+  stato               String @default("IN_CORSO")
   visualizzazioniLink Int    @default(0) @map("visualizzazioni_link")
 
   // Piano

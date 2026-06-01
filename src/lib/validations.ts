@@ -6,6 +6,13 @@ const SESSO_VALUES    = ["MASCHIO", "FEMMINA"] as const;
 const CAPELLI_VALUES  = ["LISCI", "RICCI", "CALVO"] as const;
 const OCCHI_VALUES    = ["CHIARI", "SCURI"] as const;
 
+// Stato del ciclo di vita di un evento
+export const STATO_VALUES = ["IN_CORSO", "PRONTO_RIVELAZIONE", "CONCLUSO"] as const;
+export type EventoStato = (typeof STATO_VALUES)[number];
+export const EventoStatoSchema = z.enum(STATO_VALUES, {
+  error: "Stato non valido: usa IN_CORSO, PRONTO_RIVELAZIONE o CONCLUSO",
+});
+
 // ============================================================
 // PredictionInputSchema
 // Valida i dati in entrata dalla pagina /vota/[codiceCondivisione]

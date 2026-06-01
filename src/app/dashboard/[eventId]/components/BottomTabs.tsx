@@ -5,42 +5,52 @@ import TabRegole from "./TabRegole";
 import TabGiuria from "./TabGiuria";
 import TabGrandGiorno from "./TabGrandGiorno";
 
-interface Toggle {
-  key: string;
-  label: string;
-  emoji: string;
+export interface Toggle {
+  key:    string;
+  label:  string;
+  emoji:  string;
   attivo: boolean;
 }
 
-interface Partecipante {
-  id: string;
-  nomeInvitato: string;
-  emailInvitato: string | null;
-  votoSesso: string | null;
-  votoPeso: number | null;
-  votoData: Date | null;
+export interface Partecipante {
+  id:               string;
+  nomeInvitato:     string;
+  emailInvitato:    string | null;
+  votoSesso:        string | null;
+  votoPeso:         number | null;
+  votoData:         Date   | null;
+  votoOra:          string | null;
+  votoLunghezza:    number | null;
+  votoCapelli:      string | null;
+  votoOcchi:        string | null;
+  punteggioOttenuto: number | null;
   messaggioAugurio: string | null;
-  createdAt: Date;
+  createdAt:        Date;
+}
+
+export interface RisultatiEsistenti {
+  realeSesso?:     string | null;
+  realeData?:      Date   | null;
+  realePeso?:      number | null;
+  realeOra?:       string | null;
+  realeLunghezza?: number | null;
+  realeCapelli?:   string | null;
+  realeOcchi?:     string | null;
 }
 
 interface BottomTabsProps {
-  eventId: string;
-  isPremium: boolean;
-  stato: string;
-  toggles: Toggle[];
-  partecipanti: Partecipante[];
-  risultatiEsistenti: {
-    realeSesso?: string | null;
-    realeData?: Date | null;
-    realePeso?: number | null;
-    realeOra?: string | null;
-  };
+  eventId:            string;
+  isPremium:          boolean;
+  stato:              string;
+  toggles:            Toggle[];
+  partecipanti:       Partecipante[];
+  risultatiEsistenti: RisultatiEsistenti;
 }
 
 const TABS = [
-  { id: "regole",  label: "Regole",    emoji: "⚙️" },
-  { id: "giuria",  label: "Giuria",    emoji: "👥" },
-  { id: "giorno",  label: "Il Grande Giorno", emoji: "🏁" },
+  { id: "regole", label: "Regole",          emoji: "⚙️" },
+  { id: "giuria", label: "Giuria",          emoji: "👥" },
+  { id: "giorno", label: "Il Grande Giorno", emoji: "🏁" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -57,7 +67,6 @@ export default function BottomTabs({
 
   return (
     <div className="clay-card p-6 sm:p-8 space-y-6">
-      {/* Tab bar with underline style */}
       <div className="flex border-b-2 border-[#F1ECE4] gap-4 md:gap-8 overflow-x-auto pb-0.5">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -86,7 +95,6 @@ export default function BottomTabs({
         })}
       </div>
 
-      {/* Tab content */}
       <div>
         {activeTab === "regole" && (
           <TabRegole eventId={eventId} isPremium={isPremium} toggles={toggles} />
@@ -98,6 +106,7 @@ export default function BottomTabs({
           <TabGrandGiorno
             eventId={eventId}
             stato={stato}
+            toggles={toggles}
             risultatiEsistenti={risultatiEsistenti}
             partecipanti={partecipanti}
           />

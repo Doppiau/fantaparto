@@ -30,46 +30,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--cream)" }}>
-      {/* Nav */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[var(--border)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          {/* Brand */}
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 flex items-center justify-center rounded-2xl flex-shrink-0"
-              style={{
-                background: "linear-gradient(135deg, #FF6B6B, #FF8787)",
-                boxShadow: "0 4px 12px rgba(255,107,107,0.25)",
-              }}
-            >
-              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6M10 5V3a1 1 0 011-1h2a1 1 0 011 1v2M8 8a2 2 0 012-2h4a2 2 0 012 2v11a3 3 0 01-3 3h-2a3 3 0 01-3-3V8z" />
-              </svg>
-            </div>
-            <span className="text-lg font-bold" style={{ fontFamily: "var(--font-fredoka, sans-serif)", color: "var(--ink)" }}>
-              Fanta<span style={{ color: "var(--salmon)" }}>Parto</span>
-            </span>
-          </div>
-
-          {/* User + logout */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold hidden sm:block" style={{ color: "rgba(44,44,46,0.55)" }}>
-              Ciao, <strong style={{ color: "var(--ink)" }}>{nomeMamma}</strong> 👋
-            </span>
-            <form action={logoutAction}>
-              <button
-                type="submit"
-                className="text-xs font-bold px-3 py-1.5 rounded-full transition-colors"
-                style={{ color: "rgba(44,44,46,0.45)", background: "rgba(44,44,46,0.06)" }}
-              >
-                Esci
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
 
         {/* Hero greeting */}
         <div className="clay-card p-8 relative overflow-hidden">

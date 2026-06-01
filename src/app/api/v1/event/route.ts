@@ -86,7 +86,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         nomeBimbo: nomeBimbo ?? undefined,
         dataPresuntaParto,
         codiceCondivisione,
-        stato: "ATTIVO",
+        stato: "IN_CORSO",
         isPremium,
         sessoAttivo,
         dataAttiva,

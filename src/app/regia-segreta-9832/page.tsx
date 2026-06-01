@@ -1,18 +1,14 @@
-// Rotta offuscata — Dashboard Admin Globale FantaParto
-// NON collegare mai a link pubblici. Vedere claude.md §4.1
-// Fase 7: aggiungere autenticazione Supabase Auth prima del deploy production.
-
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin";
 import { EventiTable } from "./EventiTable";
 
-// Forza rendering dinamico — i KPI devono essere sempre freschi
 export const dynamic = "force-dynamic";
 
 async function fetchKpi() {
   const [totaleMamme, eventiAttivi, totaleVoti, viewsAggregate] =
     await Promise.all([
       prisma.user.count(),
-      prisma.event.count({ where: { stato: "ATTIVO" } }),
+      prisma.event.count({ where: { stato: "IN_CORSO" } }),
       prisma.prediction.count(),
       prisma.event.aggregate({ _sum: { visualizzazioniLink: true } }),
     ]);
@@ -42,6 +38,7 @@ async function fetchEventi() {
 }
 
 export default async function RegiaDashboard() {
+  const admin = await requireAdmin();
   const [kpi, eventi] = await Promise.all([fetchKpi(), fetchEventi()]);
 
   return (
@@ -53,7 +50,7 @@ export default async function RegiaDashboard() {
             🎬 Regia — FantaParto
           </h1>
           <p style={{ margin: "4px 0 0", fontSize: "0.8rem", color: "#475569" }}>
-            Dashboard di controllo globale · Accesso riservato
+            Dashboard di controllo globale · {admin.email}
           </p>
         </div>
         <span style={badgeStyle}>ADMIN</span>
