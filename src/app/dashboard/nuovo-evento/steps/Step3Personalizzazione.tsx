@@ -4,130 +4,77 @@ import { useState } from "react";
 import { type NuovoEventoFormData } from "../types";
 
 const C = {
-  white:        "#ffffff",
-  primary:      "#874e58",
-  primaryFixed: "#ffd9de",
-  onSurf:       "#1b1c1a",
-  onSurfVar:    "#514345",
-  outlineVar:   "#d6c2c3",
-  surfContLow:  "#f5f3ef",
-  surfCont:     "#efeeea",
-  shadow:       "0px 12px 32px rgba(135,78,88,0.08)",
+  white: "#ffffff", bg: "#fbf9f5", border: "#e8e4e1", primary: "#874e58",
+  onSurf: "#1b1c1a", onSurfVar: "#6b5b5d", muted: "#b0a0a2",
 } as const;
-
 const QS = "var(--font-quicksand, sans-serif)";
 const VN = "var(--font-vietnam, sans-serif)";
+const MAX = 300;
 
-const MAX_CHARS = 300;
-
-interface Props {
-  data:     NuovoEventoFormData;
-  onChange: (updates: Partial<NuovoEventoFormData>) => void;
-}
+interface Props { data: NuovoEventoFormData; onChange: (u: Partial<NuovoEventoFormData>) => void; }
 
 export default function Step3Personalizzazione({ data, onChange }: Props) {
   const [focused, setFocused] = useState(false);
-
-  const charCount    = data.messaggioBenvenuto.length;
-  const counterColor = charCount > 250 ? C.primary : C.outlineVar;
+  const count = data.messaggioBenvenuto.length;
 
   return (
-    <div
-      className="mx-auto max-w-lg rounded-[3rem] p-10 flex flex-col gap-6"
-      style={{ background: C.white, boxShadow: C.shadow }}
-    >
-      {/* Header */}
-      <div className="flex flex-col items-center gap-3 text-center">
-        <span className="text-5xl select-none" aria-hidden>💌</span>
-        <h2
-          className="text-[28px] font-semibold"
-          style={{ fontFamily: QS, color: C.onSurf }}
-        >
+    <div style={{ maxWidth: 480, margin: "0 auto", background: C.white, border: `1px solid ${C.border}`, borderRadius: 20, padding: "36px 32px", display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ textAlign: "center", marginBottom: 4 }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>💌</div>
+        <h2 style={{ fontSize: 24, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: "0 0 8px" }}>
           Un messaggio per i tuoi cari
         </h2>
-        <p className="text-[15px] font-normal max-w-xs" style={{ color: C.onSurfVar }}>
+        <p style={{ fontSize: 14, color: C.muted, margin: 0, lineHeight: 1.6 }}>
           Scrivi un messaggio che gli invitati leggeranno prima di votare. Puoi lasciarlo vuoto.
         </p>
       </div>
 
       {/* Textarea */}
-      <div className="flex flex-col gap-1">
-        <label
-          className="text-[13px] font-semibold"
-          style={{ color: focused ? C.primary : C.onSurfVar, fontFamily: VN }}
-        >
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <label style={{ fontSize: 12, fontWeight: 600, color: focused ? C.primary : C.onSurfVar, fontFamily: VN }}>
           Messaggio di benvenuto (opzionale)
         </label>
-
-        <div className="relative">
+        <div style={{ position: "relative" }}>
           <textarea
             value={data.messaggioBenvenuto}
-            onChange={(e) =>
-              onChange({ messaggioBenvenuto: e.target.value.slice(0, MAX_CHARS) })
-            }
+            onChange={(e) => onChange({ messaggioBenvenuto: e.target.value.slice(0, MAX) })}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            placeholder="es. Ciao a tutti! Siamo emozionatissimi e vogliamo giocare con voi a indovinare chi sarà il nostro piccolo. Votate e che vinca il migliore! 🍼"
+            placeholder="es. Ciao a tutti! Siamo emozionatissimi…"
             rows={5}
-            className="w-full outline-none resize-none"
             style={{
-              background:   C.white,
-              border:       `1.5px solid ${focused ? C.primary : C.outlineVar}`,
-              borderRadius: "24px",
-              padding:      "16px 20px 36px",
-              fontSize:     "15px",
-              fontFamily:   VN,
-              color:        C.onSurf,
-              transition:   "border-color 150ms",
-              lineHeight:   "1.6",
+              width: "100%", boxSizing: "border-box", outline: "none", resize: "none",
+              border: `1.5px solid ${focused ? C.primary : C.border}`,
+              borderRadius: 16, padding: "14px 16px 40px",
+              fontSize: 14, fontFamily: VN, color: C.onSurf,
+              background: C.white, transition: "border-color 150ms", lineHeight: 1.6,
             }}
           />
-          {/* Counter */}
-          <span
-            className="absolute bottom-3 right-4 text-[11px] font-medium pointer-events-none select-none"
-            style={{ color: counterColor, fontFamily: VN }}
-          >
-            {charCount}/{MAX_CHARS}
+          <span style={{ position: "absolute", bottom: 10, right: 14, fontSize: 11, color: count > 250 ? C.primary : C.muted, pointerEvents: "none" }}>
+            {count}/{MAX}
           </span>
         </div>
       </div>
 
-      {/* Anteprima live */}
-      <div className="flex flex-col gap-2">
-        <p
-          className="text-[13px] font-semibold uppercase tracking-widest"
-          style={{ color: C.onSurfVar, fontFamily: VN }}
-        >
+      {/* Live preview */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: C.muted, margin: 0 }}>
           Anteprima
         </p>
-
-        <div
-          className="rounded-[1.5rem] p-5 flex flex-col gap-2"
-          style={{ background: C.surfContLow }}
-        >
-          <p
-            className="text-[16px] font-bold"
-            style={{ fontFamily: QS, color: C.onSurf }}
-          >
-            Il FantaParto di {data.nomeMamma || "..."}
+        <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 6 }}>
+          <p style={{ fontSize: 15, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: 0 }}>
+            Il FantaParto di {data.nomeMamma || "…"}
           </p>
-          <p className="text-[12px] font-medium" style={{ color: C.onSurfVar, fontFamily: VN }}>
-            {data.nomeFeto ? `Baby ${data.nomeFeto}` : "..."}
+          <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>
+            {data.nomeFeto ? `Baby ${data.nomeFeto}` : "…"}
           </p>
-
           {data.messaggioBenvenuto.trim() ? (
-            <p
-              className="text-[14px] italic mt-1"
-              style={{ color: C.onSurfVar, fontFamily: VN, lineHeight: "1.6" }}
-            >
+            <p style={{ fontSize: 13, color: C.onSurfVar, fontStyle: "italic", margin: "4px 0 0", lineHeight: 1.6 }}>
               &ldquo;{data.messaggioBenvenuto}&rdquo;
             </p>
           ) : (
-            <span
-              className="self-start rounded-full px-3 py-1 text-[11px] font-semibold mt-1"
-              style={{ background: C.surfCont, color: C.onSurfVar, fontFamily: VN }}
-            >
-              Nessun messaggio — gli invitati vedranno direttamente il form di voto
+            <span style={{ display: "inline-block", marginTop: 4, fontSize: 11, color: C.muted, background: C.white, border: `1px solid ${C.border}`, borderRadius: 999, padding: "2px 10px" }}>
+              Nessun messaggio
             </span>
           )}
         </div>

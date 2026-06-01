@@ -4,115 +4,51 @@ import { useState } from "react";
 import { type NuovoEventoFormData } from "../types";
 
 const C = {
-  white:        "#ffffff",
-  primary:      "#874e58",
-  primaryFixed: "#ffd9de",
-  primaryCont:  "#f4acb7",
-  onPriCont:    "#733d47",
-  onSurf:       "#1b1c1a",
-  onSurfVar:    "#514345",
-  outlineVar:   "#d6c2c3",
-  surfContLow:  "#f5f3ef",
-  shadow:       "0px 12px 32px rgba(135,78,88,0.08)",
+  white: "#ffffff", bg: "#fbf9f5", border: "#e8e4e1",
+  primary: "#874e58", priXLight: "#ffd9de", priLight: "#f4acb7", onPri: "#733d47",
+  onSurf: "#1b1c1a", onSurfVar: "#6b5b5d", muted: "#b0a0a2",
 } as const;
-
 const QS = "var(--font-quicksand, sans-serif)";
 const VN = "var(--font-vietnam, sans-serif)";
 
-// ── Toggle pill personalizzato ─────────────────────────────────────────────
-
 function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   return (
-    <button
-      onClick={onClick}
-      type="button"
-      aria-checked={on}
-      role="switch"
-      className="relative flex-shrink-0 rounded-full transition-colors duration-200"
+    <button onClick={onClick} type="button" role="switch" aria-checked={on}
       style={{
-        width:      44,
-        height:     24,
-        background: on ? C.primary : C.outlineVar,
+        width: 44, height: 24, borderRadius: 999, flexShrink: 0, border: "none",
+        background: on ? C.primary : C.border, cursor: "pointer",
+        position: "relative", transition: "background 200ms",
       }}
     >
-      <span
-        className="absolute top-0.5 rounded-full bg-white shadow-sm transition-transform duration-200"
-        style={{
-          width:     20,
-          height:    20,
-          transform: on ? "translateX(22px)" : "translateX(2px)",
-        }}
-      />
+      <span style={{
+        position: "absolute", top: 2, width: 20, height: 20, borderRadius: "50%",
+        background: C.white, boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+        transform: on ? "translateX(22px)" : "translateX(2px)", transition: "transform 200ms",
+        display: "block",
+      }} />
     </button>
   );
 }
 
-// ── Metrica card ──────────────────────────────────────────────────────────────
-
-interface MetricaConfig {
-  key:        keyof NuovoEventoFormData["metriche"];
-  icona:      string;
-  nome:       string;
-  desc:       string;
-  premium:    boolean;
-}
-
-const METRICHE: MetricaConfig[] = [
-  { key: "sesso",     icona: "👶", nome: "Sesso",              desc: "Maschio o femmina?",        premium: false },
-  { key: "data",      icona: "📅", nome: "Data del parto",     desc: "Il giorno esatto",          premium: false },
-  { key: "peso",      icona: "⚖️", nome: "Peso alla nascita",  desc: "In grammi",                 premium: false },
-  { key: "ora",       icona: "🕐", nome: "Ora di nascita",     desc: "La fascia oraria",          premium: true  },
-  { key: "lunghezza", icona: "📏", nome: "Lunghezza",          desc: "In centimetri",             premium: true  },
-  { key: "capelli",   icona: "💇", nome: "Quantità di capelli",desc: "Calvo, poco, tanto",        premium: true  },
-  { key: "occhi",     icona: "👁️", nome: "Colore degli occhi", desc: "Azzurri, marroni, verdi...",premium: true  },
-];
-
-// ── Modale Premium ────────────────────────────────────────────────────────────
-
 function PremiumModal({ onClose }: { onClose: () => void }) {
-  const handleSblocca = () => {
-    console.log("TODO: redirect Stripe");
-    onClose();
-  };
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backdropFilter: "blur(4px)", background: "rgba(0,0,0,0.3)" }}
-    >
-      <div
-        className="w-full max-w-sm rounded-[2rem] p-8 flex flex-col items-center gap-4 text-center"
-        style={{ background: C.white, boxShadow: C.shadow }}
-      >
-        <span className="text-5xl select-none">✨</span>
-        <h3
-          className="text-[24px] font-semibold"
-          style={{ fontFamily: QS, color: C.onSurf }}
-        >
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(4px)", background: "rgba(0,0,0,0.3)" }}>
+      <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 20, padding: "36px 32px", maxWidth: 360, width: "100%", textAlign: "center", display: "flex", flexDirection: "column", gap: 16 }}>
+        <p style={{ fontSize: 44, margin: 0 }}>✨</p>
+        <h3 style={{ fontSize: 22, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: 0 }}>
           Funzione Premium
         </h3>
-        <p className="text-[15px] font-normal" style={{ color: C.onSurfVar }}>
+        <p style={{ fontSize: 14, color: C.onSurfVar, lineHeight: 1.65, margin: 0 }}>
           Sblocca tutte le metriche avanzate con il piano Premium.{" "}
           <strong style={{ color: C.onSurf }}>Solo €2.99</strong> per questo evento.
         </p>
-
         <button
-          onClick={handleSblocca}
-          className="w-full rounded-full py-3 text-[14px] font-semibold text-white transition-all active:scale-95"
-          style={{
-            background: C.primary,
-            boxShadow:  "0 12px 32px rgba(135,78,88,0.22)",
-            fontFamily: VN,
-          }}
+          onClick={() => { console.log("TODO: redirect Stripe"); onClose(); }}
+          style={{ border: "none", cursor: "pointer", background: C.primary, color: C.white, borderRadius: 999, padding: "12px 24px", fontSize: 14, fontWeight: 700, fontFamily: VN, boxShadow: "0 4px 14px rgba(135,78,88,0.22)" }}
         >
           Sblocca Premium →
         </button>
-
-        <button
-          onClick={onClose}
-          className="text-[13px] font-medium transition-opacity hover:opacity-70"
-          style={{ color: C.onSurfVar, fontFamily: VN }}
-        >
+        <button onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", fontSize: 13, color: C.muted, fontFamily: VN }}>
           Continua con il piano gratuito
         </button>
       </div>
@@ -120,99 +56,71 @@ function PremiumModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ── Step 2 ────────────────────────────────────────────────────────────────────
+const METRICHE = [
+  { key: "sesso",     icon: "👶", nome: "Sesso",              desc: "Maschio o femmina?",        premium: false },
+  { key: "data",      icon: "📅", nome: "Data del parto",     desc: "Il giorno esatto",          premium: false },
+  { key: "peso",      icon: "⚖️", nome: "Peso alla nascita",  desc: "In grammi",                 premium: false },
+  { key: "ora",       icon: "🕐", nome: "Ora di nascita",     desc: "La fascia oraria",          premium: true  },
+  { key: "lunghezza", icon: "📏", nome: "Lunghezza",          desc: "In centimetri",             premium: true  },
+  { key: "capelli",   icon: "💇", nome: "Quantità di capelli",desc: "Calvo, poco, tanto",        premium: true  },
+  { key: "occhi",     icon: "👁️", nome: "Colore degli occhi", desc: "Azzurri, marroni, verdi…", premium: true  },
+] as const;
 
-interface Props {
-  data:     NuovoEventoFormData;
-  onChange: (updates: Partial<NuovoEventoFormData>) => void;
-}
+interface Props { data: NuovoEventoFormData; onChange: (u: Partial<NuovoEventoFormData>) => void; }
 
 export default function Step2Metriche({ data, onChange }: Props) {
   const [showPremium, setShowPremium] = useState(false);
 
-  const handleToggle = (cfg: MetricaConfig) => {
-    if (cfg.premium) {
-      setShowPremium(true);
-      return;
-    }
-    onChange({
-      metriche: { ...data.metriche, [cfg.key]: !data.metriche[cfg.key] },
-    });
+  const handle = (key: string, isPremium: boolean) => {
+    if (isPremium) { setShowPremium(true); return; }
+    onChange({ metriche: { ...data.metriche, [key]: !data.metriche[key as keyof typeof data.metriche] } });
   };
 
   return (
     <>
       {showPremium && <PremiumModal onClose={() => setShowPremium(false)} />}
-
-      <div
-        className="mx-auto max-w-lg rounded-[3rem] p-10 flex flex-col gap-6"
-        style={{ background: C.white, boxShadow: C.shadow }}
-      >
-        {/* Header */}
-        <div className="flex flex-col items-center gap-3 text-center">
-          <span className="text-5xl select-none" aria-hidden>🎯</span>
-          <h2
-            className="text-[28px] font-semibold"
-            style={{ fontFamily: QS, color: C.onSurf }}
-          >
+      <div style={{ maxWidth: 480, margin: "0 auto", background: C.white, border: `1px solid ${C.border}`, borderRadius: 20, padding: "36px 32px", display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ textAlign: "center", marginBottom: 4 }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🎯</div>
+          <h2 style={{ fontSize: 24, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: "0 0 8px" }}>
             Su cosa voteranno?
           </h2>
-          <p className="text-[15px] font-normal max-w-xs" style={{ color: C.onSurfVar }}>
-            Scegli i pronostici che gli invitati potranno fare. Puoi cambiarli in qualsiasi momento.
+          <p style={{ fontSize: 14, color: C.muted, margin: 0, lineHeight: 1.6 }}>
+            Scegli i pronostici che gli invitati potranno fare. Puoi cambiarli in seguito.
           </p>
         </div>
 
-        {/* Lista metriche */}
-        <div className="flex flex-col gap-3">
-          {METRICHE.map((cfg) => {
-            const isOn     = data.metriche[cfg.key];
-            const isPremium = cfg.premium;
-
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {METRICHE.map((m) => {
+            const isOn = data.metriche[m.key as keyof typeof data.metriche] && !m.premium;
             return (
               <button
-                key={cfg.key}
-                type="button"
-                onClick={() => handleToggle(cfg)}
-                className="flex items-center gap-4 rounded-[1.25rem] p-4 text-left transition-all duration-200"
+                key={m.key} type="button"
+                onClick={() => handle(m.key, m.premium)}
                 style={{
-                  background: isOn && !isPremium ? C.white : C.surfContLow,
-                  border:     `1.5px solid ${isOn && !isPremium ? C.primary : "transparent"}`,
-                  opacity:    isPremium ? 0.7 : 1,
+                  display: "flex", alignItems: "center", gap: 14,
+                  border: `1.5px solid ${isOn ? C.primary : C.border}`,
+                  background: isOn ? C.priXLight : C.white,
+                  borderRadius: 12, padding: "14px 16px", cursor: "pointer",
+                  textAlign: "left", transition: "all 150ms",
+                  opacity: m.premium ? 0.7 : 1,
                 }}
               >
-                {/* Icona */}
-                <div
-                  className="w-10 h-10 rounded-[0.75rem] flex items-center justify-center text-[20px] flex-shrink-0"
-                  style={{ background: isOn && !isPremium ? C.primaryFixed : C.outlineVar + "40" }}
-                >
-                  {cfg.icona}
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: isOn ? C.priLight + "60" : C.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
+                  {m.icon}
                 </div>
-
-                {/* Testo */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="text-[15px] font-semibold"
-                      style={{ color: C.onSurf, fontFamily: VN }}
-                    >
-                      {cfg.nome}
-                    </span>
-                    {isPremium && (
-                      <span
-                        className="rounded-full px-2 py-0.5 text-[10px] font-bold"
-                        style={{ background: C.primaryFixed, color: C.onPriCont }}
-                      >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: C.onSurf, fontFamily: VN }}>{m.nome}</span>
+                    {m.premium && (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: C.priXLight, color: C.onPri }}>
                         🔒 Premium
                       </span>
                     )}
                   </div>
-                  <p className="text-[12px] font-medium mt-0.5" style={{ color: C.onSurfVar }}>
-                    {cfg.desc}
-                  </p>
+                  <p style={{ fontSize: 12, color: C.muted, margin: 0, marginTop: 2 }}>{m.desc}</p>
                 </div>
-
-                {/* Toggle */}
-                <Toggle on={isOn && !isPremium} onClick={() => handleToggle(cfg)} />
+                <Toggle on={isOn} onClick={() => handle(m.key, m.premium)} />
               </button>
             );
           })}

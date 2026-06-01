@@ -5,23 +5,32 @@ import { useFormState, useFormStatus } from "react-dom";
 import { loginAction, signupAction, type AuthActionState } from "./actions";
 import { createClient } from "@/lib/supabase/client";
 
-/* ── Icons ──────────────────────────────────────────────────── */
-function StorkMark() {
-  return (
-    <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
-      <circle cx="20.5" cy="9" r="4" fill="#FF6B6B" />
-      <circle cx="21.4" cy="8.3" r="0.95" fill="#FFFFFF" />
-      <path d="M24 9 L31 7.4 L24 11 Z" fill="#FFD166" />
-      <path d="M18.5 12.2 C16 15 16.5 18 13 19.2 C9 20.5 5 19 3 21.5" stroke="#FF6B6B" strokeWidth="3" strokeLinecap="round" fill="none" />
-      <path d="M14.5 16.5 C12 15.5 9.5 16 8 18" stroke="#FF8787" strokeWidth="2.2" strokeLinecap="round" fill="none" />
-      <path d="M12 19.6 L11 27 M14.5 19 L16 26.5" stroke="#FF6B6B" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
+// ── Design tokens ────────────────────────────────────────────────────────────
+const C = {
+  bg:        "#fbf9f5",
+  white:     "#ffffff",
+  border:    "#e8e4e1",
+  primary:   "#874e58",
+  priLight:  "#f4acb7",
+  priXLight: "#ffd9de",
+  onPri:     "#733d47",
+  secondary: "#40627b",
+  onSurf:    "#1b1c1a",
+  onSurfVar: "#6b5b5d",
+  muted:     "#b0a0a2",
+  error:     "#b91c1c",
+  errBg:     "#fef2f2",
+  errBrd:    "#fecaca",
+} as const;
 
-function GoogleG() {
+const QS = "var(--font-quicksand, sans-serif)";
+const VN = "var(--font-vietnam, sans-serif)";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function GoogleIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 48 48">
+    <svg width="18" height="18" viewBox="0 0 48 48">
       <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
       <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
       <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
@@ -30,236 +39,380 @@ function GoogleG() {
   );
 }
 
-function Check() {
+function CheckIcon() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-      <path d="M5 12.5l4.2 4.2L19 7" stroke="#fff" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+      <path d="M5 12.5l4.2 4.2L19 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }
 
-function Star() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24">
-      <path d="M12 2.6l2.7 5.46 6.02.88-4.36 4.25 1.03 6L12 16.9 6.6 19.2l1.03-6L3.27 8.94l6.03-.88L12 2.6z" fill="#FFD166" />
-    </svg>
-  );
+async function handleGoogleLogin() {
+  const supabase = createClient();
+  await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${window.location.origin}/auth/callback` },
+  });
 }
 
-/* ── Dashboard preview ──────────────────────────────────────── */
-function Preview() {
+// ── Input field ───────────────────────────────────────────────────────────────
+
+function Field({
+  label, id, name, type = "text", placeholder, children,
+}: {
+  label: string; id: string; name: string; type?: string;
+  placeholder?: string; children?: React.ReactNode;
+}) {
+  const [focused, setFocused] = useState(false);
   return (
-    <div className="preview">
-      <div className="preview-head">
-        <div className="preview-title">
-          <span className="live-dot" />
-          I pronostici dei tuoi cari
-        </div>
-        <div className="preview-pill">42 giocatori</div>
-      </div>
-      <div className="preview-grid">
-        <div className="gender-card">
-          <div className="mini-label">Maschio o femmina?</div>
-          <div className="bubbles">
-            <div className="bubble boy">
-              <span className="pct">60%</span>
-              <span className="who">Maschio</span>
-            </div>
-            <div className="bubble girl">
-              <span className="pct">40%</span>
-              <span className="who">Femmina</span>
-            </div>
-          </div>
-        </div>
-        <div className="weight-card">
-          <div className="mini-label">Peso previsto</div>
-          <div className="weight-value">3,2<span> kg</span></div>
-          <div className="gauge">
-            <div className="gauge-fill" />
-            <div className="gauge-knob" />
-          </div>
-          <div className="gauge-scale"><span>2,5 kg</span><span>4,0 kg</span></div>
-        </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <label htmlFor={id} style={{ fontSize: 12, fontWeight: 600, color: C.onSurfVar, fontFamily: VN }}>
+        {label}
+      </label>
+      <div style={{ position: "relative" }}>
+        <input
+          id={id} name={name} type={type} placeholder={placeholder}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          style={{
+            width: "100%", outline: "none", boxSizing: "border-box",
+            border: `1.5px solid ${focused ? C.primary : C.border}`,
+            borderRadius: 999, padding: "12px 20px",
+            fontSize: 14, fontFamily: VN, color: C.onSurf,
+            background: C.white, transition: "border-color 150ms",
+          }}
+        />
+        {children}
       </div>
     </div>
   );
 }
 
-/* ── Submit button ──────────────────────────────────────────── */
-function SubmitButton({ isSignup }: { isSignup: boolean }) {
+// ── Submit button ─────────────────────────────────────────────────────────────
+
+function SubmitBtn({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" className={`cta fredoka${pending ? " success" : ""}`} disabled={pending}>
-      {pending ? "Un momento…" : isSignup ? "Crea il mio FantaParto 🚀" : "Accedi al mio FantaParto 🚀"}
+    <button
+      type="submit"
+      disabled={pending}
+      style={{
+        width: "100%", border: "none", outline: "none", cursor: pending ? "wait" : "pointer",
+        background: pending ? C.muted : C.primary, color: C.white,
+        borderRadius: 999, padding: "13px 24px",
+        fontSize: 14, fontWeight: 700, fontFamily: VN,
+        boxShadow: pending ? "none" : "0 4px 14px rgba(135,78,88,0.22)",
+        transition: "all 150ms",
+      }}
+    >
+      {pending ? "Un momento…" : label}
     </button>
   );
 }
 
-/* ── Google OAuth ───────────────────────────────────────────── */
-async function handleGoogleLogin() {
-  const supabase = createClient();
-  await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-    },
-  });
-}
+// ── Auth form card ────────────────────────────────────────────────────────────
 
-/* ── Auth card ──────────────────────────────────────────────── */
 function AuthCard({ initialTab }: { initialTab: "signup" | "login" }) {
   const [tab, setTab] = useState<"signup" | "login">(initialTab);
   const [showPw, setShowPw] = useState(false);
   const [consent, setConsent] = useState(false);
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
-
   const signupRef = useRef<HTMLButtonElement>(null);
-  const loginRef = useRef<HTMLButtonElement>(null);
-  const [ind, setInd] = useState({ left: 0, width: 0 });
+  const loginRef  = useRef<HTMLButtonElement>(null);
+  const [ind, setInd] = useState({ left: 4, width: 0 });
 
   useEffect(() => {
     const el = tab === "signup" ? signupRef.current : loginRef.current;
     if (el) setInd({ left: el.offsetLeft, width: el.offsetWidth });
   }, [tab]);
 
-  const initialState: AuthActionState = {};
-  const [signupState, signupAction_] = useFormState(signupAction, initialState);
-  const [loginState, loginAction_] = useFormState(loginAction, initialState);
+  const initial: AuthActionState = {};
+  const [signupState, signupFn] = useFormState(signupAction, initial);
+  const [loginState,  loginFn]  = useFormState(loginAction,  initial);
 
-  const isSignup = tab === "signup";
-  const currentState = isSignup ? signupState : loginState;
-  const currentAction = isSignup ? signupAction_ : loginAction_;
-
-  const mark = (k: string) => setTouched((t) => ({ ...t, [k]: true }));
+  const isSignup      = tab === "signup";
+  const currentState  = isSignup ? signupState  : loginState;
+  const currentAction = isSignup ? signupFn     : loginFn;
 
   return (
-    <div className="auth-wrap">
-      <div className="auth-card">
-        {/* Tabs */}
-        <div className="tabs">
-          <button ref={signupRef} className={`tab${isSignup ? " active" : ""}`} type="button" onClick={() => { setTab("signup"); setTouched({}); }}>
-            Crea Account
+    <div
+      style={{
+        width: "100%", maxWidth: 400, margin: "0 auto",
+        background: C.white, border: `1px solid ${C.border}`,
+        borderRadius: 20, padding: "32px 32px 28px",
+        fontFamily: VN,
+      }}
+    >
+      {/* Tab switcher */}
+      <div
+        style={{
+          position: "relative", display: "flex", background: C.bg,
+          borderRadius: 999, padding: 4, marginBottom: 28,
+        }}
+      >
+        <div
+          style={{
+            position: "absolute", top: 4, borderRadius: 999,
+            height: "calc(100% - 8px)", background: C.white,
+            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+            left: ind.left, width: ind.width,
+            transition: "left 200ms ease, width 200ms ease",
+          }}
+        />
+        {(["signup", "login"] as const).map((t) => (
+          <button
+            key={t}
+            ref={t === "signup" ? signupRef : loginRef}
+            type="button"
+            onClick={() => setTab(t)}
+            style={{
+              flex: 1, position: "relative", zIndex: 1,
+              border: "none", background: "transparent", cursor: "pointer",
+              padding: "8px 16px", borderRadius: 999,
+              fontSize: 13, fontWeight: tab === t ? 700 : 500,
+              color: tab === t ? C.onSurf : C.muted,
+              transition: "color 150ms", fontFamily: VN,
+            }}
+          >
+            {t === "signup" ? "Crea Account" : "Accedi"}
           </button>
-          <button ref={loginRef} className={`tab${!isSignup ? " active" : ""}`} type="button" onClick={() => { setTab("login"); setTouched({}); }}>
-            Accedi
-          </button>
-          <div className="tab-indicator" style={{ left: ind.left, width: ind.width }} />
-        </div>
-
-        {/* Google */}
-        <button type="button" className="gbtn" onClick={handleGoogleLogin}>
-          <GoogleG />
-          {isSignup ? "Registrati con Google" : "Accedi con Google"}
-        </button>
-
-        <div className="divider"><span>oppure con la tua email</span></div>
-
-        {/* Form */}
-        <form action={currentAction}>
-          {isSignup && (
-            <div className={`field${touched.nome ? "" : ""}`}>
-              <label htmlFor="nome">Il tuo Nome / Soprannome</label>
-              <div className="input-shell">
-                <input id="nome" name="nome" type="text" placeholder="Mamma Giulia" onBlur={() => mark("nome")} />
-              </div>
-            </div>
-          )}
-
-          <div className="field">
-            <label htmlFor="email">La tua Email</label>
-            <div className="input-shell">
-              <input id="email" name="email" type="email" placeholder="giulia@esempio.it" onBlur={() => mark("email")} />
-            </div>
-          </div>
-
-          <div className="field">
-            <label htmlFor="password">Password</label>
-            <div className="input-shell">
-              <input
-                id="password" name="password"
-                type={showPw ? "text" : "password"}
-                placeholder="Minimo 8 caratteri"
-                onBlur={() => mark("pw")}
-              />
-              <button type="button" className="pw-toggle" onClick={() => setShowPw((s) => !s)}>
-                {showPw ? "Nascondi" : "Mostra"}
-              </button>
-            </div>
-          </div>
-
-          {isSignup && (
-            <div className={`consent${consent ? " checked" : ""}`} onClick={() => setConsent((c) => !c)}>
-              <div className="consent-box">{consent && <Check />}</div>
-              <div className="consent-text">
-                Accetto la Privacy Policy e acconsento a ricevere gli auguri alla nascita.
-              </div>
-            </div>
-          )}
-
-          {currentState.error && (
-            <div style={{ fontSize: 13, color: "#E5484D", fontWeight: 500, marginBottom: 12, background: "#FFF0F0", borderRadius: 12, padding: "10px 14px" }}>
-              ⚠ {currentState.error}
-            </div>
-          )}
-
-          <SubmitButton isSignup={isSignup} />
-        </form>
-
-        <div className="foot-note">
-          {isSignup ? (
-            <>Hai già un account?{" "}
-              <button type="button" onClick={() => setTab("login")}>Accedi qui</button>
-            </>
-          ) : (
-            <>Non hai un account?{" "}
-              <button type="button" onClick={() => setTab("signup")}>Crea il tuo FantaParto</button>
-            </>
-          )}
-        </div>
+        ))}
       </div>
+
+      {/* Google OAuth */}
+      <button
+        type="button"
+        onClick={handleGoogleLogin}
+        style={{
+          width: "100%", display: "flex", alignItems: "center",
+          justifyContent: "center", gap: 10,
+          border: `1.5px solid ${C.border}`, borderRadius: 999,
+          background: C.white, cursor: "pointer",
+          padding: "11px 20px", fontSize: 14, fontWeight: 600,
+          color: C.onSurf, fontFamily: VN, marginBottom: 20,
+          transition: "border-color 150ms",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.borderColor = C.primary)}
+        onMouseLeave={(e) => (e.currentTarget.style.borderColor = C.border)}
+      >
+        <GoogleIcon />
+        {isSignup ? "Registrati con Google" : "Accedi con Google"}
+      </button>
+
+      {/* Divider */}
+      <div
+        style={{
+          display: "flex", alignItems: "center", gap: 12, marginBottom: 20,
+        }}
+      >
+        <div style={{ flex: 1, height: 1, background: C.border }} />
+        <span style={{ fontSize: 12, color: C.muted }}>oppure con email</span>
+        <div style={{ flex: 1, height: 1, background: C.border }} />
+      </div>
+
+      {/* Form */}
+      <form action={currentAction} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {isSignup && (
+          <Field label="Il tuo Nome" id="nome" name="nome" placeholder="Mamma Giulia" />
+        )}
+        <Field label="Email" id="email" name="email" type="email" placeholder="giulia@esempio.it" />
+        <Field label="Password" id="password" name="password" type={showPw ? "text" : "password"} placeholder="Minimo 8 caratteri">
+          <button
+            type="button"
+            onClick={() => setShowPw((s) => !s)}
+            style={{
+              position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)",
+              border: "none", background: "none", cursor: "pointer",
+              fontSize: 12, fontWeight: 600, color: C.muted, fontFamily: VN,
+            }}
+          >
+            {showPw ? "Nascondi" : "Mostra"}
+          </button>
+        </Field>
+
+        {isSignup && (
+          <div
+            onClick={() => setConsent((c) => !c)}
+            style={{
+              display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer",
+            }}
+          >
+            <div
+              style={{
+                width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 1,
+                border: `1.5px solid ${consent ? C.primary : C.border}`,
+                background: consent ? C.primary : C.white,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 150ms",
+              }}
+            >
+              {consent && <CheckIcon />}
+            </div>
+            <p style={{ fontSize: 12, color: C.onSurfVar, lineHeight: 1.5 }}>
+              Accetto la Privacy Policy e acconsento a ricevere gli auguri alla nascita.
+            </p>
+          </div>
+        )}
+
+        {currentState.error && (
+          <div
+            style={{
+              background: C.errBg, border: `1px solid ${C.errBrd}`,
+              borderRadius: 12, padding: "10px 14px",
+              fontSize: 13, color: C.error, fontWeight: 500,
+            }}
+          >
+            ⚠ {currentState.error}
+          </div>
+        )}
+
+        <SubmitBtn label={isSignup ? "Crea il mio account →" : "Accedi →"} />
+      </form>
+
+      {/* Footer */}
+      <p style={{ textAlign: "center", fontSize: 13, color: C.muted, marginTop: 20 }}>
+        {isSignup ? "Hai già un account? " : "Non hai un account? "}
+        <button
+          type="button"
+          onClick={() => setTab(isSignup ? "login" : "signup")}
+          style={{
+            border: "none", background: "none", cursor: "pointer",
+            fontSize: 13, fontWeight: 700, color: C.primary, fontFamily: VN,
+          }}
+        >
+          {isSignup ? "Accedi" : "Registrati"}
+        </button>
+      </p>
     </div>
   );
 }
 
-/* ── Full page ──────────────────────────────────────────────── */
+// ── Full page ─────────────────────────────────────────────────────────────────
+
+const FEATURES = [
+  { icon: "🎯", text: "Pronostici su sesso, peso, data e ora" },
+  { icon: "🏆", text: "Classifica automatica alla nascita" },
+  { icon: "📄", text: "PDF ricordo da conservare per sempre" },
+];
+
 export default function AuthPageClient({ initialTab }: { initialTab: "signup" | "login" }) {
   return (
-    <>
-      <div className="bg-blobs">
-        <div className="blob b1" />
-        <div className="blob b2" />
-        <div className="blob b3" />
-      </div>
-      <div className="auth-page">
-        {/* Left column */}
-        <div className="left-col">
-          <div className="brand">
-            <div className="brand-mark"><StorkMark /></div>
-            <div className="brand-name fredoka">Fanta<span className="accent">Parto</span></div>
+    <div
+      style={{
+        minHeight: "100vh", background: C.bg, fontFamily: VN,
+        display: "flex", alignItems: "stretch",
+      }}
+    >
+      {/* ── Left col ─────────────────────────────────────────────────────── */}
+      <div
+        style={{
+          flex: 1, display: "flex", flexDirection: "column", justifyContent: "center",
+          padding: "60px 64px", background: C.priXLight,
+          borderRight: `1px solid ${C.border}`,
+        }}
+        className="hidden lg:flex"
+      >
+        {/* Brand */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 48 }}>
+          <div
+            style={{
+              width: 44, height: 44, borderRadius: "50%",
+              background: `linear-gradient(135deg, ${C.priLight}, ${C.primary})`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 8px 20px rgba(135,78,88,0.25)",
+            }}
+          >
+            <span style={{ color: C.white, fontWeight: 900, fontSize: 18, fontFamily: QS }}>F</span>
           </div>
-
-          <h1 className="hook fredoka">Il fantacalcio della dolce attesa 🍼</h1>
-
-          <p className="subtitle">
-            Crea la tua sfida, personalizza le domande (peso, sesso, data, colore degli occhi)
-            e lascia che amici e parenti facciano i loro pronostici. Chi indovinerà i dettagli della nascita?
-          </p>
-
-          <Preview />
-
-          <div className="trust">
-            <div className="stars">
-              {[0,1,2,3,4].map((i) => <Star key={i} />)}
-            </div>
-            <div className="trust-text">
-              Più di <b>15.000 mamme</b> hanno già giocato con i loro cari.
-            </div>
-          </div>
+          <span style={{ fontSize: 22, fontWeight: 700, color: C.primary, fontFamily: QS }}>
+            FantaParto
+          </span>
         </div>
 
-        {/* Right column */}
-        <AuthCard initialTab={initialTab} />
+        <h1
+          style={{
+            fontSize: 36, fontWeight: 700, color: C.onSurf, fontFamily: QS,
+            lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 16, maxWidth: 420,
+          }}
+        >
+          Il fantacalcio della dolce attesa 🍼
+        </h1>
+
+        <p style={{ fontSize: 16, color: C.onSurfVar, lineHeight: 1.65, maxWidth: 380, marginBottom: 40 }}>
+          Crea la tua sfida, condividi il link su WhatsApp e lascia che amici e parenti facciano i loro pronostici. Chi indovinerà la nascita?
+        </p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 48 }}>
+          {FEATURES.map((f) => (
+            <div key={f.text} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div
+                style={{
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: C.white, display: "flex",
+                  alignItems: "center", justifyContent: "center", fontSize: 16,
+                  boxShadow: "0 2px 8px rgba(135,78,88,0.10)",
+                  flexShrink: 0,
+                }}
+              >
+                {f.icon}
+              </div>
+              <span style={{ fontSize: 14, fontWeight: 500, color: C.onSurfVar }}>{f.text}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Trust */}
+        <div
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 10,
+            background: C.white, border: `1px solid ${C.border}`,
+            borderRadius: 999, padding: "8px 16px",
+            width: "fit-content",
+          }}
+        >
+          <span style={{ fontSize: 14 }}>⭐️⭐️⭐️⭐️⭐️</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: C.onSurfVar }}>
+            +15.000 mamme hanno già giocato
+          </span>
+        </div>
       </div>
-    </>
+
+      {/* ── Right col ────────────────────────────────────────────────────── */}
+      <div
+        style={{
+          flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "40px 32px",
+        }}
+      >
+        <div style={{ width: "100%", maxWidth: 400 }}>
+          {/* Mobile brand */}
+          <div
+            className="lg:hidden"
+            style={{ textAlign: "center", marginBottom: 32 }}
+          >
+            <span style={{ fontSize: 20, fontWeight: 700, color: C.primary, fontFamily: QS }}>
+              🍼 FantaParto
+            </span>
+          </div>
+
+          <div style={{ marginBottom: 28 }}>
+            <h2
+              style={{
+                fontSize: 24, fontWeight: 700, color: C.onSurf,
+                fontFamily: QS, marginBottom: 4,
+              }}
+            >
+              {initialTab === "signup" ? "Crea il tuo account" : "Bentornata!"}
+            </h2>
+            <p style={{ fontSize: 14, color: C.muted }}>
+              {initialTab === "signup"
+                ? "Inizia gratis, nessuna carta richiesta."
+                : "Accedi per gestire i tuoi eventi."}
+            </p>
+          </div>
+
+          <AuthCard initialTab={initialTab} />
+        </div>
+      </div>
+    </div>
   );
 }

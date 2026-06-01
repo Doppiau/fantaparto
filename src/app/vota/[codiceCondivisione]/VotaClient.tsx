@@ -3,81 +3,179 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-interface VotaClientProps {
-  eventId: string;
-  nomeBimbo: string | null;
-  dataPresuntaParto: string; // ISO string da Prisma
-  sessoAttivo: boolean;
-  dataAttiva: boolean;
-  pesoAttivo: boolean;
-  lunghezzaAttiva: boolean;
-  oraAttiva: boolean;
-  capelliAttivo: boolean;
-  occhiAttivo: boolean;
-}
+// ── Tokens ────────────────────────────────────────────────────────────────────
+const C = {
+  bg:        "#fbf9f5",
+  white:     "#ffffff",
+  border:    "#e8e4e1",
+  primary:   "#874e58",
+  priLight:  "#f4acb7",
+  priXLight: "#ffd9de",
+  onPri:     "#733d47",
+  secondary: "#40627b",
+  secLight:  "#bee1ff",
+  onSec:     "#42647e",
+  onSurf:    "#1b1c1a",
+  onSurfVar: "#6b5b5d",
+  muted:     "#b0a0a2",
+  error:     "#b91c1c",
+  errBg:     "#fef2f2",
+  errBrd:    "#fecaca",
+} as const;
 
+const QS = "var(--font-quicksand, sans-serif)";
+const VN = "var(--font-vietnam, sans-serif)";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 type Phase = "form" | "submitting" | "success" | "already_voted";
 type Sesso = "MASCHIO" | "FEMMINA";
 type Capelli = "LISCI" | "RICCI" | "CALVO";
 type Occhi = "CHIARI" | "SCURI";
 
-function fmtPeso(g: number): string {
-  return (g / 1000).toFixed(2).replace(".", ",");
+interface Props {
+  eventId:        string;
+  nomeBimbo:      string | null;
+  dataPresuntaParto: string;
+  sessoAttivo:    boolean;
+  dataAttiva:     boolean;
+  pesoAttivo:     boolean;
+  lunghezzaAttiva:boolean;
+  oraAttiva:      boolean;
+  capelliAttivo:  boolean;
+  occhiAttivo:    boolean;
 }
 
-function fmtLunghezza(mm: number): string {
-  return (mm / 10).toFixed(1).replace(".", ",");
+// ── Sezione card ──────────────────────────────────────────────────────────────
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        background: C.white, border: `1px solid ${C.border}`,
+        borderRadius: 16, padding: "20px 24px",
+        display: "flex", flexDirection: "column", gap: 14,
+      }}
+    >
+      <p
+        style={{
+          fontSize: 11, fontWeight: 700, textTransform: "uppercase",
+          letterSpacing: "0.07em", color: C.muted, margin: 0,
+        }}
+      >
+        {label}
+      </p>
+      {children}
+    </div>
+  );
 }
 
+// ── Input pill ────────────────────────────────────────────────────────────────
+function PillInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <input
+      {...props}
+      onFocus={(e) => { setFocused(true); props.onFocus?.(e); }}
+      onBlur={(e)  => { setFocused(false); props.onBlur?.(e); }}
+      style={{
+        width: "100%", boxSizing: "border-box", outline: "none",
+        border: `1.5px solid ${focused ? C.primary : C.border}`,
+        borderRadius: 999, padding: "12px 18px",
+        fontSize: 15, fontFamily: VN, color: C.onSurf,
+        background: C.white, transition: "border-color 150ms",
+        ...props.style,
+      }}
+    />
+  );
+}
+
+// ── Choice button ─────────────────────────────────────────────────────────────
+function Choice({
+  selected, onClick, children, accent = C.primary, accentBg = C.priXLight,
+}: {
+  selected: boolean; onClick: () => void; children: React.ReactNode;
+  accent?: string; accentBg?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        border: `1.5px solid ${selected ? accent : C.border}`,
+        background: selected ? accentBg : C.white,
+        borderRadius: 12, padding: "14px 12px",
+        fontSize: 14, fontWeight: 600, fontFamily: VN,
+        color: selected ? accent : C.onSurfVar,
+        cursor: "pointer", transition: "all 150ms", textAlign: "center",
+        boxShadow: selected ? `0 4px 12px ${accent}22` : "none",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ── Slider section ────────────────────────────────────────────────────────────
+function SliderField({
+  label, value, min, max, step, display,
+  onChange,
+}: {
+  label: string; value: number; min: number; max: number; step: number;
+  display: string; onChange: (v: number) => void;
+}) {
+  return (
+    <Section label={label}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <span style={{ fontSize: 13, color: C.onSurfVar }}>Trascina per scegliere</span>
+        <span style={{ fontSize: 26, fontWeight: 700, fontFamily: QS, color: C.primary }}>
+          {display}
+        </span>
+      </div>
+      <input
+        type="range" min={min} max={max} step={step} value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        style={{ width: "100%", accentColor: C.primary, cursor: "pointer" }}
+      />
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.muted }}>
+        <span>{min < 1000 ? `${(min / 10).toFixed(0)} cm` : `${(min / 1000).toFixed(2)} kg`}</span>
+        <span>{max < 1000 ? `${(max / 10).toFixed(0)} cm` : `${(max / 1000).toFixed(2)} kg`}</span>
+      </div>
+    </Section>
+  );
+}
+
+// ── Page component ────────────────────────────────────────────────────────────
 export default function VotaClient({
-  eventId,
-  nomeBimbo,
-  dataPresuntaParto,
-  sessoAttivo,
-  dataAttiva,
-  pesoAttivo,
-  lunghezzaAttiva,
-  oraAttiva,
-  capelliAttivo,
-  occhiAttivo,
-}: VotaClientProps) {
-  const [phase, setPhase] = useState<Phase>("form");
+  eventId, nomeBimbo, dataPresuntaParto,
+  sessoAttivo, dataAttiva, pesoAttivo,
+  lunghezzaAttiva, oraAttiva, capelliAttivo, occhiAttivo,
+}: Props) {
+  const [phase, setPhase]           = useState<Phase>("form");
   const [fingerprint, setFingerprint] = useState<string | null>(null);
+  const [nomeInvitato, setNome]     = useState("");
+  const [emailInvitato, setEmail]   = useState("");
+  const [messaggioAugurio, setMsg]  = useState("");
+  const [votoSesso, setVotoSesso]   = useState<Sesso | "">("");
+  const [votoData, setVotoData]     = useState(dataPresuntaParto.split("T")[0]);
+  const [votoPeso, setVotoPeso]     = useState(3200);
+  const [votoLunghezza, setVotoLun] = useState(500);
+  const [votoOra, setVotoOra]       = useState("");
+  const [votoCapelli, setVotoCap]   = useState<Capelli | "">("");
+  const [votoOcchi, setVotoOcchi]   = useState<Occhi | "">("");
+  const [error, setError]           = useState<string | null>(null);
 
-  // Dati invitato
-  const [nomeInvitato, setNomeInvitato] = useState("");
-  const [emailInvitato, setEmailInvitato] = useState("");
-  const [messaggioAugurio, setMessaggioAugurio] = useState("");
+  const nomeDisplay = nomeBimbo ? `Baby ${nomeBimbo}` : "Fagiolino 🫘";
+  const dppFormatted = new Date(dataPresuntaParto).toLocaleDateString("it-IT", {
+    day: "numeric", month: "long", year: "numeric",
+  });
 
-  // Pronostici
-  const [votoSesso, setVotoSesso] = useState<Sesso | "">("");
-  const [votoData, setVotoData] = useState(dataPresuntaParto.split("T")[0]);
-  const [votoPeso, setVotoPeso] = useState(3200);
-  const [votoLunghezza, setVotoLunghezza] = useState(500);
-  const [votoOra, setVotoOra] = useState("");
-  const [votoCapelli, setVotoCapelli] = useState<Capelli | "">("");
-  const [votoOcchi, setVotoOcchi] = useState<Occhi | "">("");
-
-  const [error, setError] = useState<string | null>(null);
-
-  // Fingerprint: generato una volta sola e persistito in localStorage
   useEffect(() => {
     const votedKey = `fp_voted_${eventId}`;
-    if (localStorage.getItem(votedKey)) {
-      setPhase("already_voted");
-      return;
-    }
-
+    if (localStorage.getItem(votedKey)) { setPhase("already_voted"); return; }
     const fpKey = `fp_${eventId}`;
     let fp = localStorage.getItem(fpKey);
     if (!fp) {
-      fp = [
-        Date.now().toString(36),
-        Math.random().toString(36).slice(2, 10),
-        window.screen.width,
-        window.screen.height,
-        navigator.hardwareConcurrency ?? 0,
-      ].join("-");
+      fp = [Date.now().toString(36), Math.random().toString(36).slice(2, 10),
+        window.screen.width, window.screen.height, navigator.hardwareConcurrency ?? 0].join("-");
       localStorage.setItem(fpKey, fp);
     }
     setFingerprint(fp);
@@ -86,14 +184,9 @@ export default function VotaClient({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!fingerprint || !nomeInvitato.trim()) return;
-
-    setPhase("submitting");
-    setError(null);
-
+    setPhase("submitting"); setError(null);
     const body: Record<string, unknown> = {
-      eventId,
-      nomeInvitato: nomeInvitato.trim(),
-      deviceFingerprint: fingerprint,
+      eventId, nomeInvitato: nomeInvitato.trim(), deviceFingerprint: fingerprint,
     };
     if (emailInvitato) body.emailInvitato = emailInvitato;
     if (messaggioAugurio) body.messaggioAugurio = messaggioAugurio;
@@ -104,22 +197,13 @@ export default function VotaClient({
     if (oraAttiva && votoOra) body.votoOra = votoOra;
     if (capelliAttivo && votoCapelli) body.votoCapelli = votoCapelli;
     if (occhiAttivo && votoOcchi) body.votoOcchi = votoOcchi;
-
     try {
       const res = await fetch("/api/v1/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-
       const json: { success: boolean; error?: string } = await res.json();
-
-      if (!res.ok) {
-        setError(json.error ?? "Errore imprevisto. Riprova.");
-        setPhase("form");
-        return;
-      }
-
+      if (!res.ok) { setError(json.error ?? "Errore imprevisto."); setPhase("form"); return; }
       localStorage.setItem(`fp_voted_${eventId}`, "1");
       setPhase("success");
     } catch {
@@ -128,63 +212,46 @@ export default function VotaClient({
     }
   }
 
-  const nomeDisplay = nomeBimbo ? `Baby ${nomeBimbo}` : "Fagiolino 🫘";
-  const dppFormatted = new Date(dataPresuntaParto).toLocaleDateString("it-IT", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
+  // ── Already voted ──────────────────────────────────────────────────────────
   if (phase === "already_voted") {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center p-4"
-        style={{ background: "var(--cream)" }}
-      >
-        <div className="fp-card p-8 max-w-sm w-full text-center flex flex-col items-center gap-4">
-          <span className="text-5xl">✅</span>
-          <h1
-            className="text-xl font-black text-[var(--ink)]"
-            style={{ fontFamily: "var(--font-fredoka, sans-serif)" }}
-          >
+      <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: VN }}>
+        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 20, padding: "40px 32px", maxWidth: 360, width: "100%", textAlign: "center" }}>
+          <p style={{ fontSize: 44, marginBottom: 16 }}>✅</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: C.onSurf, fontFamily: QS, marginBottom: 10 }}>
             Hai già votato!
           </h1>
-          <p className="text-sm text-[var(--ink-60)]">
-            Hai già espresso il tuo pronostico per{" "}
-            <strong>{nomeDisplay}</strong>.<br />
-            Aspetta la nascita per scoprire chi ha vinto!
+          <p style={{ fontSize: 14, color: C.onSurfVar, lineHeight: 1.6 }}>
+            Hai già espresso il tuo pronostico per <strong>{nomeDisplay}</strong>. Aspetta la nascita per scoprire chi ha vinto!
           </p>
         </div>
       </div>
     );
   }
 
+  // ── Success ────────────────────────────────────────────────────────────────
   if (phase === "success") {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center p-4"
-        style={{ background: "var(--cream)" }}
-      >
-        <div className="fp-card p-8 max-w-sm w-full text-center flex flex-col items-center gap-5">
-          <span className="text-6xl">🎉</span>
-          <h1
-            className="text-3xl font-black text-[var(--ink)]"
-            style={{ fontFamily: "var(--font-fredoka, sans-serif)" }}
-          >
+      <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: VN }}>
+        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 20, padding: "40px 32px", maxWidth: 380, width: "100%", textAlign: "center", display: "flex", flexDirection: "column", gap: 16 }}>
+          <p style={{ fontSize: 52, margin: 0 }}>🎉</p>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: C.onSurf, fontFamily: QS, margin: 0 }}>
             Pronostico inviato!
           </h1>
-          <p className="text-sm text-[var(--ink-60)]">
-            Il tuo voto per <strong>{nomeDisplay}</strong> è salvato.
-            <br />
-            Tornerai qui dopo la nascita per scoprire chi ha indovinato!
+          <p style={{ fontSize: 14, color: C.onSurfVar, lineHeight: 1.65 }}>
+            Il tuo voto per <strong>{nomeDisplay}</strong> è salvato. Tornerai qui dopo la nascita per scoprire chi ha indovinato!
           </p>
-          <div className="w-full border-t border-[var(--border)] pt-5 flex flex-col gap-3">
-            <p className="text-xs font-bold text-[var(--ink-45)] uppercase tracking-widest">
-              Aspetta una gravidanza in famiglia?
+          <div style={{ paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+            <p style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: C.muted, marginBottom: 12 }}>
+              Aspetti anche tu un bambino?
             </p>
             <Link
-              href="/"
-              className="fp-btn-gold flex items-center justify-center gap-2 text-sm font-bold"
+              href="/signup"
+              style={{
+                display: "block", fontSize: 14, fontWeight: 700, color: C.white,
+                background: C.primary, borderRadius: 999, padding: "12px 24px",
+                textDecoration: "none", boxShadow: "0 4px 14px rgba(135,78,88,0.22)",
+              }}
             >
               🍼 Crea il tuo FantaParto
             </Link>
@@ -194,313 +261,166 @@ export default function VotaClient({
     );
   }
 
+  // ── Form ───────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen" style={{ background: "var(--cream)" }}>
-      {/* Blobs decorativi */}
-      <div className="bg-blobs" aria-hidden="true">
-        <div className="blob b1" />
-        <div className="blob b2" />
-      </div>
+    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: VN }}>
+      <div style={{ maxWidth: 520, margin: "0 auto", padding: "32px 20px 64px" }}>
 
-      <div className="relative z-10 max-w-lg mx-auto px-4 py-10 flex flex-col gap-5">
         {/* Header */}
-        <header className="text-center pt-2 pb-1">
-          <p className="text-xs font-semibold text-[var(--ink-45)] uppercase tracking-widest mb-2">
+        <header style={{ textAlign: "center", marginBottom: 28 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: C.muted, marginBottom: 8 }}>
             FantaParto
           </p>
-          <h1
-            className="text-3xl font-black text-[var(--ink)]"
-            style={{ fontFamily: "var(--font-fredoka, sans-serif)" }}
-          >
+          <h1 style={{ fontSize: 28, fontWeight: 700, fontFamily: QS, color: C.onSurf, marginBottom: 6 }}>
             {nomeDisplay}
           </h1>
-          <p className="text-sm text-[var(--ink-60)] mt-1">
+          <p style={{ fontSize: 14, color: C.onSurfVar }}>
             Data Presunta Parto · {dppFormatted}
           </p>
         </header>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* ─ Chi sei ──────────────────────────────────────────────── */}
-          <section className="fp-card p-5 flex flex-col gap-3">
-            <p className="text-xs font-bold text-[var(--ink-45)] uppercase tracking-widest">
-              Chi sei? *
-            </p>
-            <input
-              type="text"
-              placeholder="Il tuo nome"
-              value={nomeInvitato}
-              onChange={(e) => setNomeInvitato(e.target.value)}
-              className="fp-input w-full"
-              maxLength={80}
-              required
-            />
-            <input
-              type="email"
-              placeholder="Email (opzionale)"
-              value={emailInvitato}
-              onChange={(e) => setEmailInvitato(e.target.value)}
-              className="fp-input w-full"
-            />
-          </section>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
-          {/* ─ Sesso ────────────────────────────────────────────────── */}
+          {/* Chi sei */}
+          <Section label="Chi sei? *">
+            <PillInput
+              type="text" placeholder="Il tuo nome *" value={nomeInvitato}
+              onChange={(e) => setNome(e.target.value)} maxLength={80} required
+            />
+            <PillInput
+              type="email" placeholder="Email (opzionale)" value={emailInvitato}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </Section>
+
+          {/* Sesso */}
           {sessoAttivo && (
-            <section className="fp-card p-5 flex flex-col gap-3">
-              <p className="text-xs font-bold text-[var(--ink-45)] uppercase tracking-widest">
-                Maschio o femmina?
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setVotoSesso(votoSesso === "MASCHIO" ? "" : "MASCHIO")
-                  }
-                  className="py-6 rounded-2xl font-bold text-lg border-2 transition-all duration-200 active:scale-95"
-                  style={{
-                    borderColor:
-                      votoSesso === "MASCHIO" ? "#6FA8DC" : "var(--border)",
-                    background:
-                      votoSesso === "MASCHIO" ? "#EBF4FC" : "white",
-                    color:
-                      votoSesso === "MASCHIO" ? "#6FA8DC" : "var(--ink-60)",
-                    boxShadow:
-                      votoSesso === "MASCHIO"
-                        ? "0 8px 20px -8px rgba(111,168,220,0.45)"
-                        : "none",
-                  }}
-                >
+            <Section label="Maschio o Femmina?">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <Choice selected={votoSesso === "MASCHIO"} onClick={() => setVotoSesso(votoSesso === "MASCHIO" ? "" : "MASCHIO")} accent={C.secondary} accentBg={C.secLight}>
                   💙 Maschio
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setVotoSesso(votoSesso === "FEMMINA" ? "" : "FEMMINA")
-                  }
-                  className="py-6 rounded-2xl font-bold text-lg border-2 transition-all duration-200 active:scale-95"
-                  style={{
-                    borderColor:
-                      votoSesso === "FEMMINA" ? "#F296C2" : "var(--border)",
-                    background:
-                      votoSesso === "FEMMINA" ? "#FDEEF6" : "white",
-                    color:
-                      votoSesso === "FEMMINA" ? "#F296C2" : "var(--ink-60)",
-                    boxShadow:
-                      votoSesso === "FEMMINA"
-                        ? "0 8px 20px -8px rgba(242,150,194,0.45)"
-                        : "none",
-                  }}
-                >
+                </Choice>
+                <Choice selected={votoSesso === "FEMMINA"} onClick={() => setVotoSesso(votoSesso === "FEMMINA" ? "" : "FEMMINA")}>
                   🩷 Femmina
-                </button>
+                </Choice>
               </div>
-            </section>
+            </Section>
           )}
 
-          {/* ─ Data ─────────────────────────────────────────────────── */}
+          {/* Data */}
           {dataAttiva && (
-            <section className="fp-card p-5 flex flex-col gap-3">
-              <p className="text-xs font-bold text-[var(--ink-45)] uppercase tracking-widest">
-                Quando nascerà?
-              </p>
-              <input
-                type="date"
-                value={votoData}
+            <Section label="Quando nascerà?">
+              <PillInput
+                type="date" value={votoData}
                 onChange={(e) => setVotoData(e.target.value)}
-                className="fp-input w-full text-center text-lg font-bold"
+                style={{ textAlign: "center", fontSize: 16, fontWeight: 600 }}
               />
-            </section>
+            </Section>
           )}
 
-          {/* ─ Peso ─────────────────────────────────────────────────── */}
+          {/* Peso */}
           {pesoAttivo && (
-            <section className="fp-card p-5 flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-[var(--ink-45)] uppercase tracking-widest">
-                  Peso alla nascita
-                </p>
-                <span className="text-2xl font-black text-[var(--honey)]">
-                  {fmtPeso(votoPeso)}{" "}
-                  <span className="text-base font-semibold text-[var(--ink-60)]">
-                    kg
-                  </span>
-                </span>
-              </div>
-              <input
-                type="range"
-                min={1000}
-                max={6000}
-                step={50}
-                value={votoPeso}
-                onChange={(e) => setVotoPeso(Number(e.target.value))}
-                className="w-full h-2 rounded-full cursor-pointer"
-                style={{ accentColor: "var(--honey)" }}
-              />
-              <div className="flex justify-between text-[11px] font-semibold text-[var(--ink-45)]">
-                <span>1,00 kg</span>
-                <span>6,00 kg</span>
-              </div>
-            </section>
+            <SliderField
+              label="Peso alla nascita" value={votoPeso} min={1000} max={6000} step={50}
+              display={`${(votoPeso / 1000).toFixed(2).replace(".", ",")} kg`}
+              onChange={setVotoPeso}
+            />
           )}
 
-          {/* ─ Lunghezza ────────────────────────────────────────────── */}
+          {/* Lunghezza */}
           {lunghezzaAttiva && (
-            <section className="fp-card p-5 flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-[var(--ink-45)] uppercase tracking-widest">
-                  Lunghezza
-                </p>
-                <span className="text-2xl font-black text-[var(--honey)]">
-                  {fmtLunghezza(votoLunghezza)}{" "}
-                  <span className="text-base font-semibold text-[var(--ink-60)]">
-                    cm
-                  </span>
-                </span>
-              </div>
-              <input
-                type="range"
-                min={300}
-                max={700}
-                step={5}
-                value={votoLunghezza}
-                onChange={(e) => setVotoLunghezza(Number(e.target.value))}
-                className="w-full h-2 rounded-full cursor-pointer"
-                style={{ accentColor: "var(--honey)" }}
-              />
-              <div className="flex justify-between text-[11px] font-semibold text-[var(--ink-45)]">
-                <span>30,0 cm</span>
-                <span>70,0 cm</span>
-              </div>
-            </section>
+            <SliderField
+              label="Lunghezza" value={votoLunghezza} min={300} max={700} step={5}
+              display={`${(votoLunghezza / 10).toFixed(1).replace(".", ",")} cm`}
+              onChange={setVotoLun}
+            />
           )}
 
-          {/* ─ Ora ──────────────────────────────────────────────────── */}
+          {/* Ora */}
           {oraAttiva && (
-            <section className="fp-card p-5 flex flex-col gap-3">
-              <p className="text-xs font-bold text-[var(--ink-45)] uppercase tracking-widest">
-                Ora di nascita (opzionale)
-              </p>
-              <input
-                type="time"
-                value={votoOra}
+            <Section label="Ora di nascita (opzionale)">
+              <PillInput
+                type="time" value={votoOra}
                 onChange={(e) => setVotoOra(e.target.value)}
-                className="fp-input w-full text-center text-lg font-bold"
+                style={{ textAlign: "center", fontSize: 16, fontWeight: 600 }}
               />
-            </section>
+            </Section>
           )}
 
-          {/* ─ Capelli ──────────────────────────────────────────────── */}
+          {/* Capelli */}
           {capelliAttivo && (
-            <section className="fp-card p-5 flex flex-col gap-3">
-              <p className="text-xs font-bold text-[var(--ink-45)] uppercase tracking-widest">
-                Capelli
-              </p>
-              <div className="grid grid-cols-3 gap-2">
+            <Section label="Capelli">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
                 {(["LISCI", "RICCI", "CALVO"] as const).map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => setVotoCapelli(votoCapelli === v ? "" : v)}
-                    className="py-3 rounded-2xl font-bold text-sm border-2 transition-all duration-200"
-                    style={{
-                      borderColor:
-                        votoCapelli === v ? "var(--honey)" : "var(--border)",
-                      background:
-                        votoCapelli === v ? "#FFF8E7" : "white",
-                      color:
-                        votoCapelli === v ? "var(--honey)" : "var(--ink-60)",
-                    }}
-                  >
-                    {v === "LISCI"
-                      ? "💇 Lisci"
-                      : v === "RICCI"
-                      ? "🌀 Ricci"
-                      : "✨ Calvo"}
-                  </button>
+                  <Choice key={v} selected={votoCapelli === v} onClick={() => setVotoCap(votoCapelli === v ? "" : v)}>
+                    {v === "LISCI" ? "💇 Lisci" : v === "RICCI" ? "🌀 Ricci" : "✨ Calvo"}
+                  </Choice>
                 ))}
               </div>
-            </section>
+            </Section>
           )}
 
-          {/* ─ Occhi ────────────────────────────────────────────────── */}
+          {/* Occhi */}
           {occhiAttivo && (
-            <section className="fp-card p-5 flex flex-col gap-3">
-              <p className="text-xs font-bold text-[var(--ink-45)] uppercase tracking-widest">
-                Colore occhi
-              </p>
-              <div className="grid grid-cols-2 gap-3">
+            <Section label="Colore occhi">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {(["CHIARI", "SCURI"] as const).map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => setVotoOcchi(votoOcchi === v ? "" : v)}
-                    className="py-4 rounded-2xl font-bold text-sm border-2 transition-all duration-200"
-                    style={{
-                      borderColor:
-                        votoOcchi === v ? "var(--honey)" : "var(--border)",
-                      background: votoOcchi === v ? "#FFF8E7" : "white",
-                      color:
-                        votoOcchi === v ? "var(--honey)" : "var(--ink-60)",
-                    }}
-                  >
+                  <Choice key={v} selected={votoOcchi === v} onClick={() => setVotoOcchi(votoOcchi === v ? "" : v)}>
                     {v === "CHIARI" ? "🔵 Chiari" : "🟤 Scuri"}
-                  </button>
+                  </Choice>
                 ))}
               </div>
-            </section>
+            </Section>
           )}
 
-          {/* ─ Messaggio ────────────────────────────────────────────── */}
-          <section className="fp-card p-5 flex flex-col gap-3">
-            <p className="text-xs font-bold text-[var(--ink-45)] uppercase tracking-widest">
+          {/* Messaggio auguri */}
+          <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px 24px", display: "flex", flexDirection: "column", gap: 10 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: C.muted, margin: 0 }}>
               Messaggio di auguri 💕
             </p>
             <textarea
               placeholder="Scrivi un pensiero alla mamma..."
               value={messaggioAugurio}
-              onChange={(e) => setMessaggioAugurio(e.target.value)}
-              className="fp-input w-full resize-none"
-              rows={3}
+              onChange={(e) => setMsg(e.target.value)}
               maxLength={500}
+              rows={3}
+              style={{
+                width: "100%", boxSizing: "border-box", outline: "none", resize: "none",
+                border: `1.5px solid ${C.border}`, borderRadius: 16, padding: "12px 16px",
+                fontSize: 14, fontFamily: VN, color: C.onSurf, background: C.white,
+              }}
             />
-            <p className="text-right text-[11px] text-[var(--ink-45)]">
+            <p style={{ fontSize: 11, color: C.muted, textAlign: "right", margin: 0 }}>
               {messaggioAugurio.length}/500
             </p>
-          </section>
+          </div>
 
-          {/* ─ Errore ───────────────────────────────────────────────── */}
+          {/* Error */}
           {error && (
-            <div
-              className="fp-card px-4 py-3 text-center"
-              style={{ background: "#FFF0F0", borderColor: "#FFD5D5" }}
-            >
-              <p className="text-sm text-red-500 font-semibold">{error}</p>
+            <div style={{ background: C.errBg, border: `1px solid ${C.errBrd}`, borderRadius: 12, padding: "12px 16px", fontSize: 13, color: C.error }}>
+              ⚠ {error}
             </div>
           )}
 
-          {/* ─ Submit ───────────────────────────────────────────────── */}
+          {/* Submit */}
           <button
             type="submit"
-            disabled={
-              phase === "submitting" || !fingerprint || !nomeInvitato.trim()
-            }
-            className="fp-btn-gold w-full py-5 font-black disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={phase === "submitting" || !fingerprint || !nomeInvitato.trim()}
             style={{
-              fontFamily: "var(--font-fredoka, sans-serif)",
-              fontSize: "1.1rem",
+              border: "none", outline: "none", cursor: (phase === "submitting" || !nomeInvitato.trim()) ? "not-allowed" : "pointer",
+              background: (phase === "submitting" || !nomeInvitato.trim()) ? C.muted : C.primary,
+              color: C.white, borderRadius: 999, padding: "16px 24px",
+              fontSize: 15, fontWeight: 700, fontFamily: VN,
+              boxShadow: (phase === "submitting" || !nomeInvitato.trim()) ? "none" : "0 8px 20px rgba(135,78,88,0.25)",
+              transition: "all 150ms", marginTop: 4,
             }}
           >
-            {phase === "submitting"
-              ? "⏳ Invio in corso..."
-              : "🚀 Invia il mio pronostico!"}
+            {phase === "submitting" ? "⏳ Invio in corso…" : "🚀 Invia il mio pronostico!"}
           </button>
 
-          <p className="text-center text-xs text-[var(--ink-45)] pb-6">
+          <p style={{ textAlign: "center", fontSize: 12, color: C.muted }}>
             Powered by{" "}
-            <Link
-              href="/"
-              className="font-bold hover:underline"
-              style={{ color: "var(--honey)" }}
-            >
+            <Link href="/" style={{ color: C.primary, fontWeight: 700, textDecoration: "none" }}>
               FantaParto
             </Link>
           </p>

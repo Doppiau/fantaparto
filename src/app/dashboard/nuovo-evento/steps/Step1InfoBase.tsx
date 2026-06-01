@@ -4,244 +4,121 @@ import { useState } from "react";
 import { type NuovoEventoFormData } from "../types";
 
 const C = {
-  white:        "#ffffff",
-  primary:      "#874e58",
-  primaryFixed: "#ffd9de",
-  primaryCont:  "#f4acb7",
-  onPriCont:    "#733d47",
-  secondary:    "#40627b",
-  secCont:      "#bee1ff",
-  onSecCont:    "#42647e",
-  onSurf:       "#1b1c1a",
-  onSurfVar:    "#514345",
-  outlineVar:   "#d6c2c3",
-  error:        "#ba1a1a",
-  errCont:      "#ffdad6",
-  shadow:       "0px 12px 32px rgba(135,78,88,0.08)",
+  white: "#ffffff", border: "#e8e4e1", primary: "#874e58",
+  priXLight: "#ffd9de", priLight: "#f4acb7", onPri: "#733d47",
+  secondary: "#40627b", secLight: "#bee1ff", onSec: "#42647e",
+  onSurf: "#1b1c1a", onSurfVar: "#6b5b5d", muted: "#b0a0a2",
+  error: "#b91c1c", errBg: "#fef2f2", errBrd: "#fecaca",
 } as const;
-
 const QS = "var(--font-quicksand, sans-serif)";
 const VN = "var(--font-vietnam, sans-serif)";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function getDomani(): string {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().split("T")[0];
-}
-
-function getMaxDPP(): string {
-  const d = new Date();
-  d.setFullYear(d.getFullYear() + 1);
-  return d.toISOString().split("T")[0];
-}
-
+function getDomani() { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; }
+function getMaxDPP()  { const d = new Date(); d.setFullYear(d.getFullYear() + 1); return d.toISOString().split("T")[0]; }
 function calcolaSettimana(dpp: string): number | null {
   if (!dpp) return null;
-  const oggi  = new Date();
-  const dppD  = new Date(dpp);
+  const oggi = new Date(); const dppD = new Date(dpp);
   if (isNaN(dppD.getTime()) || dppD <= oggi) return null;
-  const giorni = Math.ceil((dppD.getTime() - oggi.getTime()) / 86_400_000);
-  return Math.max(0, 40 - Math.ceil(giorni / 7));
+  return Math.max(0, 40 - Math.ceil((dppD.getTime() - oggi.getTime()) / (86_400_000 * 7)));
 }
 
-// ── Componente input pill con floating label ──────────────────────────────────
-
-function InputField({
-  label,
-  type = "text",
-  value,
-  onChange,
-  onBlur,
-  placeholder,
-  helperText,
-  error,
-  min,
-  max,
-  maxLength,
-  showCounter,
+function InputRow({
+  label, id, type = "text", value, onChange, onBlur,
+  placeholder, helper, error, min, max, maxLength, showCounter,
 }: {
-  label: string;
-  type?: string;
-  value: string;
-  onChange: (v: string) => void;
-  onBlur?: () => void;
-  placeholder?: string;
-  helperText?: string;
-  error?: string;
-  min?: string;
-  max?: string;
-  maxLength?: number;
-  showCounter?: boolean;
+  label: string; id: string; type?: string; value: string;
+  onChange: (v: string) => void; onBlur?: () => void;
+  placeholder?: string; helper?: string; error?: string;
+  min?: string; max?: string; maxLength?: number; showCounter?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
-  const hasError = !!error;
-
+  const hasErr = !!error;
   return (
-    <div className="flex flex-col gap-1">
-      {/* Floating label */}
-      <label
-        className="text-[13px] font-semibold"
-        style={{ color: hasError ? C.error : focused ? C.primary : C.onSurfVar, fontFamily: VN }}
-      >
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <label htmlFor={id} style={{ fontSize: 12, fontWeight: 600, color: hasErr ? C.error : C.onSurfVar, fontFamily: VN }}>
         {label}
       </label>
-
-      <div className="relative">
+      <div style={{ position: "relative" }}>
         <input
-          type={type}
-          value={value}
+          id={id} type={type} value={value} placeholder={placeholder}
+          min={min} max={max} maxLength={maxLength}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => { setFocused(false); onBlur?.(); }}
-          placeholder={placeholder}
-          min={min}
-          max={max}
-          maxLength={maxLength}
-          className="w-full outline-none"
           style={{
-            background:    C.white,
-            border:        `1.5px solid ${hasError ? C.error : focused ? C.primary : C.outlineVar}`,
-            borderRadius:  "999px",
-            padding:       "14px 20px",
-            fontSize:      "15px",
-            fontFamily:    VN,
-            color:         C.onSurf,
-            transition:    "border-color 150ms",
+            width: "100%", boxSizing: "border-box", outline: "none",
+            border: `1.5px solid ${hasErr ? C.error : focused ? C.primary : C.border}`,
+            borderRadius: 999, padding: "13px 20px",
+            paddingRight: showCounter ? 56 : 20,
+            fontSize: 15, fontFamily: VN, color: C.onSurf,
+            background: C.white, transition: "border-color 150ms",
           }}
         />
-        {/* Contatore caratteri */}
         {showCounter && maxLength && (
-          <span
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-medium pointer-events-none select-none"
-            style={{ color: value.length > maxLength * 0.85 ? C.primary : C.outlineVar }}
-          >
+          <span style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: value.length > maxLength * 0.85 ? C.primary : C.muted, pointerEvents: "none" }}>
             {value.length}/{maxLength}
           </span>
         )}
       </div>
-
-      {/* Helper / Error */}
-      {(helperText || error) && (
-        <p
-          className="text-[12px] font-medium px-2"
-          style={{ color: hasError ? C.error : C.onSurfVar, fontFamily: VN }}
-        >
-          {error ?? helperText}
+      {(helper || error) && (
+        <p style={{ fontSize: 12, color: hasErr ? C.error : C.muted, paddingLeft: 4, margin: 0, fontFamily: VN }}>
+          {error ?? helper}
         </p>
       )}
     </div>
   );
 }
 
-// ── Step 1 ────────────────────────────────────────────────────────────────────
-
-interface Props {
-  data:     NuovoEventoFormData;
-  onChange: (updates: Partial<NuovoEventoFormData>) => void;
-}
+interface Props { data: NuovoEventoFormData; onChange: (u: Partial<NuovoEventoFormData>) => void; }
 
 export default function Step1InfoBase({ data, onChange }: Props) {
-  const [touched, setTouched] = useState({
-    nomeFeto: false,
-    dpp:      false,
-    nomeMamma:false,
-  });
+  const [touched, setTouched] = useState({ nomeFeto: false, dpp: false, nomeMamma: false });
+  const touch = (k: keyof typeof touched) => () => setTouched((t) => ({ ...t, [k]: true }));
+  const oggi  = new Date(); oggi.setHours(0, 0, 0, 0);
+  const dppD  = data.dpp ? new Date(data.dpp) : null;
 
-  const touch = (field: keyof typeof touched) => () =>
-    setTouched((t) => ({ ...t, [field]: true }));
-
-  // Errori inline
-  const errNomeFeto =
-    touched.nomeFeto && data.nomeFeto.trim().length < 2
-      ? "Inserisci almeno 2 caratteri"
-      : undefined;
-
-  const errDpp = (() => {
-    if (!touched.dpp) return undefined;
-    if (!data.dpp)    return "Seleziona una data";
-    const d = new Date(data.dpp);
-    const oggi = new Date(); oggi.setHours(0,0,0,0);
-    if (isNaN(d.getTime()))  return "Data non valida";
-    if (d <= oggi)           return "La DPP deve essere nel futuro";
-    return undefined;
-  })();
-
-  const errNomeMamma =
-    touched.nomeMamma && data.nomeMamma.trim().length < 2
-      ? "Inserisci almeno 2 caratteri"
-      : undefined;
-
+  const errNome = touched.nomeFeto && data.nomeFeto.trim().length < 2 ? "Minimo 2 caratteri" : undefined;
+  const errDpp  = touched.dpp
+    ? !data.dpp ? "Seleziona una data" : dppD && dppD <= oggi ? "La DPP deve essere futura" : undefined
+    : undefined;
+  const errMamma = touched.nomeMamma && data.nomeMamma.trim().length < 2 ? "Minimo 2 caratteri" : undefined;
   const settimana = calcolaSettimana(data.dpp);
 
   return (
-    <div
-      className="mx-auto max-w-lg rounded-[3rem] p-10 flex flex-col gap-6"
-      style={{ background: C.white, boxShadow: C.shadow }}
-    >
-      {/* Header */}
-      <div className="flex flex-col items-center gap-3 text-center">
-        <span className="text-5xl select-none" aria-hidden>🍼</span>
-        <h2
-          className="text-[28px] font-semibold"
-          style={{ fontFamily: QS, color: C.onSurf }}
-        >
+    <div style={{ maxWidth: 480, margin: "0 auto", background: C.white, border: `1px solid ${C.border}`, borderRadius: 20, padding: "36px 32px", display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ textAlign: "center", marginBottom: 4 }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>🍼</div>
+        <h2 style={{ fontSize: 24, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: "0 0 8px" }}>
           Parliamo del tuo piccolo
         </h2>
-        <p className="text-[15px] font-normal max-w-xs" style={{ color: C.onSurfVar }}>
+        <p style={{ fontSize: 14, color: C.muted, margin: 0, lineHeight: 1.6 }}>
           Queste informazioni saranno visibili agli invitati che voteranno.
         </p>
       </div>
 
-      {/* Campo 1 — Soprannome feto */}
-      <InputField
-        label="Soprannome del piccolo"
-        value={data.nomeFeto}
-        onChange={(v) => onChange({ nomeFeto: v })}
-        onBlur={touch("nomeFeto")}
-        placeholder="es. Baby Rossi, Principessa, Campione..."
-        helperText="Questo nome apparirà nella pagina di voto degli invitati"
-        error={errNomeFeto}
-        maxLength={30}
-        showCounter
-      />
+      <InputRow label="Soprannome del piccolo" id="nomeFeto" value={data.nomeFeto}
+        onChange={(v) => onChange({ nomeFeto: v })} onBlur={touch("nomeFeto")}
+        placeholder="es. Baby Rossi, Principessa…"
+        helper="Apparirà nella pagina di voto degli invitati"
+        error={errNome} maxLength={30} showCounter />
 
-      {/* Campo 2 — DPP */}
-      <div className="flex flex-col gap-1">
-        <InputField
-          label="Data Presunta del Parto"
-          type="date"
-          value={data.dpp}
-          onChange={(v) => onChange({ dpp: v })}
-          onBlur={touch("dpp")}
-          helperText="Puoi modificarla in seguito dalla configurazione"
-          error={errDpp}
-          min={getDomani()}
-          max={getMaxDPP()}
-        />
-
-        {/* Pill settimana di gravidanza */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <InputRow label="Data Presunta del Parto" id="dpp" type="date" value={data.dpp}
+          onChange={(v) => onChange({ dpp: v })} onBlur={touch("dpp")}
+          helper="Puoi modificarla in seguito dalla configurazione"
+          error={errDpp} min={getDomani()} max={getMaxDPP()} />
         {settimana !== null && (
-          <div
-            className="self-start rounded-full px-4 py-1.5 text-[13px] font-semibold mt-1"
-            style={{ background: C.secCont, color: C.onSecCont, fontFamily: VN }}
-          >
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: C.secLight, borderRadius: 999, padding: "4px 12px", width: "fit-content", fontSize: 12, fontWeight: 700, color: C.onSec }}>
             📅 Sei alla settimana {settimana} di gravidanza
-          </div>
+          </span>
         )}
       </div>
 
-      {/* Campo 3 — Nome mamma */}
-      <InputField
-        label="Il tuo nome (visibile agli invitati)"
-        value={data.nomeMamma}
-        onChange={(v) => onChange({ nomeMamma: v })}
-        onBlur={touch("nomeMamma")}
+      <InputRow label="Il tuo nome (visibile agli invitati)" id="nomeMamma" value={data.nomeMamma}
+        onChange={(v) => onChange({ nomeMamma: v })} onBlur={touch("nomeMamma")}
         placeholder="es. Giulia"
-        helperText={`Gli invitati vedranno "Il FantaParto di ${data.nomeMamma || "..."}" `}
-        error={errNomeMamma}
-      />
+        helper={`Gli invitati vedranno "Il FantaParto di ${data.nomeMamma || "..."}"`}
+        error={errMamma} />
     </div>
   );
 }
