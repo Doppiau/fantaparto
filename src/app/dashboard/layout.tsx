@@ -30,7 +30,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
           email:     user.email        ?? "",
         }}
       />
-      <div style={{ marginLeft: 256 }}>
+      {/* Su mobile: margine 0 + padding-top per hamburger. Su desktop md+: 256px sidebar */}
+      <div className="md:ml-64 pt-16 md:pt-0">
         {children}
       </div>
     </div>
