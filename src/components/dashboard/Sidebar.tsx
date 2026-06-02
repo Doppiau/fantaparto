@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAction } from "@/app/auth/actions";
@@ -52,6 +52,9 @@ export default function Sidebar({ eventi, user }: SidebarProps) {
   const attivi   = eventi.filter((e) => e.stato !== "CONCLUSO");
   const initiali = (user.nome ?? user.email).slice(0, 2).toUpperCase();
   const close    = () => setMobileOpen(false);
+
+  // Chiudi automaticamente su mobile ad ogni cambio di rotta
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   return (
     <>
