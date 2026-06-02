@@ -3,13 +3,14 @@
 import { type NuovoEventoFormData } from "../types";
 
 const C = {
-  white: "#ffffff", bg: "#fbf9f5", border: "#e8e4e1",
-  primary: "#874e58", priXLight: "#ffd9de", priLight: "#f4acb7", onPri: "#733d47",
-  secondary: "#40627b", secLight: "#bee1ff", onSec: "#42647e",
-  onSurf: "#1b1c1a", onSurfVar: "#6b5b5d", muted: "#b0a0a2",
+  white: "#ffffff", bg: "#fef5f4", border: "#f0e8e6",
+  primary: "#b5352c", priXLight: "#fde8e6", priLight: "#f4acb7", onPri: "#7a1f18",
+  secondary: "#40627b", secLight: "#dbeafe", onSec: "#1e40af",
+  onSurf: "#1a1a2e", onSurfVar: "#5a4e50", muted: "#a89a9b",
 } as const;
 const QS = "var(--font-quicksand, sans-serif)";
 const VN = "var(--font-vietnam, sans-serif)";
+const FR = "var(--font-fredoka, sans-serif)";
 
 const ML: Record<string, { emoji: string; nome: string }> = {
   sesso:     { emoji: "👶", nome: "Sesso"     },

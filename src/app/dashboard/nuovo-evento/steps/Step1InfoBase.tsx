@@ -4,14 +4,15 @@ import { useState } from "react";
 import { type NuovoEventoFormData } from "../types";
 
 const C = {
-  white: "#ffffff", border: "#e8e4e1", primary: "#874e58",
-  priXLight: "#ffd9de", priLight: "#f4acb7", onPri: "#733d47",
-  secondary: "#40627b", secLight: "#bee1ff", onSec: "#42647e",
-  onSurf: "#1b1c1a", onSurfVar: "#6b5b5d", muted: "#b0a0a2",
+  white: "#ffffff", border: "#f0e8e6", bg: "#fef5f4",
+  primary: "#b5352c", priXLight: "#fde8e6", priLight: "#f4acb7",
+  secondary: "#40627b", secLight: "#dbeafe", onSec: "#1e40af",
+  onSurf: "#1a1a2e", onSurfVar: "#5a4e50", muted: "#a89a9b",
   error: "#b91c1c", errBg: "#fef2f2", errBrd: "#fecaca",
 } as const;
 const QS = "var(--font-quicksand, sans-serif)";
 const VN = "var(--font-vietnam, sans-serif)";
+const FR = "var(--font-fredoka, sans-serif)";
 
 function getDomani() { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; }
 function getMaxDPP()  { const d = new Date(); d.setFullYear(d.getFullYear() + 1); return d.toISOString().split("T")[0]; }
@@ -85,10 +86,10 @@ export default function Step1InfoBase({ data, onChange }: Props) {
   const settimana = calcolaSettimana(data.dpp);
 
   return (
-    <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 20, padding: "36px 32px", display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 24, padding: "40px 36px", display: "flex", flexDirection: "column", gap: 20, boxShadow: "0 4px 32px -8px rgba(181,53,44,0.10)" }}>
       <div style={{ textAlign: "center", marginBottom: 4 }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>🍼</div>
-        <h2 style={{ fontSize: 24, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: "0 0 8px" }}>
+        <h2 style={{ fontSize: 26, fontWeight: 700, fontFamily: FR, color: C.onSurf, margin: "0 0 8px" }}>
           Parliamo del tuo piccolo
         </h2>
         <p style={{ fontSize: 14, color: C.muted, margin: 0, lineHeight: 1.6 }}>
