@@ -213,13 +213,23 @@ export default async function EventDashboardPage({ params }: PageProps) {
             href="/dashboard/nuovo-evento"
             style={{ fontSize: 13, fontWeight: 700, color: C.onSurfV, border: `1px solid ${C.border}`, borderRadius: 999, padding: "6px 14px", textDecoration: "none", background: C.white }}
           >
-            + Nuovo evento
+            + Nuovo
+          </Link>
+          <Link
+            href={`/dashboard/${evento.id}/grande-giorno`}
+            style={{
+              fontSize: 13, fontWeight: 700,
+              color: evento.stato === "CONCLUSO" ? "#166534" : C.primary,
+              border: `1px solid ${evento.stato === "CONCLUSO" ? "#bbf7d0" : C.priLight}`,
+              borderRadius: 999, padding: "6px 14px",
+              textDecoration: "none",
+              background: evento.stato === "CONCLUSO" ? "#f0fdf4" : C.priXL,
+            }}
+          >
+            {evento.stato === "CONCLUSO" ? "🏅 Ricordi" : "🏁 Grande Giorno"}
           </Link>
           <CopyLinkButton codice={evento.codiceCondivisione} />
-          <EliminaEventoButton
-            eventId={evento.id}
-            nomeEvento={nomeEvento}
-          />
+          <EliminaEventoButton eventId={evento.id} nomeEvento={nomeEvento} />
         </div>
       </div>
 
