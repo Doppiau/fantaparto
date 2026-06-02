@@ -202,7 +202,7 @@ export default function NuovoEventoPage() {
         transition:       "opacity 200ms",
       }}
     >
-      <div className="px-6 md:px-10 py-8 max-w-[860px] mx-auto">
+      <div className="px-6 md:px-10 py-8 max-w-[640px] mx-auto">
 
         {/* Header pagina */}
         <div className="mb-8">

@@ -18,7 +18,7 @@ export default function Step3Personalizzazione({ data, onChange }: Props) {
   const count = data.messaggioBenvenuto.length;
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", background: C.white, border: `1px solid ${C.border}`, borderRadius: 20, padding: "36px 32px", display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 20, padding: "36px 32px", display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ textAlign: "center", marginBottom: 4 }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>💌</div>
         <h2 style={{ fontSize: 24, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: "0 0 8px" }}>
