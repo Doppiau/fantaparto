@@ -59,7 +59,7 @@ export default function Sidebar({ eventi, user }: SidebarProps) {
       <button
         onClick={() => setMobileOpen(true)}
         aria-label="Apri menu"
-        className="md:hidden"
+        className={`md:hidden ${mobileOpen ? "hidden" : ""}`}
         style={{
           position: "fixed", top: 12, left: 12, zIndex: 60,
           width: 40, height: 40, borderRadius: 10,
