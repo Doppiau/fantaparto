@@ -94,10 +94,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // ── 3a. Crea utente se non esiste; aggiorna nome solo se ancora vuoto ───────
     if (nomeMamma) {
+      // upsert: crea se non esiste, non tocca nulla se esiste già
       await prisma.user.upsert({
         where:  { id: userId },
         create: { id: userId, email: user.email ?? "", nome: nomeMamma },
-        update: { nome: { set: undefined } }, // non sovrascrivere nome già impostato
+        update: {},
       });
       // Imposta nome solo se il profilo è ancora senza nome
       await prisma.user.updateMany({
