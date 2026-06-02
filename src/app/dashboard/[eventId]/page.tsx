@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import ModerateButton from "@/components/dashboard/ModerateButton";
 import CopyLinkButton from "@/components/dashboard/CopyLinkButton";
+import EliminaEventoButton from "@/components/dashboard/EliminaEventoButton";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 const C = {
@@ -215,6 +216,10 @@ export default async function EventDashboardPage({ params }: PageProps) {
             + Nuovo evento
           </Link>
           <CopyLinkButton codice={evento.codiceCondivisione} />
+          <EliminaEventoButton
+            eventId={evento.id}
+            nomeEvento={nomeEvento}
+          />
         </div>
       </div>
 

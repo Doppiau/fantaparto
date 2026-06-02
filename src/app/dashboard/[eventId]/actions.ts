@@ -42,6 +42,24 @@ export async function aggiornaToggleAction(eventId: string, key: string, valore:
   revalidatePath("/dashboard/settings");
 }
 
+// ── Elimina evento ────────────────────────────────────────────────────────────
+
+export async function eliminaEventoAction(eventId: string): Promise<{ success: true } | { success: false; error: string }> {
+  try {
+    const userId = await getAuthUserId();
+    await verificaProprietario(eventId, userId);
+    // Elimina prediction e poi evento in transazione
+    await prisma.$transaction([
+      prisma.prediction.deleteMany({ where: { eventId } }),
+      prisma.event.delete({ where: { id: eventId } }),
+    ]);
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore sconosciuto" };
+  }
+}
+
 // ── Elimina prediction ────────────────────────────────────────────────────────
 
 export async function eliminaPredictionAction(eventId: string, predictionId: string) {
