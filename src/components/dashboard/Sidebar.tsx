@@ -59,12 +59,11 @@ export default function Sidebar({ eventi, user }: SidebarProps) {
       <button
         onClick={() => setMobileOpen(true)}
         aria-label="Apri menu"
-        className={`md:hidden ${mobileOpen ? "hidden" : ""}`}
+        className={`md:hidden ${mobileOpen ? "!hidden" : "flex"} items-center justify-center`}
         style={{
           position: "fixed", top: 12, left: 12, zIndex: 60,
           width: 40, height: 40, borderRadius: 10,
           background: S.bg, border: `1px solid ${S.border}`,
-          display: "flex", alignItems: "center", justifyContent: "center",
           cursor: "pointer", boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
         }}
       >
