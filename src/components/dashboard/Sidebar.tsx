@@ -41,7 +41,7 @@ const NAV = [
   { href: "/dashboard",             icon: "dashboard",   label: "Panoramica",     disabled: false },
   { href: "/dashboard/stats",       icon: "analytics",   label: "Statistiche",    disabled: true  },
   { href: "/dashboard/invitati",    icon: "group",       label: "Invitati",       disabled: true  },
-  { href: "/dashboard/settings",    icon: "settings",    label: "Configurazione", disabled: true  },
+  { href: "/dashboard/settings",    icon: "settings",    label: "Configurazione", disabled: false },
   { href: "/dashboard/rivelazione", icon: "celebration", label: "Rivelazione",    disabled: true  },
 ] as const;
 

@@ -39,6 +39,7 @@ export async function aggiornaToggleAction(eventId: string, key: string, valore:
   if (!TOGGLE_MAP[key]) throw new Error("Campo non valido");
   await prisma.event.update({ where: { id: eventId }, data: { [key]: valore } });
   revalidatePath(`/dashboard/${eventId}`);
+  revalidatePath("/dashboard/settings");
 }
 
 // ── Elimina prediction ────────────────────────────────────────────────────────
