@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import Sidebar from "@/components/dashboard/Sidebar";
+import styles from "./layout.module.css";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -30,8 +31,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           email:     user.email        ?? "",
         }}
       />
-      {/* Su mobile: margine 0 + padding-top per hamburger. Su desktop md+: 256px sidebar */}
-      <div className="dashboard-content">
+      <div className={styles.content}>
         {children}
       </div>
     </div>

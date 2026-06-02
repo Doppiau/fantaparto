@@ -1,0 +1,10 @@
+.content {
+  padding-top: 4rem; /* 64px — spazio hamburger su mobile */
+}
+
+@media (min-width: 768px) {
+  .content {
+    margin-left: 16rem; /* 256px — larghezza sidebar */
+    padding-top: 0;
+  }
+}
