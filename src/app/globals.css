@@ -1,4 +1,19 @@
 @import "tailwindcss";
+@config "./tailwind.config.ts";
+
+/* ── Sidebar layout offset ───────────────────────────────────
+   Garantisce che il contenuto parta dopo la sidebar (256 px)
+   su desktop (md+), indipendentemente da come Tailwind v4
+   gestisce md:ml-64.                                        */
+.dashboard-content {
+  padding-top: 4rem; /* 64 px mobile — spazio hamburger */
+}
+@media (min-width: 768px) {
+  .dashboard-content {
+    margin-left: 16rem; /* 256 px = larghezza sidebar */
+    padding-top: 0;
+  }
+}
 
 :root {
   --cream: #FDFBF7;

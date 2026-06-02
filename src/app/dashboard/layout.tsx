@@ -31,7 +31,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         }}
       />
       {/* Su mobile: margine 0 + padding-top per hamburger. Su desktop md+: 256px sidebar */}
-      <div className="md:ml-64 pt-16 md:pt-0">
+      <div className="dashboard-content">
         {children}
       </div>
     </div>
