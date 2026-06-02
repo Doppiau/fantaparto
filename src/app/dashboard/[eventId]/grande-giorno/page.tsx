@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import TabGrandGiorno from "../components/TabGrandGiorno";
+import GrandeGiornoWizard from "./GrandeGiornoWizard";
 import { type Toggle, type Partecipante, type RisultatiEsistenti } from "../components/BottomTabs";
 
 const C = {
@@ -190,10 +190,10 @@ export default async function GrandeGiornoPage({ params }: PageProps) {
         {/* ── Wizard Grande Giorno ─────────────────────────────────────────── */}
         <div style={{
           background: C.white, border: `1px solid ${C.border}`,
-          borderRadius: 24, padding: "32px 28px",
+          borderRadius: 24, padding: "36px 32px",
           boxShadow: "0 4px 32px -8px rgba(181,53,44,0.10)",
         }}>
-          <TabGrandGiorno
+          <GrandeGiornoWizard
             eventId={eventId}
             stato={evento.stato}
             toggles={toggles}
