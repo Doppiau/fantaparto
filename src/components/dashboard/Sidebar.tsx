@@ -42,7 +42,7 @@ const NAV = [
   { href: "/dashboard/stats",       icon: "analytics",   label: "Statistiche",    disabled: true  },
   { href: "/dashboard/invitati",    icon: "group",       label: "Invitati",       disabled: true  },
   { href: "/dashboard/settings",    icon: "settings",    label: "Configurazione", disabled: false },
-  { href: "/dashboard/rivelazione", icon: "celebration", label: "Rivelazione",    disabled: true  },
+  { href: "/dashboard/rivelazione", icon: "celebration", label: "Rivelazione",    disabled: false },
 ] as const;
 
 export default function Sidebar({ eventi, user }: SidebarProps) {
