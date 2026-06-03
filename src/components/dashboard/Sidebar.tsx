@@ -38,11 +38,12 @@ const QS = "var(--font-quicksand, sans-serif)";
 const VN = "var(--font-vietnam, sans-serif)";
 
 const NAV = [
-  { href: "/dashboard",             icon: "dashboard",   label: "Panoramica",     disabled: false },
-  { href: "/dashboard/stats",       icon: "analytics",   label: "Statistiche",    disabled: true  },
-  { href: "/dashboard/invitati",    icon: "group",       label: "Invitati",       disabled: true  },
-  { href: "/dashboard/settings",    icon: "settings",    label: "Configurazione", disabled: false },
-  { href: "/dashboard/rivelazione", icon: "celebration", label: "Rivelazione",    disabled: false },
+  { href: "/dashboard",             icon: "dashboard",   label: "Panoramica",        disabled: false },
+  { href: "/dashboard/eventi",      icon: "event_list",  label: "Tutti gli eventi",  disabled: false },
+  { href: "/dashboard/stats",       icon: "analytics",   label: "Statistiche",       disabled: true  },
+  { href: "/dashboard/invitati",    icon: "group",       label: "Invitati",          disabled: true  },
+  { href: "/dashboard/settings",    icon: "settings",    label: "Configurazione",    disabled: false },
+  { href: "/dashboard/rivelazione", icon: "celebration", label: "Rivelazione",       disabled: false },
 ] as const;
 
 export default function Sidebar({ eventi, user }: SidebarProps) {
@@ -136,9 +137,11 @@ export default function Sidebar({ eventi, user }: SidebarProps) {
         <nav style={{ flex: 1, padding: "10px", overflowY: "auto" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {NAV.map(({ href, icon, label, disabled }) => {
+              const otherHrefs = NAV.filter((n) => n.href !== "/dashboard").map((n) => n.href);
               const isActive = !disabled && (
                 href === "/dashboard"
-                  ? pathname === "/dashboard" || pathname.startsWith("/dashboard/")
+                  ? pathname === "/dashboard" ||
+                    (pathname.startsWith("/dashboard/") && !otherHrefs.some((r) => pathname.startsWith(r)))
                   : pathname.startsWith(href)
               );
               return (
