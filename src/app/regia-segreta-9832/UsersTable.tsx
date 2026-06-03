@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { toggleUserPremiumAction } from "./actions";
 
 interface Utente {
@@ -111,7 +112,8 @@ export function UsersTable({ utenti }: UsersTableProps) {
               <th style={{ padding: "8px 12px", textAlign: "center" }}>Piano</th>
               <th style={{ padding: "8px 12px", textAlign: "center" }}>Eventi</th>
               <th style={{ padding: "8px 12px", textAlign: "center" }}>Voti</th>
-              <th style={{ padding: "8px 12px", textAlign: "center" }}>Azione</th>
+              <th style={{ padding: "8px 12px", textAlign: "center" }}>Premium</th>
+              <th style={{ padding: "8px 12px", textAlign: "center" }}>Support</th>
             </tr>
           </thead>
           <tbody>
@@ -153,6 +155,19 @@ export function UsersTable({ utenti }: UsersTableProps) {
                     >
                       {pending === u.id ? "…" : isPremium ? "Revoca" : "⭐ Upgrade"}
                     </button>
+                  </td>
+                  <td style={{ padding: "10px 12px", textAlign: "center" }}>
+                    <Link
+                      href={`/regia-segreta-9832/impersona/${u.id}`}
+                      style={{
+                        padding: "5px 12px", borderRadius: 6,
+                        background: "#0284c722", color: "#38bdf8",
+                        fontSize: 11, fontWeight: 700, textDecoration: "none",
+                        display: "inline-block",
+                      }}
+                    >
+                      👁 Impersona
+                    </Link>
                   </td>
                 </tr>
               );

@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { isPrismaError } from "@/lib/prisma-errors";
 import { assertAdmin } from "@/lib/admin";
+import { redis, banIp } from "@/lib/ratelimit";
+
+const BAN_PREFIX = "fp:ban:";
 
 // ── Chiudi evento ─────────────────────────────────────────────────────────────
 
@@ -124,5 +127,88 @@ export async function deleteEventAction(
     }
     const msg = err instanceof Error ? err.message : "Errore interno.";
     return { success: false, error: msg };
+  }
+}
+
+// ── IP Ban Console ────────────────────────────────────────────────────────────
+
+export async function fetchBannedIpsAction(): Promise<{
+  success: boolean;
+  ips?: { ip: string; ttl: number }[];
+  error?: string;
+}> {
+  try {
+    await assertAdmin();
+    const keys: string[] = await redis.keys(`${BAN_PREFIX}*`);
+    const ips = await Promise.all(
+      keys.map(async (key) => ({
+        ip:  key.replace(BAN_PREFIX, ""),
+        ttl: await redis.ttl(key),
+      })),
+    );
+    return { success: true, ips };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore" };
+  }
+}
+
+export async function unbanIpAction(
+  ip: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const admin = await assertAdmin();
+    await redis.del(`${BAN_PREFIX}${ip}`);
+    await prisma.auditLog.create({
+      data: {
+        adminId:  admin.id,
+        azione:   "UNBAN_IP",
+        dettagli: `IP ${ip} rimosso dalla blacklist dalla Regia (${admin.email}).`,
+      },
+    });
+    revalidatePath("/regia-segreta-9832");
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore" };
+  }
+}
+
+export async function banIpManualAction(
+  ip: string,
+  ttlOre?: number,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const admin = await assertAdmin();
+    await banIp(ip, ttlOre ? ttlOre * 3600 : null);
+    await prisma.auditLog.create({
+      data: {
+        adminId:  admin.id,
+        azione:   "BAN_IP",
+        dettagli: `IP ${ip} bannato manualmente dalla Regia (${admin.email}). TTL: ${ttlOre ? `${ttlOre}h` : "permanente"}.`,
+      },
+    });
+    revalidatePath("/regia-segreta-9832");
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore" };
+  }
+}
+
+// ── Impersonazione (audit log) ────────────────────────────────────────────────
+
+export async function logImpersonazioneAction(
+  userId: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const admin = await assertAdmin();
+    await prisma.auditLog.create({
+      data: {
+        adminId:  admin.id,
+        azione:   "IMPERSONA_UTENTE",
+        dettagli: `Accesso sola lettura al profilo utente ${userId} dalla Regia (${admin.email}).`,
+      },
+    });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore" };
   }
 }

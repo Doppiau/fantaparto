@@ -3,6 +3,8 @@ import { requireAdmin } from "@/lib/admin";
 import { EventiTable } from "./EventiTable";
 import { UsersTable } from "./UsersTable";
 import { AuditLogSection } from "./AuditLogSection";
+import { IpBanConsole } from "./IpBanConsole";
+import { fetchBannedIpsAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -58,9 +60,11 @@ async function fetchAuditLog() {
 
 export default async function RegiaDashboard() {
   const admin = await requireAdmin();
-  const [kpi, eventi, utenti, auditLogs] = await Promise.all([
+  const [kpi, eventi, utenti, auditLogs, bannedIpsResult] = await Promise.all([
     fetchKpi(), fetchEventi(), fetchUtenti(), fetchAuditLog(),
+    fetchBannedIpsAction(),
   ]);
+  const bannedIps = bannedIpsResult.ips ?? [];
 
   const premiumEventi = eventi.filter((e) => e.isPremium).length;
 
@@ -124,6 +128,20 @@ export default async function RegiaDashboard() {
           </div>
         </div>
         <EventiTable eventi={eventi} />
+      </section>
+
+      {/* ── IP Ban Console ──────────────────────────────────────────────────── */}
+      <section style={{ ...sectionStyle, marginBottom: "1.5rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+          <div>
+            <h2 style={sectionTitle}>🛡️ IP Ban Console</h2>
+            <p style={{ color: "#64748b", fontSize: "0.8rem", margin: "2px 0 0" }}>
+              Blacklist Redis in tempo reale · {bannedIps.length} IP bannati
+            </p>
+          </div>
+          <Pill color="#ef4444">{bannedIps.length} bannati</Pill>
+        </div>
+        <IpBanConsole initialIps={bannedIps} />
       </section>
 
       {/* ── Audit Log ───────────────────────────────────────────────────────── */}
