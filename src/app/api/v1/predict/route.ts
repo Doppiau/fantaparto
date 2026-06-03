@@ -78,7 +78,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ── 2. Verifica esistenza evento e stato ──────────────────────────────────
     const evento = await prisma.event.findUnique({
       where: { id: eventId },
-      select: { id: true, stato: true, isPremium: true },
+      select: { id: true, stato: true, isPremium: true, votiBloccati: true },
     });
 
     if (!evento) {
@@ -96,6 +96,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json(
         { success: false, error: msg },
         { status: 400 }
+      );
+    }
+
+    if (evento.votiBloccati) {
+      return NextResponse.json(
+        { success: false, error: "Le votazioni sono state temporaneamente chiuse dalla mamma. Torna presto! 🍼" },
+        { status: 403 }
       );
     }
 

@@ -66,6 +66,11 @@ model Event {
   // Domande custom JSON (solo utenti Premium)
   customQuestions Json? @map("custom_questions")
 
+  // Privacy & controllo votazioni
+  classificaPrivata Boolean @default(false) @map("classifica_privata")   // classifica visibile solo ai genitori
+  hypeSpaceAnonimo  Boolean @default(false) @map("hype_space_anonimo")   // invitati non vedono grafici altrui
+  votiBloccati      Boolean @default(false) @map("voti_bloccati")        // blocco manuale nuovi voti
+
   // Risultati reali — compilati dalla mamma post-parto
   // sesso: "MASCHIO" | "FEMMINA"
   // capelli: "LISCI" | "RICCI" | "CALVO"

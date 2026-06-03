@@ -42,6 +42,7 @@ const NAV = [
   { href: "/dashboard/eventi",      icon: "event_list",  label: "Tutti gli eventi",  disabled: false },
   { href: "/dashboard/stats",       icon: "analytics",   label: "Statistiche",       disabled: true  },
   { href: "/dashboard/invitati",    icon: "group",       label: "Invitati",          disabled: true  },
+  { href: "/dashboard/profilo",     icon: "manage_accounts", label: "Profilo",          disabled: false },
   { href: "/dashboard/settings",    icon: "settings",    label: "Configurazione",    disabled: false },
   { href: "/dashboard/rivelazione", icon: "celebration", label: "Rivelazione",       disabled: false },
 ] as const;
