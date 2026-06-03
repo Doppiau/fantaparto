@@ -3,20 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
-// Il logo è in /public → Vercel lo serve via CDN, non è accessibile via fs.
-// Lo recuperiamo via fetch HTTP così funziona sia in locale che su Vercel.
-async function loadLogo(): Promise<string> {
-  try {
-    const res = await fetch("https://fantaparto.com/logo.png", {
-      signal: AbortSignal.timeout(3000),
-    });
-    if (!res.ok) return "";
-    const buf = await res.arrayBuffer();
-    return `data:image/png;base64,${Buffer.from(buf).toString("base64")}`;
-  } catch {
-    return "";
-  }
-}
+const LOGO_URL = "https://fantaparto.com/logo.png";
 
 // Stelle fisse deterministiche per lo sfondo stellato
 const STARS = Array.from({ length: 90 }, (_, i) => ({
@@ -59,8 +46,6 @@ export async function GET(
   ]);
 
   if (!evento) return new Response("Not found", { status: 404 });
-
-  const logoSrc = await loadLogo();
 
   const totVoti   = evento._count.predictions;
   const totSesso  = maschio + femmina;
@@ -149,18 +134,11 @@ export async function GET(
           <StarryBg />
 
           {/* ── Logo ────────────────────────────────────────────────────── */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, zIndex: 1 }}>
-            {logoSrc ? (
-              <img src={logoSrc} width={220} height={220} style={{ display: "block", filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.55))" }} />
-            ) : (
-              <>
-                <span style={{ fontSize: 80, display: "flex" }}>🦢</span>
-                <div style={{ fontSize: 68, fontWeight: 900, letterSpacing: "-1px", display: "flex" }}>
-                  <span style={{ color: "#ff9f45" }}>Fanta</span><span style={{ color: "#ffffff" }}>Parto</span>
-                </div>
-              </>
-            )}
-            <div style={{ fontSize: 34, fontWeight: 600, color: "rgba(255,255,255,0.75)", display: "flex" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, zIndex: 1 }}>
+            <div style={{ background: "#fff", borderRadius: 28, padding: "10px 10px 6px", display: "flex", boxShadow: "0 8px 32px rgba(0,0,0,0.35)" }}>
+              <img src={LOGO_URL} width={190} height={190} style={{ display: "block", borderRadius: 18 }} />
+            </div>
+            <div style={{ fontSize: 34, fontWeight: 600, color: "rgba(255,255,255,0.80)", display: "flex" }}>
               {nomeEvento}
             </div>
           </div>
@@ -297,17 +275,10 @@ export async function GET(
         <StarryBg />
 
         {/* Logo */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 1 }}>
-          {logoSrc ? (
-            <img src={logoSrc} width={220} height={220} style={{ display: "block", filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.55))" }} />
-          ) : (
-            <>
-              <span style={{ fontSize: 80, display: "flex" }}>🦢</span>
-              <div style={{ fontSize: 72, fontWeight: 900, letterSpacing: "-2px", display: "flex" }}>
-                <span style={{ color: "#ff9f45" }}>Fanta</span><span style={{ color: "#ffffff" }}>Parto</span>
-              </div>
-            </>
-          )}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, zIndex: 1 }}>
+          <div style={{ background: "#fff", borderRadius: 28, padding: "10px 10px 6px", display: "flex", boxShadow: "0 8px 32px rgba(0,0,0,0.35)" }}>
+            <img src={LOGO_URL} width={190} height={190} style={{ display: "block", borderRadius: 18 }} />
+          </div>
           <div style={{ fontSize: 40, fontWeight: 700, color: "rgba(255,255,255,0.80)", display: "flex" }}>
             {nomeEvento}
           </div>
