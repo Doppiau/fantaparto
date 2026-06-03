@@ -170,8 +170,8 @@ export default function VotaClient({
 
   useEffect(() => {
     const votedKey = `fp_voted_${eventId}`;
-    if (localStorage.getItem(votedKey)) { setPhase("already_voted"); return; }
-    const fpKey = `fp_${eventId}`;
+    const fpKey    = `fp_${eventId}`;
+
     let fp = localStorage.getItem(fpKey);
     if (!fp) {
       fp = [Date.now().toString(36), Math.random().toString(36).slice(2, 10),
@@ -179,6 +179,28 @@ export default function VotaClient({
       localStorage.setItem(fpKey, fp);
     }
     setFingerprint(fp);
+
+    if (!localStorage.getItem(votedKey)) return;
+
+    // localStorage dice "già votato" — verifica lato server che il voto esista ancora.
+    // Il genitore potrebbe averlo eliminato: in quel caso azzeriamo il flag locale e
+    // mostriamo di nuovo il form vuoto (reset del voto completato lato client).
+    setPhase("already_voted"); // ottimistico: nessun flash del form
+    const fpSnapshot = fp;
+    fetch(`/api/v1/predict/status?eventId=${encodeURIComponent(eventId)}&fingerprint=${encodeURIComponent(fpSnapshot)}`)
+      .then((r) => r.json())
+      .then(({ hasVoted }: { hasVoted: boolean }) => {
+        if (!hasVoted) {
+          localStorage.removeItem(votedKey);
+          setPhase("form");
+        }
+      })
+      .catch(() => {
+      // Errore di rete / parsing: non possiamo verificare — mostriamo il form.
+      // Il doppio-voto è bloccato a livello DB dal check fingerprint in /api/v1/predict.
+      localStorage.removeItem(votedKey);
+      setPhase("form");
+    });
   }, [eventId]);
 
   async function handleSubmit(e: React.FormEvent) {

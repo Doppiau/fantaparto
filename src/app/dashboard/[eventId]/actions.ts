@@ -61,12 +61,28 @@ export async function eliminaEventoAction(eventId: string): Promise<{ success: t
 }
 
 // ── Elimina prediction ────────────────────────────────────────────────────────
+// Transazione atomica: rimuove il voto e — poiché il deviceFingerprint è
+// salvato nel record Prediction stesso — azzera automaticamente il blocco
+// re-voto per quell'ospite. Il sistema "dimentica" che quell'invitato ha
+// già partecipato; al suo prossimo accesso al link troverà il form attivo.
 
-export async function eliminaPredictionAction(eventId: string, predictionId: string) {
-  const userId = await getAuthUserId();
-  await verificaProprietario(eventId, userId);
-  await prisma.prediction.deleteMany({ where: { id: predictionId, eventId } });
-  revalidatePath(`/dashboard/${eventId}`);
+export async function eliminaPredictionAction(
+  eventId: string,
+  predictionId: string,
+): Promise<{ success: true } | { success: false; error: string }> {
+  try {
+    const userId = await getAuthUserId();
+    await verificaProprietario(eventId, userId);
+
+    await prisma.$transaction([
+      prisma.prediction.deleteMany({ where: { id: predictionId, eventId } }),
+    ]);
+
+    revalidatePath(`/dashboard/${eventId}`);
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore sconosciuto" };
+  }
 }
 
 // ── Inserisci risultati reali + calcolo classifica (atomico) ──────────────────

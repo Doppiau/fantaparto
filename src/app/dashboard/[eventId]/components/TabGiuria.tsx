@@ -24,13 +24,19 @@ const FREE_LIMIT = 20;
 export default function TabGiuria({ partecipanti: iniziali, eventId }: TabGiuriaProps) {
   const [lista, setLista] = useState(iniziali);
   const [removing, setRemoving] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   function elimina(id: string) {
     setRemoving(id);
+    setDeleteError(null);
     startTransition(async () => {
-      await eliminaPredictionAction(eventId, id);
-      setLista((l) => l.filter((p) => p.id !== id));
+      const result = await eliminaPredictionAction(eventId, id);
+      if (result.success) {
+        setLista((l) => l.filter((p) => p.id !== id));
+      } else {
+        setDeleteError(result.error);
+      }
       setRemoving(null);
     });
   }
@@ -99,6 +105,13 @@ export default function TabGiuria({ partecipanti: iniziali, eventId }: TabGiuria
           </div>
         </div>
       </div>
+
+      {/* Delete error */}
+      {deleteError && (
+        <div className="px-4 py-3 rounded-xl text-[13px] font-semibold text-[#b91c1c] bg-[#fef2f2] border border-[#fecaca]">
+          ⚠ {deleteError}
+        </div>
+      )}
 
       {/* Participants table */}
       <div className="overflow-x-auto rounded-2xl border-2 border-[#F1ECE4]">
