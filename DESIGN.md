@@ -190,3 +190,23 @@ The shape language is defined by **Extreme Radii**. This design system uses pill
 
 ### Lists
 - **The "Nursery" List:** Instead of dividers, list items are separated by `sm` (12px) gaps and individual cards, creating a modular feel rather than a continuous table.
+
+---
+
+## 2. Product Flows & UX Specs
+
+### 2.1 Canale Creatore (Genitori)
+
+#### Moderazione Avanzata e Reset del Voto
+
+I genitori hanno accesso all'elenco completo dei singoli partecipanti. In caso di errore di inserimento, refusi nel nome o voti palesemente falsi/spam, i genitori possono eliminare il voto specifico con uno swipe (da App) o un click sul pulsante **Elimina** (da Web).
+
+##### Logica di Sblocco per il Nuovo Voto — Deep Dive Tecnico
+
+L'eliminazione del voto avvia una **transazione atomica** sul database Supabase che esegue tre azioni simultanee:
+
+1. **Rimozione del voto e ricalcolo statistiche** — rimuove il record del voto e ricalcola istantaneamente le statistiche dell'Hype Space.
+2. **Cancellazione del deviceFingerprint** — cancella l'impronta digitale del dispositivo associata a quel voto nella tabella di blocco.
+3. **Invalidazione del token email** — se l'utente aveva registrato la propria email per la classifica, invalida il token precedente.
+
+Grazie a questa operazione, il sistema "dimentica" che quell'invitato ha già partecipato. Quando l'ospite tornerà sul link dell'evento (`fantaparto.com/vota/[codice]`), non vedrà più la schermata di conferma con il badge, ma troverà nuovamente il form di voto vuoto e attivo, permettendogli di votare ancora una seconda volta senza alcun blocco o attrito.
