@@ -25,6 +25,28 @@ async function verificaProprietario(eventId: string, userId: string) {
 
 type Result = { success: true } | { success: false; error: string };
 
+// ── 0. Aggiorna nome genitore ─────────────────────────────────────────────────
+
+const NomeGenitoreSchema = z.string().max(80);
+
+export async function aggiornaNomeGenitoreAction(nome: string): Promise<Result> {
+  try {
+    const { user } = await getAuthUser();
+    const trimmed = nome.trim();
+    const parsed = NomeGenitoreSchema.safeParse(trimmed);
+    if (!parsed.success) return { success: false, error: "Nome troppo lungo (max 80 caratteri)" };
+    await prisma.user.update({
+      where: { id: user.id },
+      data:  { nome: trimmed || null },
+    });
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/profilo");
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore sconosciuto" };
+  }
+}
+
 // ── 1. Aggiorna DPP ───────────────────────────────────────────────────────────
 
 const DppSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data non valida");

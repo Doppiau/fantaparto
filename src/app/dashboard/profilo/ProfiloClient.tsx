@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import {
+  aggiornaNomeGenitoreAction,
   aggiornaDppAction,
   aggiornaNomeBimboAction,
   toggleSwitchEventoAction,
@@ -26,6 +27,7 @@ interface Evento {
 interface ProfiloClientProps {
   eventi: Evento[];
   emailUtente: string;
+  nomeGenitore: string | null;
 }
 
 // ── Componente Switch ─────────────────────────────────────────────────────────
@@ -135,13 +137,14 @@ function EventSelector({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function ProfiloClient({ eventi, emailUtente }: ProfiloClientProps) {
+export default function ProfiloClient({ eventi, emailUtente, nomeGenitore }: ProfiloClientProps) {
   const [selectedId, setSelectedId] = useState(eventi[0]?.id ?? "");
   const [localEventi, setLocalEventi] = useState(eventi);
   const ev = localEventi.find((e) => e.id === selectedId);
 
   const [dpp, setDpp] = useState(ev?.dataPresuntaParto.toISOString().split("T")[0] ?? "");
   const [nomeBimbo, setNomeBimbo] = useState(ev?.nomeBimbo ?? "");
+  const [nomeGenitoreInput, setNomeGenitoreInput] = useState(nomeGenitore ?? "");
   const [feedback, setFeedback] = useState<Record<string, string>>({});
   const [, startTransition] = useTransition();
 
@@ -187,6 +190,17 @@ export default function ProfiloClient({ eventi, emailUtente }: ProfiloClientProp
         setMsg("nome", "✓ Nome aggiornato");
       } else {
         setMsg("nome", `✗ ${res.error}`);
+      }
+    });
+  }
+
+  function handleNomeGenitore() {
+    startTransition(async () => {
+      const res = await aggiornaNomeGenitoreAction(nomeGenitoreInput);
+      if (res.success) {
+        setMsg("nomeGenitore", "✓ Nome aggiornato");
+      } else {
+        setMsg("nomeGenitore", `✗ ${res.error}`);
       }
     });
   }
@@ -363,9 +377,49 @@ export default function ProfiloClient({ eventi, emailUtente }: ProfiloClientProp
       {/* ── 3. GDPR & Account ───────────────────────────────────────────── */}
       <Card title="Account e Privacy (GDPR)" icon="⚖️">
         <div style={{ padding: "16px 0 8px", display: "flex", flexDirection: "column", gap: 12 }}>
+
+          {/* Nome genitore */}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(44,44,46,0.40)", display: "block", marginBottom: 6 }}>
+              Il tuo nome
+            </label>
+            <div style={{ display: "flex", gap: 10 }}>
+              <input
+                type="text"
+                value={nomeGenitoreInput}
+                onChange={(e) => setNomeGenitoreInput(e.target.value)}
+                maxLength={80}
+                placeholder="Come vuoi essere chiamata/o?"
+                style={{
+                  flex: 1, padding: "10px 14px", borderRadius: 12,
+                  border: "1.5px solid #F1ECE4", background: "#fff",
+                  fontSize: 14, fontFamily: VN, color: "#2C2C2E", outline: "none",
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleNomeGenitore}
+                style={{
+                  padding: "10px 20px", borderRadius: 12, border: "none",
+                  background: "#874e58", color: "#fff",
+                  fontSize: 13, fontWeight: 700, cursor: "pointer",
+                  fontFamily: VN, flexShrink: 0,
+                }}
+              >
+                Salva
+              </button>
+            </div>
+            {feedback.nomeGenitore && (
+              <p style={{ fontSize: 12, marginTop: 6, color: feedback.nomeGenitore.startsWith("✓") ? "#166534" : "#b91c1c" }}>
+                {feedback.nomeGenitore}
+              </p>
+            )}
+          </div>
+
+          {/* Email (read only) */}
           <div style={{ padding: "14px", background: "#f7f5f2", borderRadius: 12 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "#2C2C2E", margin: "0 0 2px" }}>Account</p>
-            <p style={{ fontSize: 12, color: "rgba(44,44,46,0.50)", margin: 0 }}>{emailUtente}</p>
+            <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(44,44,46,0.40)", margin: "0 0 2px" }}>Email</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "#2C2C2E", margin: 0 }}>{emailUtente}</p>
           </div>
 
           {/* Export */}

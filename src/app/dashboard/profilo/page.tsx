@@ -13,7 +13,7 @@ export default async function ProfiloPage() {
   const [dbUser, eventi] = await Promise.all([
     prisma.user.findUnique({
       where:  { id: user.id },
-      select: { email: true },
+      select: { email: true, nome: true },
     }),
     prisma.event.findMany({
       where:   { userId: user.id },
@@ -42,6 +42,7 @@ export default async function ProfiloPage() {
       <ProfiloClient
         eventi={eventi}
         emailUtente={dbUser?.email ?? user.email ?? ""}
+        nomeGenitore={dbUser?.nome ?? null}
       />
     </div>
   );
