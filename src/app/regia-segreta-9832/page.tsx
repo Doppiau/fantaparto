@@ -80,7 +80,7 @@ export default async function RegiaDashboard() {
 
   const premiumEventi = eventi.filter((e) => e.isPremium).length;
 
-  const baseUrl = "https://fantaparto.com/vota";
+  const baseUrl = "https://fantaparto.com";
 
   return (
     <div style={pageStyle}>
