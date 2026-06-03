@@ -121,11 +121,14 @@ export default async function DashboardPage() {
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: VN }}>
 
       {/* ── Top bar ─────────────────────────────────────────────────────────── */}
-      <div style={{
-        position: "sticky", top: 0, zIndex: 40, height: 64,
-        background: C.white, borderBottom: `1px solid ${C.border}`,
-        display: "flex", alignItems: "center", padding: "0 32px", gap: 16,
-      }}>
+      <div
+        className="pl-16 pr-4 md:px-8"
+        style={{
+          position: "sticky", top: 0, zIndex: 40, height: 64,
+          background: C.white, borderBottom: `1px solid ${C.border}`,
+          display: "flex", alignItems: "center", gap: 16,
+        }}
+      >
         <h1 style={{ fontSize: 20, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: 0, flex: 1 }}>
           Dashboard
         </h1>
@@ -158,7 +161,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Contenuto principale ─────────────────────────────────────────────── */}
-      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "36px 32px 64px" }}>
+      <div className="px-4 md:px-8" style={{ maxWidth: 1120, margin: "0 auto", paddingTop: 36, paddingBottom: 64 }}>
 
         {eventoAttivo === null ? (
 
@@ -232,11 +235,8 @@ export default async function DashboardPage() {
             {/* Come funziona — 3 cards */}
             <div
               id="come-funziona"
-              style={{
-                width: "100%", marginTop: 40,
-                display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16,
-              }}
-              className="max-md:grid-cols-1"
+              className="grid grid-cols-1 md:grid-cols-3"
+              style={{ width: "100%", marginTop: 40, gap: 16 }}
             >
               {[
                 { icon: "🎯", title: "Pronostici social",      desc: "Sesso, peso, data, ora. Chi indovina vince.",      color: "#c44a40", bg: "#fde8e6" },
@@ -261,7 +261,7 @@ export default async function DashboardPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
             {/* ROW 1: Hero + Countdown */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: 14 }} className="max-md:grid-cols-1">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_260px]" style={{ gap: 14 }}>
 
               <div style={{
                 borderRadius: 20, padding: "32px 36px",
@@ -321,7 +321,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* ROW 2: Stats 4 cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }} className="max-md:grid-cols-2">
+            <div className="grid grid-cols-2 md:grid-cols-4" style={{ gap: 12 }}>
 
               <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px" }}>
                 <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: C.muted, margin: "0 0 12px" }}>Total Votes</p>
@@ -387,7 +387,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* ROW 3: Altri eventi + Partecipazione */}
-            <div style={{ display: "grid", gridTemplateColumns: altriEventi.length > 0 ? "1fr 1fr" : "1fr", gap: 14 }}>
+            <div className={`grid grid-cols-1 gap-4 ${altriEventi.length > 0 ? "md:grid-cols-2" : ""}`} style={{ gap: 14 }}>
               {altriEventi.length > 0 && (
                 <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px 24px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>

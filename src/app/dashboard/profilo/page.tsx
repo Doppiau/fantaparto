@@ -27,7 +27,7 @@ export default async function ProfiloPage() {
   ]);
 
   return (
-    <div style={{ padding: "32px 24px 80px", maxWidth: 680, margin: "0 auto" }}>
+    <div className="px-4 md:px-6" style={{ paddingTop: 32, paddingBottom: 80, maxWidth: 680, margin: "0 auto" }}>
 
       {/* Header */}
       <div style={{ marginBottom: 28 }}>

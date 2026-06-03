@@ -35,7 +35,7 @@ export default async function EventiPage() {
   const conclusi      = eventi.filter((e) => e.stato === "CONCLUSO").length;
 
   return (
-    <div style={{ padding: "32px 24px 80px", maxWidth: 860, margin: "0 auto", fontFamily: VN }}>
+    <div className="px-4 md:px-6" style={{ paddingTop: 32, paddingBottom: 80, maxWidth: 860, margin: "0 auto", fontFamily: VN }}>
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 28 }}>
@@ -67,7 +67,7 @@ export default async function EventiPage() {
 
       {/* ── KPI row ─────────────────────────────────────────────────────── */}
       {eventi.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
+        <div className="grid grid-cols-3" style={{ gap: 12, marginBottom: 24 }}>
           {[
             { label: "Totale eventi", value: eventi.length, icon: "🗂️" },
             { label: "In corso",      value: inCorso,        icon: "🟢" },
