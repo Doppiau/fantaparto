@@ -137,19 +137,12 @@ export default async function EventiPage() {
               <Link
                 key={ev.id}
                 href={`/dashboard/${ev.id}`}
+                className="fp-evento-card"
                 style={{
                   display: "flex", alignItems: "center", gap: 16,
                   background: "#fff", border: "1.5px solid #F1ECE4",
                   borderRadius: 16, padding: "16px 20px",
-                  textDecoration: "none", transition: "border-color 150ms, box-shadow 150ms",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(135,78,88,0.25)";
-                  (e.currentTarget as HTMLAnchorElement).style.boxShadow   = "0 4px 16px rgba(135,78,88,0.08)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.borderColor = "#F1ECE4";
-                  (e.currentTarget as HTMLAnchorElement).style.boxShadow   = "none";
+                  textDecoration: "none",
                 }}
               >
                 {/* Dot status */}

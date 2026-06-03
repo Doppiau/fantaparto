@@ -409,3 +409,6 @@ html, body {
 }
 .animate-float-1 { animation: gentle-float-1 6s infinite ease-in-out; }
 .animate-float-2 { animation: gentle-float-2 7s infinite ease-in-out; }
+
+.fp-evento-card { transition: border-color 150ms, box-shadow 150ms; }
+.fp-evento-card:hover { border-color: rgba(135,78,88,0.25) !important; box-shadow: 0 4px 16px rgba(135,78,88,0.08); }
