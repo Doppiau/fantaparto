@@ -1,15 +1,18 @@
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/prisma";
-import fs from "fs";
-import path from "path";
 
 export const runtime = "nodejs";
 
-// Carica il logo da /public/logo.png (trasparente) come base64
-function loadLogo(): string {
+// Il logo è in /public → Vercel lo serve via CDN, non è accessibile via fs.
+// Lo recuperiamo via fetch HTTP così funziona sia in locale che su Vercel.
+async function loadLogo(): Promise<string> {
   try {
-    const buf = fs.readFileSync(path.join(process.cwd(), "public", "logo.png"));
-    return `data:image/png;base64,${buf.toString("base64")}`;
+    const res = await fetch("https://fantaparto.com/logo.png", {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return "";
+    const buf = await res.arrayBuffer();
+    return `data:image/png;base64,${Buffer.from(buf).toString("base64")}`;
   } catch {
     return "";
   }
@@ -57,7 +60,7 @@ export async function GET(
 
   if (!evento) return new Response("Not found", { status: 404 });
 
-  const logoSrc = loadLogo();
+  const logoSrc = await loadLogo();
 
   const totVoti   = evento._count.predictions;
   const totSesso  = maschio + femmina;

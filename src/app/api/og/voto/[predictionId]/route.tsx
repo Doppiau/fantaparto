@@ -1,14 +1,16 @@
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/prisma";
-import fs from "fs";
-import path from "path";
 
 export const runtime = "nodejs";
 
-function loadLogo(): string {
+async function loadLogo(): Promise<string> {
   try {
-    const buf = fs.readFileSync(path.join(process.cwd(), "public", "logo.png"));
-    return `data:image/png;base64,${buf.toString("base64")}`;
+    const res = await fetch("https://fantaparto.com/logo.png", {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return "";
+    const buf = await res.arrayBuffer();
+    return `data:image/png;base64,${Buffer.from(buf).toString("base64")}`;
   } catch {
     return "";
   }
@@ -38,7 +40,7 @@ export async function GET(
 
   if (!prediction) return new Response("Not found", { status: 404 });
 
-  const logoSrc = loadLogo();
+  const logoSrc = await loadLogo();
 
   // ── Dati dinamici ────────────────────────────────────────────────────────────
   const nomeBaby   = prediction.event.nomeBimbo ? `Baby ${prediction.event.nomeBimbo}` : "FantaParto";
