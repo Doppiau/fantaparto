@@ -103,15 +103,14 @@ export default function Sidebar({ eventi, user }: SidebarProps) {
         {/* ── Brand ──────────────────────────────────────────────────────── */}
         <div style={{ padding: "20px 20px 16px", borderBottom: `1px solid ${S.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div
-              style={{
-                width: 40, height: 40, borderRadius: 11, flexShrink: 0,
-                background: "linear-gradient(135deg, #f4acb7 0%, #874e58 100%)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 0 18px rgba(244,172,183,0.30), 0 6px 14px rgba(135,78,88,0.35)",
-              }}
-            >
-              <span style={{ color: "#fff", fontWeight: 900, fontSize: 18, fontFamily: QS }}>F</span>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12, flexShrink: 0, overflow: "hidden",
+              background: "#fff",
+              boxShadow: "0 0 16px rgba(244,172,183,0.25), 0 4px 12px rgba(0,0,0,0.30)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="FantaParto" width={40} height={40} style={{ display: "block" }} />
             </div>
             <div>
               <p style={{ fontSize: 18, fontWeight: 700, color: S.onSurf, fontFamily: QS, margin: 0, lineHeight: 1.1 }}>
