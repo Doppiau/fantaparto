@@ -1,7 +1,18 @@
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/prisma";
+import fs from "fs";
+import path from "path";
 
 export const runtime = "nodejs";
+
+function loadLogo(): string {
+  try {
+    const buf = fs.readFileSync(path.join(process.cwd(), "public", "logo.png"));
+    return `data:image/png;base64,${buf.toString("base64")}`;
+  } catch {
+    return "";
+  }
+}
 
 export async function GET(
   _req: Request,
@@ -26,6 +37,8 @@ export async function GET(
   });
 
   if (!prediction) return new Response("Not found", { status: 404 });
+
+  const logoSrc = loadLogo();
 
   // ── Dati dinamici ────────────────────────────────────────────────────────────
   const nomeBaby   = prediction.event.nomeBimbo ? `Baby ${prediction.event.nomeBimbo}` : "FantaParto";
@@ -99,10 +112,14 @@ export async function GET(
         <div style={{ position: "absolute", top: "55%", right: -60, width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(180,50,200,0.12), transparent 70%)", display: "flex" }} />
 
         {/* ── Logo + nome evento ───────────────────────────────────────────── */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-          <div style={{ fontSize: 72, fontWeight: 900, letterSpacing: "-2px", display: "flex" }}>
-            <span style={{ color: "#ff9f45" }}>Fanta</span><span style={{ color: "#ffffff" }}>Parto</span>
-          </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+          {logoSrc ? (
+            <img src={logoSrc} width={200} height={200} style={{ display: "block", filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.50))" }} />
+          ) : (
+            <div style={{ fontSize: 72, fontWeight: 900, letterSpacing: "-2px", display: "flex" }}>
+              <span style={{ color: "#ff9f45" }}>Fanta</span><span style={{ color: "#ffffff" }}>Parto</span>
+            </div>
+          )}
           <div style={{ fontSize: 38, fontWeight: 700, color: "rgba(255,255,255,0.80)", display: "flex" }}>
             {nomeBaby}
           </div>

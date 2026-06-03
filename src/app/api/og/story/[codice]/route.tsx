@@ -1,7 +1,19 @@
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/prisma";
+import fs from "fs";
+import path from "path";
 
 export const runtime = "nodejs";
+
+// Carica il logo da /public/logo.png (trasparente) come base64
+function loadLogo(): string {
+  try {
+    const buf = fs.readFileSync(path.join(process.cwd(), "public", "logo.png"));
+    return `data:image/png;base64,${buf.toString("base64")}`;
+  } catch {
+    return "";
+  }
+}
 
 // Stelle fisse deterministiche per lo sfondo stellato
 const STARS = Array.from({ length: 90 }, (_, i) => ({
@@ -44,6 +56,8 @@ export async function GET(
   ]);
 
   if (!evento) return new Response("Not found", { status: 404 });
+
+  const logoSrc = loadLogo();
 
   const totVoti   = evento._count.predictions;
   const totSesso  = maschio + femmina;
@@ -131,12 +145,18 @@ export async function GET(
         }}>
           <StarryBg />
 
-          {/* ── Cicogna + Logo ───────────────────────────────────────────── */}
+          {/* ── Logo ────────────────────────────────────────────────────── */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, zIndex: 1 }}>
-            <span style={{ fontSize: 90, display: "flex", filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.40))" }}>🦢</span>
-            <div style={{ fontSize: 68, fontWeight: 900, letterSpacing: "-1px", display: "flex", filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.50))" }}>
-              <span style={{ color: "#ff9f45" }}>Fanta</span><span style={{ color: "#ffffff" }}>Parto</span>
-            </div>
+            {logoSrc ? (
+              <img src={logoSrc} width={220} height={220} style={{ display: "block", filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.55))" }} />
+            ) : (
+              <>
+                <span style={{ fontSize: 80, display: "flex" }}>🦢</span>
+                <div style={{ fontSize: 68, fontWeight: 900, letterSpacing: "-1px", display: "flex" }}>
+                  <span style={{ color: "#ff9f45" }}>Fanta</span><span style={{ color: "#ffffff" }}>Parto</span>
+                </div>
+              </>
+            )}
             <div style={{ fontSize: 34, fontWeight: 600, color: "rgba(255,255,255,0.75)", display: "flex" }}>
               {nomeEvento}
             </div>
@@ -274,11 +294,17 @@ export async function GET(
         <StarryBg />
 
         {/* Logo */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, zIndex: 1 }}>
-          <span style={{ fontSize: 80, display: "flex" }}>🦢</span>
-          <div style={{ fontSize: 72, fontWeight: 900, letterSpacing: "-2px", display: "flex" }}>
-            <span style={{ color: "#ff9f45" }}>Fanta</span><span style={{ color: "#ffffff" }}>Parto</span>
-          </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 1 }}>
+          {logoSrc ? (
+            <img src={logoSrc} width={220} height={220} style={{ display: "block", filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.55))" }} />
+          ) : (
+            <>
+              <span style={{ fontSize: 80, display: "flex" }}>🦢</span>
+              <div style={{ fontSize: 72, fontWeight: 900, letterSpacing: "-2px", display: "flex" }}>
+                <span style={{ color: "#ff9f45" }}>Fanta</span><span style={{ color: "#ffffff" }}>Parto</span>
+              </div>
+            </>
+          )}
           <div style={{ fontSize: 40, fontWeight: 700, color: "rgba(255,255,255,0.80)", display: "flex" }}>
             {nomeEvento}
           </div>
