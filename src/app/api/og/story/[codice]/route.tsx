@@ -84,7 +84,7 @@ export async function GET(
             borderRadius: 40, padding: "56px 64px", display: "flex", flexDirection: "column",
             alignItems: "center", gap: 36, width: "82%",
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16, display: "flex" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <span style={{ fontSize: 72, display: "flex" }}>👶</span>
               <div style={{ display: "flex", flexDirection: "column" }}>
                 <span style={{ fontSize: 28, fontWeight: 600, color: "rgba(255,255,255,0.6)", display: "flex" }}>È</span>
