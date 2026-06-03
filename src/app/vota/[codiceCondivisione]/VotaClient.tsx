@@ -151,6 +151,7 @@ export default function VotaClient({
 }: Props) {
   const [phase, setPhase]           = useState<Phase>("form");
   const [fingerprint, setFingerprint] = useState<string | null>(null);
+  const [predictionId, setPredictionId] = useState<string | null>(null);
   const [nomeInvitato, setNome]     = useState("");
   const [emailInvitato, setEmail]   = useState("");
   const [messaggioAugurio, setMsg]  = useState("");
@@ -224,9 +225,10 @@ export default function VotaClient({
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const json: { success: boolean; error?: string } = await res.json();
+      const json: { success: boolean; error?: string; data?: { id: string } } = await res.json();
       if (!res.ok) { setError(json.error ?? "Errore imprevisto."); setPhase("form"); return; }
       localStorage.setItem(`fp_voted_${eventId}`, "1");
+      if (json.data?.id) setPredictionId(json.data.id);
       setPhase("success");
     } catch {
       setError("Errore di connessione. Controlla la rete e riprova.");
@@ -263,6 +265,22 @@ export default function VotaClient({
           <p style={{ fontSize: 14, color: C.onSurfVar, lineHeight: 1.65 }}>
             Il tuo voto per <strong>{nomeDisplay}</strong> è salvato. Tornerai qui dopo la nascita per scoprire chi ha indovinato!
           </p>
+          {predictionId && (
+            <a
+              href={`/api/og/voto/${predictionId}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                fontSize: 14, fontWeight: 700, color: C.white,
+                background: "linear-gradient(135deg, #1565c0 0%, #c2185b 100%)",
+                borderRadius: 999, padding: "13px 24px",
+                textDecoration: "none", boxShadow: "0 4px 14px rgba(135,78,88,0.22)",
+              }}
+            >
+              🖼️ Vedi e condividi la tua card
+            </a>
+          )}
           <div style={{ paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
             <p style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: C.muted, marginBottom: 12 }}>
               Aspetti anche tu un bambino?
