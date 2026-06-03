@@ -22,12 +22,13 @@ export default function CopyLinkButton({ codice }: Props) {
   return (
     <button
       onClick={handleCopy}
+      className="sm:!px-[22px]"
       style={{
         position: "relative",
         display: "flex",
         alignItems: "center",
         gap: 8,
-        padding: "11px 22px",
+        padding: "11px 14px",
         borderRadius: 999,
         border: "none",
         cursor: "pointer",
@@ -67,8 +68,10 @@ export default function CopyLinkButton({ codice }: Props) {
         {copied ? "✅" : "🔗"}
       </span>
 
-      {/* Testo */}
-      <span>{copied ? "Link copiato!" : "Copia link invito"}</span>
+      {/* Testo — nascosto su mobile, visibile da sm in su */}
+      <span className="hidden sm:inline">
+        {copied ? "Link copiato!" : "Copia link invito"}
+      </span>
 
       {/* Pulse ring when copied */}
       {copied && (
