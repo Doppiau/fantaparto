@@ -133,6 +133,68 @@ model Prediction {
 }
 
 // ============================================================
+// COUPON (Codici promozionali — gestiti dalla Regia)
+// ============================================================
+
+model Coupon {
+  id           String    @id @default(uuid()) @db.Uuid
+  codice       String    @unique
+  tipo         String    // "PREMIUM_USER" | "PREMIUM_EVENTO" | "SCONTO_PCT"
+  creatorTag   String?   @map("creator_tag")  // nome influencer/campagna
+  scontoPct    Int?      @map("sconto_pct")   // 0-100, solo per SCONTO_PCT
+  usoMax       Int?      @map("uso_max")      // null = illimitato
+  usoCorrente  Int       @default(0) @map("uso_corrente")
+  scadenza     DateTime?
+  attivo       Boolean   @default(true)
+  note         String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([codice])
+  @@map("coupons")
+}
+
+// ============================================================
+// CAMPAGNA INFLUENCER (Tracciamento click e conversioni)
+// ============================================================
+
+model CampagnaInfluencer {
+  id          String   @id @default(uuid()) @db.Uuid
+  nome        String
+  codiceRif   String   @unique @map("codice_rif") // ?ref=CODICE nell'URL voto
+  click       Int      @default(0)
+  conversioni Int      @default(0)               // voti registrati via questo ref
+  attiva      Boolean  @default(true)
+  note        String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([codiceRif])
+  @@map("campagne_influencer")
+}
+
+// ============================================================
+// LINK AFFILIAZIONE (Lista Nascita Intelligente — B2B2C)
+// Amazon, Nidodigrazia e altri partner commerciali
+// ============================================================
+
+model LinkAffiliazione {
+  id              String   @id @default(uuid()) @db.Uuid
+  nome            String                              // es. "Passeggino Bugaboo Bee"
+  partner         String                              // "AMAZON" | "NIDODIGRAZIA" | "ALTRO"
+  url             String   @db.Text                  // URL completo con tag affiliazione
+  tagTracciamento String   @map("tag_tracciamento")  // es. "fantaparto-21"
+  click           Int      @default(0)
+  categoria       String?                             // es. "Puericultura", "Abbigliamento"
+  commissioni     Float?   @map("commissioni_stimate") // € commissioni dichiarate manualmente
+  attivo          Boolean  @default(true)
+  note            String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([partner])
+  @@map("link_affiliazione")
+}
+
+// ============================================================
 // AUDIT LOG (Per la Dashboard Admin Segreta)
 // ============================================================
 
