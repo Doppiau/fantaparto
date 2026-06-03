@@ -42,7 +42,6 @@ const NAV = [
   { href: "/dashboard/eventi",      icon: "event_list",  label: "Tutti gli eventi",  disabled: false },
   { href: "/dashboard/stats",       icon: "analytics",   label: "Statistiche",       disabled: true  },
   { href: "/dashboard/invitati",    icon: "group",       label: "Invitati",          disabled: true  },
-  { href: "/dashboard/profilo",     icon: "manage_accounts", label: "Profilo",          disabled: false },
   { href: "/dashboard/settings",    icon: "settings",    label: "Configurazione",    disabled: false },
   { href: "/dashboard/rivelazione", icon: "celebration", label: "Rivelazione",       disabled: false },
 ] as const;
@@ -239,23 +238,36 @@ export default function Sidebar({ eventi, user }: SidebarProps) {
             Nuova Sfida
           </Link>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: S.surface, border: `1px solid ${S.border}` }}>
-            {user.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.avatarUrl} alt="avatar" style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, border: `2px solid ${S.border}` }} />
-            ) : (
-              <div style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, background: "linear-gradient(135deg, #874e58, #5e2d3a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, color: "#fff", border: `2px solid rgba(244,172,183,0.20)` }}>
-                {initiali}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 12, background: S.surface, border: `1px solid ${S.border}` }}>
+            {/* Avatar + nome/email → link a /dashboard/profilo */}
+            <Link
+              href="/dashboard/profilo"
+              onClick={close}
+              style={{
+                display: "flex", alignItems: "center", gap: 10,
+                flex: 1, minWidth: 0, textDecoration: "none",
+                borderRadius: 8, padding: "2px 4px",
+              }}
+            >
+              {user.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatarUrl} alt="avatar" style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, border: `2px solid ${S.border}` }} />
+              ) : (
+                <div style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, background: "linear-gradient(135deg, #874e58, #5e2d3a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, color: "#fff", border: `2px solid rgba(244,172,183,0.20)` }}>
+                  {initiali}
+                </div>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: S.onSurf, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {user.nome ?? user.email.split("@")[0]}
+                </p>
+                <p style={{ fontSize: 10, color: S.muted, margin: "1px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {user.email}
+                </p>
               </div>
-            )}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: S.onSurf, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {user.nome ?? user.email.split("@")[0]}
-              </p>
-              <p style={{ fontSize: 10, color: S.muted, margin: "1px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {user.email}
-              </p>
-            </div>
+            </Link>
+
+            {/* Logout */}
             <form action={logoutAction}>
               <button type="submit" title="Logout" style={{ border: "none", background: "none", cursor: "pointer", color: S.muted, padding: 4, borderRadius: 8, flexShrink: 0 }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 18, display: "block" }}>logout</span>
