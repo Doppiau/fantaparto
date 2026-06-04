@@ -107,7 +107,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       });
     }
 
-    // ── 3b. Creazione evento ──────────────────────────────────────────────────
+    // ── 3b. Leggi isPremium reale dal DB (non dal body — prevenire bypass client) ─
+    const dbUser = await prisma.user.findUnique({ where: { id: userId }, select: { isPremium: true } });
+    const userIsPremium = dbUser?.isPremium ?? false;
+
+    // Se l'utente non è Premium, forza le metriche avanzate a false
+    const metricheFinali = userIsPremium
+      ? { sessoAttivo, dataAttiva, pesoAttivo, lunghezzaAttiva, oraAttiva, capelliAttivo, occhiAttivo }
+      : { sessoAttivo, dataAttiva, pesoAttivo, lunghezzaAttiva: false, oraAttiva: false, capelliAttivo: false, occhiAttivo: false };
+
+    // ── 3c. Creazione evento ──────────────────────────────────────────────────
     const evento = await prisma.event.create({
       data: {
         userId,
@@ -115,16 +124,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         dataPresuntaParto,
         codiceCondivisione,
         stato: "IN_CORSO",
-        isPremium,
-        sessoAttivo,
-        dataAttiva,
-        pesoAttivo,
-        lunghezzaAttiva,
-        oraAttiva,
-        capelliAttivo,
-        occhiAttivo,
+        isPremium: false,    // il piano si attiva solo via coupon o admin toggle
+        ...metricheFinali,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        customQuestions: customQuestions as any ?? undefined,
+        customQuestions: (userIsPremium ? customQuestions : undefined) as any ?? undefined,
       },
       select: {
         id: true,

@@ -8,6 +8,9 @@ import {
   getIpFromRequest, isIpBanned, recordViolationAndMaybeBan,
 } from "@/lib/ratelimit";
 import { checkVpn } from "@/lib/vpn";
+import { notificaLimiteRaggiunto } from "@/lib/notifications";
+
+const FREE_LIMIT = 20;
 
 // Schema wrapper: aggiunge eventId + honeypot al PredictionInputSchema
 const PostBodySchema = PredictionInputSchema.extend({
@@ -93,7 +96,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ── 2. Verifica esistenza evento e stato ──────────────────────────────────
     const evento = await prisma.event.findUnique({
       where: { id: eventId },
-      select: { id: true, stato: true, isPremium: true, votiBloccati: true },
+      select: {
+        id: true, stato: true, isPremium: true, votiBloccati: true,
+        nomeBimbo: true, limitNotificaInviata: true,
+        user: { select: { email: true } },
+      },
     });
 
     if (!evento) {
@@ -134,12 +141,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // ── 4. Limite partecipanti piano gratuito (max 20) ────────────────────────
+    // ── 4. Limite partecipanti piano gratuito (max FREE_LIMIT) ──────────────────
     if (!evento.isPremium) {
       const totaleVoti = await prisma.prediction.count({ where: { eventId } });
-      if (totaleVoti >= 20) {
+      if (totaleVoti >= FREE_LIMIT) {
         return NextResponse.json(
-          { success: false, error: "L'evento ha raggiunto il limite massimo di partecipanti gratis" },
+          { success: false, limitReached: true, error: "Questo evento ha raggiunto il limite di 20 partecipanti del piano gratuito." },
           { status: 403 }
         );
       }
@@ -176,6 +183,23 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       },
       select: { id: true, nomeInvitato: true, createdAt: true },
     });
+
+    // ── 7. Notifica al genitore se siamo arrivati esattamente al limite Free ───
+    if (!evento.isPremium && !evento.limitNotificaInviata) {
+      const nuovoTotale = await prisma.prediction.count({ where: { eventId } });
+      if (nuovoTotale >= FREE_LIMIT) {
+        // Aggiorna il flag e invia email in parallelo (fire-and-forget)
+        prisma.event.update({
+          where: { id: eventId },
+          data:  { limitNotificaInviata: true },
+        }).catch(console.error);
+
+        notificaLimiteRaggiunto(
+          evento.user.email,
+          evento.nomeBimbo,
+        ).catch(console.error);
+      }
+    }
 
     return NextResponse.json(
       {

@@ -27,7 +27,7 @@ const QS = "var(--font-quicksand, sans-serif)";
 const VN = "var(--font-vietnam, sans-serif)";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type Phase = "form" | "submitting" | "success" | "already_voted";
+type Phase = "form" | "submitting" | "success" | "already_voted" | "limit_reached";
 type Sesso = "MASCHIO" | "FEMMINA";
 type Capelli = "LISCI" | "RICCI" | "CALVO";
 type Occhi = "CHIARI" | "SCURI";
@@ -44,6 +44,7 @@ interface Props {
   capelliAttivo:  boolean;
   occhiAttivo:    boolean;
   temaColore?:    string | null;
+  isPremium:      boolean;
 }
 
 const TEMA: Record<string, { primary: string; priLight: string; priXLight: string; onPri: string }> = {
@@ -156,7 +157,7 @@ export default function VotaClient({
   eventId, nomeBimbo, dataPresuntaParto,
   sessoAttivo, dataAttiva, pesoAttivo,
   lunghezzaAttiva, oraAttiva, capelliAttivo, occhiAttivo,
-  temaColore,
+  temaColore, isPremium,
 }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-shadow
   const C = { ...C_BASE, ...(TEMA[temaColore ?? "ROSA"] ?? TEMA.ROSA) };
@@ -238,8 +239,11 @@ export default function VotaClient({
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const json: { success: boolean; error?: string; data?: { id: string } } = await res.json();
-      if (!res.ok) { setError(json.error ?? "Errore imprevisto."); setPhase("form"); return; }
+      const json: { success: boolean; limitReached?: boolean; error?: string; data?: { id: string } } = await res.json();
+      if (!res.ok) {
+        if (json.limitReached) { setPhase("limit_reached"); return; }
+        setError(json.error ?? "Errore imprevisto."); setPhase("form"); return;
+      }
       localStorage.setItem(`fp_voted_${eventId}`, "1");
       if (json.data?.id) setPredictionId(json.data.id);
       setPhase("success");
@@ -247,6 +251,29 @@ export default function VotaClient({
       setError("Errore di connessione. Controlla la rete e riprova.");
       setPhase("form");
     }
+  }
+
+  // ── Limite raggiunto (Free plan) ──────────────────────────────────────────
+  if (phase === "limit_reached") {
+    return (
+      <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: VN }}>
+        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 24, padding: "48px 36px", maxWidth: 400, width: "100%", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ width: 72, height: 72, borderRadius: "50%", background: C.priXLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36 }}>
+            🏆
+          </div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: 0 }}>
+            Evento al completo!
+          </h1>
+          <p style={{ fontSize: 14, color: C.onSurfVar, lineHeight: 1.65, margin: 0 }}>
+            <strong>{nomeDisplay}</strong> ha raggiunto il limite di partecipanti del piano gratuito.
+            I genitori riceveranno una notifica per sbloccare i posti con il piano Premium.
+          </p>
+          <Link href="/" style={{ fontSize: 13, fontWeight: 700, color: C.primary, textDecoration: "none", marginTop: 4 }}>
+            Scopri FantaParto →
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   // ── Already voted ──────────────────────────────────────────────────────────
@@ -330,6 +357,11 @@ export default function VotaClient({
           <p style={{ fontSize: 14, color: C.onSurfVar }}>
             Data Presunta Parto · {dppFormatted}
           </p>
+          {!isPremium && (
+            <p style={{ fontSize: 11, color: C.muted, marginTop: 10, padding: "5px 12px", borderRadius: 999, background: C_BASE.bg, display: "inline-block", border: `1px solid ${C_BASE.border}` }}>
+              🆓 Piano Free · max 20 partecipanti · metriche base
+            </p>
+          )}
         </header>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
