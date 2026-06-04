@@ -123,6 +123,12 @@ model Prediction {
   // Null finché l'evento non è CONCLUSO e il calcolo non viene eseguito
   punteggioOttenuto Int? @map("punteggio_ottenuto")
 
+  // Antifrode
+  ipAddress          String?  @map("ip_address")           // IP del votante al momento del voto
+  vpnFlag            Boolean  @default(false) @map("vpn_flag")          // proxycheck.io: VPN/proxy rilevato
+  flagSospetto       Boolean  @default(false) @map("flag_sospetto")      // flaggato dal sistema antifrode
+  motivazioneSospetto String? @map("motivazione_sospetto") // es. "VPN" | "IP_RAPIDO"
+
   createdAt DateTime @default(now()) @map("created_at")
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)

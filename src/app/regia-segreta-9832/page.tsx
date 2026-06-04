@@ -7,6 +7,7 @@ import { IpBanConsole } from "./IpBanConsole";
 import { CouponManager } from "./CouponManager";
 import { CampagnaManager } from "./CampagnaManager";
 import { AffiliazionePanel } from "./AffiliazionePanel";
+import { RadarFrodi } from "./RadarFrodi";
 import { fetchBannedIpsAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -70,11 +71,30 @@ async function fetchLinkAffiliazione() {
   return prisma.linkAffiliazione.findMany({ orderBy: { createdAt: "desc" } });
 }
 
+async function fetchRadarFrodi() {
+  const rows = await prisma.prediction.findMany({
+    where: { OR: [{ flagSospetto: true }, { vpnFlag: true }] },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+    select: {
+      id: true, nomeInvitato: true, emailInvitato: true,
+      ipAddress: true, vpnFlag: true, flagSospetto: true,
+      motivazioneSospetto: true, createdAt: true,
+      event: { select: { nomeBimbo: true, codiceCondivisione: true } },
+    },
+  });
+
+  const vpn      = rows.filter((r) => r.vpnFlag).length;
+  const ipRapido = rows.filter((r) => r.motivazioneSospetto?.startsWith("IP_RAPIDO")).length;
+  return { rows, kpi: { totale: rows.length, vpn, ipRapido } };
+}
+
 export default async function RegiaDashboard() {
   const admin = await requireAdmin();
-  const [kpi, eventi, utenti, auditLogs, bannedIpsResult, coupons, campagne, linkAff] = await Promise.all([
+  const [kpi, eventi, utenti, auditLogs, bannedIpsResult, coupons, campagne, linkAff, radar] = await Promise.all([
     fetchKpi(), fetchEventi(), fetchUtenti(), fetchAuditLog(),
     fetchBannedIpsAction(), fetchCoupons(), fetchCampagne(), fetchLinkAffiliazione(),
+    fetchRadarFrodi(),
   ]);
   const bannedIps = bannedIpsResult.ips ?? [];
 
@@ -165,6 +185,24 @@ export default async function RegiaDashboard() {
           <Pill color="#ef4444">{bannedIps.length} bannati</Pill>
         </div>
         <IpBanConsole initialIps={bannedIps} />
+      </section>
+
+      {/* ── Radar Frodi ─────────────────────────────────────────────────────────── */}
+      <section style={{ ...sectionStyle, marginBottom: "1.5rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+          <div>
+            <h2 style={sectionTitle}>🔎 Radar Frodi</h2>
+            <p style={{ color: "#64748b", fontSize: "0.8rem", margin: "2px 0 0" }}>
+              Voti sospetti: VPN rilevati, IP multipli, escalation automatica · {radar.kpi.totale} flag attivi
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {radar.kpi.vpn > 0 && <Pill color="#ef4444">{radar.kpi.vpn} VPN</Pill>}
+            {radar.kpi.ipRapido > 0 && <Pill color="#f97316">{radar.kpi.ipRapido} IP rapidi</Pill>}
+            {radar.kpi.totale === 0 && <Pill color="#22c55e">tutto ok</Pill>}
+          </div>
+        </div>
+        <RadarFrodi initialRows={radar.rows} kpi={radar.kpi} />
       </section>
 
       {/* ── Audit Log ───────────────────────────────────────────────────────── */}

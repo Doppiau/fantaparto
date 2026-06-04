@@ -26,9 +26,19 @@ export const rateLimitAuth = new Ratelimit({
   analytics: true,
 });
 
+// Limitatore per-evento per-IP: max 3 voti dallo stesso IP sullo stesso evento per ora.
+// Previene famiglie/uffici che vogliono far votare lo stesso device più volte.
+export const rateLimitVotoPerEvento = new Ratelimit({
+  redis,
+  limiter: Ratelimit.fixedWindow(3, "60 m"),
+  prefix: "fp:rl:evento",
+  analytics: true,
+});
+
 // ── Utility: IP banning ───────────────────────────────────────────────────────
 
 const BAN_PREFIX = "fp:ban:";
+const VIOLATION_PREFIX = "fp:viol:";
 
 export async function banIp(
   ip: string,
@@ -46,6 +56,19 @@ export async function banIp(
 export async function isIpBanned(ip: string): Promise<boolean> {
   const key = `${BAN_PREFIX}${ip}`;
   return (await redis.exists(key)) === 1;
+}
+
+// Escalation automatica: al 2° rate-limit violation entro 10 minuti → ban 1h.
+// Chiamare quando si rileva una violazione rate-limit.
+export async function recordViolationAndMaybeBan(ip: string): Promise<void> {
+  const key = `${VIOLATION_PREFIX}${ip}`;
+  const count = await redis.incr(key);
+  if (count === 1) {
+    await redis.expire(key, 10 * 60); // finestra di 10 minuti
+  }
+  if (count >= 2) {
+    await banIp(ip, 60 * 60); // ban 1 ora al 2° strike
+  }
 }
 
 // ── Utility: estrazione IP robusta per Vercel ─────────────────────────────────

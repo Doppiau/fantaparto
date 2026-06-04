@@ -193,6 +193,84 @@ export async function banIpManualAction(
   }
 }
 
+// ── Radar Frodi ───────────────────────────────────────────────────────────────
+
+export async function clearFlagSospettoAction(
+  predictionId: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const admin = await assertAdmin();
+    await prisma.$transaction(async (tx) => {
+      await tx.prediction.update({
+        where: { id: predictionId },
+        data: { flagSospetto: false, motivazioneSospetto: null },
+      });
+      await tx.auditLog.create({
+        data: {
+          adminId:  admin.id,
+          azione:   "CLEAR_FLAG_FRODE",
+          dettagli: `Flag sospetto rimosso dalla prediction ${predictionId} dalla Regia (${admin.email}).`,
+        },
+      });
+    });
+    revalidatePath("/regia-segreta-9832");
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore" };
+  }
+}
+
+export async function deletePredictionAdminAction(
+  predictionId: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const admin = await assertAdmin();
+    await prisma.$transaction(async (tx) => {
+      const p = await tx.prediction.delete({ where: { id: predictionId } });
+      await tx.auditLog.create({
+        data: {
+          adminId:  admin.id,
+          azione:   "ELIMINA_VOTO_FRODE",
+          dettagli: `Voto di "${p.nomeInvitato}" (${predictionId}) eliminato per frode dalla Regia (${admin.email}).`,
+        },
+      });
+    });
+    revalidatePath("/regia-segreta-9832");
+    return { success: true };
+  } catch (e) {
+    if (isPrismaError(e, "P2025")) return { success: false, error: "Voto non trovato." };
+    return { success: false, error: e instanceof Error ? e.message : "Errore" };
+  }
+}
+
+export async function banIpFromPredictionAction(
+  predictionId: string,
+  ttlOre?: number,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const admin = await assertAdmin();
+    const prediction = await prisma.prediction.findUnique({
+      where: { id: predictionId },
+      select: { ipAddress: true, nomeInvitato: true },
+    });
+    if (!prediction?.ipAddress) {
+      return { success: false, error: "IP non disponibile per questo voto." };
+    }
+    await banIp(prediction.ipAddress, ttlOre ? ttlOre * 3600 : null);
+    await prisma.auditLog.create({
+      data: {
+        adminId:  admin.id,
+        azione:   "BAN_IP_FRODE",
+        dettagli: `IP ${prediction.ipAddress} (voto di "${prediction.nomeInvitato}") bannato dalla Regia (${admin.email}). TTL: ${ttlOre ? `${ttlOre}h` : "permanente"}.`,
+      },
+    });
+    revalidatePath("/regia-segreta-9832");
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore" };
+  }
+}
+
 // ── Impersonazione (audit log) ────────────────────────────────────────────────
 
 export async function logImpersonazioneAction(

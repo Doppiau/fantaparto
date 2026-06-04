@@ -163,6 +163,7 @@ export default function VotaClient({
   const [votoCapelli, setVotoCap]   = useState<Capelli | "">("");
   const [votoOcchi, setVotoOcchi]   = useState<Occhi | "">("");
   const [error, setError]           = useState<string | null>(null);
+  const [honeypot, setHoneypot]     = useState("");
 
   const nomeDisplay = nomeBimbo ? `Baby ${nomeBimbo}` : "Fagiolino 🫘";
   const dppFormatted = new Date(dataPresuntaParto).toLocaleDateString("it-IT", {
@@ -210,6 +211,7 @@ export default function VotaClient({
     setPhase("submitting"); setError(null);
     const body: Record<string, unknown> = {
       eventId, nomeInvitato: nomeInvitato.trim(), deviceFingerprint: fingerprint,
+      _hp: honeypot,
     };
     if (emailInvitato) body.emailInvitato = emailInvitato;
     if (messaggioAugurio) body.messaggioAugurio = messaggioAugurio;
@@ -320,6 +322,18 @@ export default function VotaClient({
         </header>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+          {/* Honeypot — invisibile agli umani, compilato dai bot */}
+          <input
+            type="text"
+            name="website_confirm"
+            value={honeypot}
+            onChange={(e) => setHoneypot(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+          />
 
           {/* Chi sei */}
           <Section label="Chi sei? *">

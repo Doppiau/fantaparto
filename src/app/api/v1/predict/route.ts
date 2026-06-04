@@ -3,15 +3,20 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { PredictionInputSchema } from "@/lib/validations";
 import { isPrismaError } from "@/lib/prisma-errors";
-import { rateLimitVoto, getIpFromRequest, isIpBanned } from "@/lib/ratelimit";
+import {
+  rateLimitVoto, rateLimitVotoPerEvento,
+  getIpFromRequest, isIpBanned, recordViolationAndMaybeBan,
+} from "@/lib/ratelimit";
+import { checkVpn } from "@/lib/vpn";
 
-// Schema wrapper: aggiunge eventId al PredictionInputSchema
+// Schema wrapper: aggiunge eventId + honeypot al PredictionInputSchema
 const PostBodySchema = PredictionInputSchema.extend({
   eventId: z.string().uuid("eventId deve essere un UUID valido"),
+  _hp:     z.string().optional(), // campo honeypot — i bot lo compilano, gli umani no
 });
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  // ── 0. Controllo blacklist IP e rate limiting ─────────────────────────────
+  // ── 0. Controllo blacklist IP e rate limiting globale ─────────────────────
   const ip = getIpFromRequest(req);
 
   const [banned, { success: withinLimit, limit, remaining, reset }] =
@@ -25,6 +30,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   if (!withinLimit) {
+    await recordViolationAndMaybeBan(ip);
     return NextResponse.json(
       { success: false, error: "Troppe richieste! Riprova tra poco." },
       {
@@ -59,20 +65,29 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   const {
-    eventId,
-    nomeInvitato,
-    emailInvitato,
-    messaggioAugurio,
-    deviceFingerprint,
-    votoSesso,
-    votoData,
-    votoPeso,
-    votoLunghezza,
-    votoOra,
-    votoCapelli,
-    votoOcchi,
-    votoCustomAnswers,
+    eventId, _hp,
+    nomeInvitato, emailInvitato, messaggioAugurio, deviceFingerprint,
+    votoSesso, votoData, votoPeso, votoLunghezza, votoOra, votoCapelli, votoOcchi, votoCustomAnswers,
   } = parsed.data;
+
+  // ── 1b. Honeypot check ───────────────────────────────────────────────────────
+  // Se il campo _hp è compilato = bot. Risposta fake 201 per non rivelare il check.
+  if (_hp && _hp.trim().length > 0) {
+    return NextResponse.json(
+      { success: true, message: "Pronostico salvato! In bocca al lupo alla mamma 🍀", data: { id: crypto.randomUUID(), nomeInvitato, createdAt: new Date() } },
+      { status: 201 }
+    );
+  }
+
+  // ── 1c. Rate limit per-evento per-IP ────────────────────────────────────────
+  const { success: withinEventLimit } = await rateLimitVotoPerEvento.limit(`${eventId}:${ip}`);
+  if (!withinEventLimit) {
+    await recordViolationAndMaybeBan(ip);
+    return NextResponse.json(
+      { success: false, error: "Hai raggiunto il limite di partecipazioni per questo evento dal tuo indirizzo di rete. Riprova tra un'ora." },
+      { status: 429 }
+    );
+  }
 
   try {
     // ── 2. Verifica esistenza evento e stato ──────────────────────────────────
@@ -130,29 +145,36 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // ── 5. Salvataggio voto ───────────────────────────────────────────────────
+    // ── 5. VPN detection (parallela al salvataggio se possibile) ─────────────
+    const vpnResult = await checkVpn(ip);
+
+    const vpnFlag       = vpnResult.isVpn;
+    const flagSospetto  = vpnFlag;
+    const motivazione   = vpnFlag ? `VPN:${vpnResult.type ?? "proxy"}` : null;
+
+    // ── 6. Salvataggio voto ───────────────────────────────────────────────────
     const prediction = await prisma.prediction.create({
       data: {
         eventId,
         nomeInvitato,
-        emailInvitato: emailInvitato || undefined,
+        emailInvitato:    emailInvitato || undefined,
         messaggioAugurio: messaggioAugurio || undefined,
         deviceFingerprint,
-        votoSesso: votoSesso ?? undefined,
-        votoData: votoData ?? undefined,
-        votoPeso: votoPeso ?? undefined,
-        votoLunghezza: votoLunghezza ?? undefined,
-        votoOra: votoOra ?? undefined,
-        votoCapelli: votoCapelli ?? undefined,
-        votoOcchi: votoOcchi ?? undefined,
+        ipAddress:           ip !== "unknown" ? ip : null,
+        vpnFlag,
+        flagSospetto,
+        motivazioneSospetto: motivazione,
+        votoSesso:      votoSesso ?? undefined,
+        votoData:       votoData ?? undefined,
+        votoPeso:       votoPeso ?? undefined,
+        votoLunghezza:  votoLunghezza ?? undefined,
+        votoOra:        votoOra ?? undefined,
+        votoCapelli:    votoCapelli ?? undefined,
+        votoOcchi:      votoOcchi ?? undefined,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         votoCustomAnswers: (votoCustomAnswers as any) ?? undefined,
       },
-      select: {
-        id: true,
-        nomeInvitato: true,
-        createdAt: true,
-      },
+      select: { id: true, nomeInvitato: true, createdAt: true },
     });
 
     return NextResponse.json(
