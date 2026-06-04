@@ -167,6 +167,7 @@ export default async function VotaPage({ params }: PageProps) {
   return (
     <VotaClient
       eventId={event.id}
+      codiceCondivisione={codiceCondivisione}
       nomeBimbo={event.nomeBimbo}
       dataPresuntaParto={event.dataPresuntaParto.toISOString()}
       isPremium={event.isPremium}

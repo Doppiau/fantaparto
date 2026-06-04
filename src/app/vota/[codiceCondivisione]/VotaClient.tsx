@@ -33,18 +33,19 @@ type Capelli = "LISCI" | "RICCI" | "CALVO";
 type Occhi = "CHIARI" | "SCURI";
 
 interface Props {
-  eventId:        string;
-  nomeBimbo:      string | null;
-  dataPresuntaParto: string;
-  sessoAttivo:    boolean;
-  dataAttiva:     boolean;
-  pesoAttivo:     boolean;
-  lunghezzaAttiva:boolean;
-  oraAttiva:      boolean;
-  capelliAttivo:  boolean;
-  occhiAttivo:    boolean;
-  temaColore?:    string | null;
-  isPremium:      boolean;
+  eventId:             string;
+  codiceCondivisione:  string;
+  nomeBimbo:           string | null;
+  dataPresuntaParto:   string;
+  sessoAttivo:         boolean;
+  dataAttiva:          boolean;
+  pesoAttivo:          boolean;
+  lunghezzaAttiva:     boolean;
+  oraAttiva:           boolean;
+  capelliAttivo:       boolean;
+  occhiAttivo:         boolean;
+  temaColore?:         string | null;
+  isPremium:           boolean;
 }
 
 const TEMA: Record<string, { primary: string; priLight: string; priXLight: string; onPri: string }> = {
@@ -154,7 +155,7 @@ function SliderField({
 
 // ── Page component ────────────────────────────────────────────────────────────
 export default function VotaClient({
-  eventId, nomeBimbo, dataPresuntaParto,
+  eventId, codiceCondivisione, nomeBimbo, dataPresuntaParto,
   sessoAttivo, dataAttiva, pesoAttivo,
   lunghezzaAttiva, oraAttiva, capelliAttivo, occhiAttivo,
   temaColore, isPremium,
@@ -305,6 +306,20 @@ export default function VotaClient({
           <p style={{ fontSize: 14, color: C.onSurfVar, lineHeight: 1.65 }}>
             Il tuo voto per <strong>{nomeDisplay}</strong> è salvato. Tornerai qui dopo la nascita per scoprire chi ha indovinato!
           </p>
+          {/* CTA principale: Hype Space */}
+          <Link
+            href={`/vota/${codiceCondivisione}/hype`}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              fontSize: 15, fontWeight: 700, color: C.white,
+              background: `linear-gradient(135deg, ${C.primary}, ${C.priLight}bb)`,
+              borderRadius: 999, padding: "14px 28px",
+              textDecoration: "none", boxShadow: `0 8px 24px ${C.primary}40`,
+            }}
+          >
+            📊 Vedi l&apos;Hype Space!
+          </Link>
+
           {predictionId && (
             <a
               href={`/api/og/voto/${predictionId}`}
@@ -312,13 +327,13 @@ export default function VotaClient({
               rel="noreferrer"
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                fontSize: 14, fontWeight: 700, color: C.white,
-                background: "linear-gradient(135deg, #1565c0 0%, #c2185b 100%)",
-                borderRadius: 999, padding: "13px 24px",
-                textDecoration: "none", boxShadow: "0 4px 14px rgba(135,78,88,0.22)",
+                fontSize: 13, fontWeight: 700, color: C.onSurfVar,
+                background: C_BASE.bg, border: `1px solid ${C_BASE.border}`,
+                borderRadius: 999, padding: "11px 24px",
+                textDecoration: "none",
               }}
             >
-              🖼️ Vedi e condividi la tua card
+              🖼️ Condividi la tua card
             </a>
           )}
           <div style={{ paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
