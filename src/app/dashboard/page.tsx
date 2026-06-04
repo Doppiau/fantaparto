@@ -6,25 +6,27 @@ import CopyLinkButton from "@/components/dashboard/CopyLinkButton";
 
 export const dynamic = "force-dynamic";
 
-// ── Tokens ────────────────────────────────────────────────────────────────────
+// ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
-  bg:       "#fef5f4",
-  white:    "#ffffff",
-  border:   "#f0e8e6",
-  primary:  "#b5352c",
-  priLight: "#f4acb7",
-  priXL:    "#fde8e6",
-  onPri:    "#7a1f18",
-  sec:      "#40627b",
-  secLight: "#bee1ff",
-  onSec:    "#42647e",
-  onSurf:   "#1a1a2e",
-  onSurfV:  "#5a4e50",
-  muted:    "#a89a9b",
-  amberCard:"#fef3c7",
-  amberText:"#92400e",
-  amberAcc: "#f59e0b",
-  cardBg:   "#ffffff",
+  bg:        "#faf8f5",
+  white:     "#ffffff",
+  border:    "#ede8e5",
+  borderSoft:"#f2eeeb",
+  primary:   "#b5352c",
+  priLight:  "#f4acb7",
+  priXL:     "#fde8e6",
+  onPri:     "#7a1f18",
+  sec:       "#40627b",
+  secLight:  "#bee1ff",
+  onSec:     "#255470",
+  onSurf:    "#1a1a2e",
+  onSurfV:   "#5a4e50",
+  muted:     "#a89a9b",
+  amber:     "#f59e0b",
+  amberBg:   "#fef3c7",
+  amberText: "#92400e",
+  green:     "#16a34a",
+  greenBg:   "#dcfce7",
 } as const;
 
 const QS = "var(--font-quicksand, sans-serif)";
@@ -42,26 +44,41 @@ function formatDPP(d: Date) {
   return d.toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
 }
 
-// ── Donut SVG ─────────────────────────────────────────────────────────────────
-function Donut({ pct, label, sub, color }: { pct: number; label: string; sub: string; color: string }) {
-  const r = 30; const circ = 2 * Math.PI * r;
-  const dash = circ * Math.min(1, pct / 100);
+// ── Mini components ───────────────────────────────────────────────────────────
+function Bar({ pct, color, h = 6 }: { pct: number; color: string; h?: number }) {
   return (
-    <svg width="80" height="80" viewBox="0 0 80 80">
-      <circle cx="40" cy="40" r={r} fill="none" stroke={C.border} strokeWidth="9" />
-      <circle cx="40" cy="40" r={r} fill="none" stroke={color} strokeWidth="9"
-        strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" transform="rotate(-90 40 40)" />
-      <text x="40" y="38" textAnchor="middle" fontSize="13" fontWeight="800" fill={C.onSurf} fontFamily={QS}>{label}</text>
-      <text x="40" y="52" textAnchor="middle" fontSize="8" fill={C.muted} fontFamily={VN}>{sub}</text>
-    </svg>
+    <div style={{ height: h, borderRadius: 999, background: C.borderSoft, overflow: "hidden" }}>
+      <div style={{ height: "100%", width: `${Math.min(100, Math.max(0, pct))}%`, background: color, borderRadius: 999, transition: "width 0.5s ease" }} />
+    </div>
   );
 }
 
-function Bar({ pct, color, h = 6 }: { pct: number; color: string; h?: number }) {
+function StatCard({ label, icon, children, accent = C.primary }: { label: string; icon: string; children: React.ReactNode; accent?: string }) {
   return (
-    <div style={{ height: h, borderRadius: 999, background: C.border, overflow: "hidden" }}>
-      <div style={{ height: "100%", width: `${Math.min(100, pct)}%`, background: color, borderRadius: 999 }} />
+    <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 18, padding: "20px 22px", display: "flex", flexDirection: "column", gap: 4 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: C.muted, margin: 0 }}>{label}</p>
+        <div style={{ width: 28, height: 28, borderRadius: 8, background: accent + "18", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>{icon}</div>
+      </div>
+      {children}
     </div>
+  );
+}
+
+function QuickAction({ href, icon, label, accent = C.onSurfV, bg = C.white }: { href: string; icon: string; label: string; accent?: string; bg?: string }) {
+  return (
+    <Link
+      href={href}
+      style={{
+        display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+        padding: "14px 10px", borderRadius: 14, textDecoration: "none",
+        background: bg, border: `1px solid ${C.border}`,
+        transition: "all 150ms", flex: 1,
+      }}
+    >
+      <span style={{ fontSize: 22 }}>{icon}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: accent, textAlign: "center", lineHeight: 1.3 }}>{label}</span>
+    </Link>
   );
 }
 
@@ -78,7 +95,7 @@ export default async function DashboardPage() {
   if (!user) redirect("/login");
 
   const [dbUser, eventi] = await Promise.all([
-    prisma.user.findUnique({ where: { id: user.id }, select: { nome: true } }),
+    prisma.user.findUnique({ where: { id: user.id }, select: { nome: true, isPremium: true } }),
     prisma.event.findMany({
       where: { userId: user.id }, orderBy: { createdAt: "desc" },
       select: {
@@ -90,6 +107,7 @@ export default async function DashboardPage() {
   ]);
 
   const nomeMamma    = dbUser?.nome ?? "Mamma";
+  const isPremium    = dbUser?.isPremium ?? false;
   const eventoAttivo = eventi.find((e) => e.stato === "IN_CORSO") ?? eventi[0] ?? null;
   const altriEventi  = eventoAttivo ? eventi.filter((e) => e.id !== eventoAttivo.id) : [];
 
@@ -104,18 +122,20 @@ export default async function DashboardPage() {
   const pesiValidi = predictions.map((p) => p.votoPeso).filter((p): p is number => p !== null);
   const mediaPeso  = pesiValidi.length > 0 ? pesiValidi.reduce((a, b) => a + b, 0) / pesiValidi.length : null;
 
-  const dpp      = eventoAttivo ? new Date(eventoAttivo.dataPresuntaParto) : null;
-  const giorni   = dpp ? calcolaGiorni(dpp) : 0;
-  const sett     = settimana(giorni);
-  const voti     = eventoAttivo?._count.predictions ?? 0;
-  const maxVoti  = eventoAttivo?.isPremium ? null : 20;
-  const pctVoti  = maxVoti ? Math.min(100, Math.round((voti / maxVoti) * 100)) : 0;
-  const totSesso = maschio + femmina;
-  const pctM     = totSesso > 0 ? Math.round((maschio / totSesso) * 100) : 0;
-  const pctF     = 100 - pctM;
-  const pesoPct  = mediaPeso ? Math.round(((mediaPeso - 2500) / 2500) * 100) : 0;
-  const urgente  = giorni <= 14 && giorni > 0;
-  const nomeEvento = eventoAttivo?.nomeBimbo ? `Baby ${eventoAttivo.nomeBimbo}` : "Il tuo FantaParto";
+  const dpp         = eventoAttivo ? new Date(eventoAttivo.dataPresuntaParto) : null;
+  const giorni      = dpp ? calcolaGiorni(dpp) : 0;
+  const sett        = settimana(giorni);
+  const voti        = eventoAttivo?._count.predictions ?? 0;
+  const maxVoti     = eventoAttivo?.isPremium ? null : 20;
+  const pctVoti     = maxVoti ? Math.min(100, Math.round((voti / maxVoti) * 100)) : 0;
+  const totSesso    = maschio + femmina;
+  const pctM        = totSesso > 0 ? Math.round((maschio / totSesso) * 100) : 0;
+  const pctF        = 100 - pctM;
+  const urgente     = giorni <= 14 && giorni > 0;
+  const nomeEvento  = eventoAttivo?.nomeBimbo ? `Baby ${eventoAttivo.nomeBimbo}` : "Il tuo FantaParto";
+  const cvr         = eventoAttivo && eventoAttivo.visualizzazioniLink > 0
+    ? Math.round((voti / eventoAttivo.visualizzazioniLink) * 100)
+    : 0;
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: VN }}>
@@ -129,333 +149,425 @@ export default async function DashboardPage() {
           display: "flex", alignItems: "center", gap: 16,
         }}
       >
-        <h1 style={{ fontSize: 20, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: 0, flex: 1 }}>
+        <h1 style={{ fontSize: 18, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: 0, flex: 1 }}>
           Dashboard
         </h1>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Bell */}
-          <button style={{ width: 36, height: 36, borderRadius: "50%", border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
-            🔔
-          </button>
-          {/* Help */}
-          <button style={{ width: 36, height: 36, borderRadius: "50%", border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: C.muted, fontFamily: QS }}>
-            ?
-          </button>
-          {/* Share link — solo con evento attivo */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {eventoAttivo && (
-            <div style={{ display: "flex", gap: 8 }}>
+            <>
               <Link
                 href="/dashboard/nuovo-evento"
                 style={{
-                  fontSize: 13, fontWeight: 600, color: C.onSurfV,
+                  fontSize: 12, fontWeight: 600, color: C.onSurfV,
                   border: `1px solid ${C.border}`, borderRadius: 999,
-                  padding: "7px 14px", textDecoration: "none", background: C.white,
+                  padding: "6px 14px", textDecoration: "none", background: C.white,
+                  display: "flex", alignItems: "center", gap: 4,
                 }}
               >
-                + Nuovo
+                <span style={{ fontSize: 14 }}>+</span> Nuovo
               </Link>
               <CopyLinkButton codice={eventoAttivo.codiceCondivisione} />
-            </div>
+            </>
           )}
         </div>
       </div>
 
       {/* ── Contenuto principale ─────────────────────────────────────────────── */}
-      <div className="px-4 md:px-8" style={{ maxWidth: 1120, margin: "0 auto", paddingTop: 36, paddingBottom: 64 }}>
+      <div className="px-4 md:px-8" style={{ maxWidth: 1100, margin: "0 auto", paddingTop: 32, paddingBottom: 64 }}>
 
         {eventoAttivo === null ? (
 
-          /* ─── EMPTY STATE ─────────────────────────────────────────────────── */
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 16 }}>
-
-            <div style={{
-              width: "100%", maxWidth: 700,
-              background: C.white,
-              borderRadius: 24,
-              border: `1px solid ${C.border}`,
-              boxShadow: "0 8px 40px -12px rgba(181,53,44,0.12), 0 2px 8px -2px rgba(0,0,0,0.06)",
-              padding: "64px 48px",
-              textAlign: "center",
-              display: "flex", flexDirection: "column", alignItems: "center", gap: 0,
-            }}>
-
-              {/* Illustration */}
-              <div style={{ marginBottom: 28, position: "relative", display: "inline-block" }}>
-                <span style={{ fontSize: 18, position: "absolute", top: -8, left: -12 }}>✨</span>
-                <span style={{ fontSize: 90, lineHeight: 1, display: "block" }}>🍼</span>
-                <span style={{ fontSize: 14, position: "absolute", top: 4, right: -14 }}>✨</span>
-                <span style={{ fontSize: 10, position: "absolute", bottom: 0, right: -8 }}>✦</span>
-              </div>
-
-              {/* Heading */}
-              <h2 style={{
-                fontSize: 30, fontWeight: 700, fontFamily: FR,
-                color: C.onSurf, margin: "0 0 14px", lineHeight: 1.25,
-                letterSpacing: "-0.01em",
-              }}>
-                Il tuo primo FantaParto<br />ti aspetta!
-              </h2>
-
-              {/* Description */}
-              <p style={{
-                fontSize: 15, color: C.onSurfV, lineHeight: 1.65,
-                maxWidth: 420, margin: "0 0 36px",
-              }}>
-                Inizia a creare il tuo evento personalizzato, invita amici e
-                parenti e scopri chi indovinerà i dettagli del grande giorno.
-              </p>
-
-              {/* CTA */}
-              <Link
-                href="/dashboard/nuovo-evento"
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  fontSize: 16, fontWeight: 700, color: C.white,
-                  background: C.primary,
-                  borderRadius: 14, padding: "14px 32px",
-                  textDecoration: "none",
-                  boxShadow: "0 8px 24px rgba(181,53,44,0.30)",
-                  marginBottom: 16,
-                  fontFamily: FR,
-                }}
-              >
-                <span style={{ fontSize: 18 }}>+</span>
-                Crea il tuo FantaParto
-              </Link>
-
-              {/* Secondary link */}
-              <a
-                href="#come-funziona"
-                style={{ fontSize: 14, fontWeight: 600, color: C.muted, textDecoration: "none" }}
-              >
-                Guarda come funziona →
-              </a>
-            </div>
-
-            {/* Come funziona — 3 cards */}
-            <div
-              id="come-funziona"
-              className="grid grid-cols-1 md:grid-cols-3"
-              style={{ width: "100%", marginTop: 40, gap: 16 }}
-            >
-              {[
-                { icon: "🎯", title: "Pronostici social",      desc: "Sesso, peso, data, ora. Chi indovina vince.",      color: "#c44a40", bg: "#fde8e6" },
-                { icon: "🏆", title: "Classifica automatica",  desc: "I punteggi si calcolano alla nascita del bimbo.",  color: "#92400e", bg: "#fef3c7" },
-                { icon: "📄", title: "PDF ricordo",            desc: "Un documento personalizzato da conservare.",        color: "#1e40af", bg: "#dbeafe" },
-              ].map((f) => (
-                <div key={f.title} style={{
-                  background: f.bg, borderRadius: 18, padding: "28px 24px",
-                  border: "1px solid rgba(0,0,0,0.05)",
-                }}>
-                  <p style={{ fontSize: 32, margin: "0 0 12px" }}>{f.icon}</p>
-                  <p style={{ fontSize: 15, fontWeight: 700, fontFamily: QS, color: f.color, margin: "0 0 6px" }}>{f.title}</p>
-                  <p style={{ fontSize: 13, color: C.onSurfV, margin: 0, lineHeight: 1.6 }}>{f.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          /* ─── EMPTY STATE ────────────────────────────────────────────────── */
+          <EmptyState nomeMamma={nomeMamma} />
 
         ) : (
 
-          /* ─── ACTIVE STATE ────────────────────────────────────────────────── */
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          /* ─── ACTIVE STATE ───────────────────────────────────────────────── */
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
             {/* ROW 1: Hero + Countdown */}
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_260px]" style={{ gap: 14 }}>
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_240px]" style={{ gap: 14 }}>
 
+              {/* Hero */}
               <div style={{
-                borderRadius: 20, padding: "32px 36px",
-                background: `linear-gradient(135deg, #fde8e6 0%, #fff5f4 55%, ${C.bg} 100%)`,
-                border: `1px solid ${C.priLight}50`,
-                display: "flex", flexDirection: "column", justifyContent: "space-between",
+                borderRadius: 20, padding: "28px 32px",
+                background: `linear-gradient(135deg, #fde8e6 0%, #fff8f7 60%, ${C.bg} 100%)`,
+                border: `1px solid ${C.priLight}55`,
+                display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 16,
               }}>
                 <div>
-                  <h2 style={{ fontSize: 28, fontWeight: 800, fontFamily: FR, color: C.primary, margin: "0 0 10px", lineHeight: 1.2 }}>
-                    Bentornata, {nomeMamma}! 🍼
+                  <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: C.primary, margin: "0 0 6px" }}>
+                    👋 Bentornata, {nomeMamma}
+                  </p>
+                  <h2 style={{ fontSize: 24, fontWeight: 800, fontFamily: FR, color: C.onSurf, margin: "0 0 8px", lineHeight: 1.2 }}>
+                    {nomeEvento}
                   </h2>
-                  <p style={{ fontSize: 14, color: C.onSurfV, lineHeight: 1.65, maxWidth: 420, margin: 0 }}>
-                    <strong>{nomeEvento}</strong> ha ricevuto{" "}
-                    <strong>{voti} pronostic{voti === 1 ? "o" : "i"}</strong>.
-                    {dpp && ` La DPP è il ${formatDPP(dpp)}.`}
+                  <p style={{ fontSize: 13, color: C.onSurfV, lineHeight: 1.6, maxWidth: 400, margin: 0 }}>
+                    {voti === 0
+                      ? "Nessun pronostico ancora. Condividi il link con amici e parenti!"
+                      : `${voti} pronostic${voti === 1 ? "o ricevuto" : "i ricevuti"}${dpp ? ` · DPP ${formatDPP(dpp)}` : ""}`
+                    }
                   </p>
                 </div>
-                <div style={{ display: "flex", gap: 10, marginTop: 28, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   <Link href={`/dashboard/${eventoAttivo.id}`} style={{
                     fontSize: 13, fontWeight: 700, color: C.white,
                     background: C.primary, borderRadius: 999,
-                    padding: "10px 22px", textDecoration: "none",
-                    boxShadow: "0 4px 14px rgba(181,53,44,0.30)",
+                    padding: "10px 20px", textDecoration: "none",
+                    boxShadow: "0 4px 14px rgba(181,53,44,0.28)",
+                    display: "flex", alignItems: "center", gap: 6,
                   }}>
-                    Vai alla dashboard →
+                    Vedi dettagli →
                   </Link>
                   <CopyLinkButton codice={eventoAttivo.codiceCondivisione} />
                 </div>
               </div>
 
+              {/* Countdown */}
               <div style={{
-                borderRadius: 20, padding: "28px 24px",
+                borderRadius: 20, padding: "24px 22px",
                 background: urgente
-                  ? `linear-gradient(135deg, #fecaca 0%, #fee2e2 100%)`
-                  : `linear-gradient(135deg, ${C.amberCard} 0%, #fffbeb 100%)`,
+                  ? "linear-gradient(135deg, #fecaca 0%, #fee2e2 100%)"
+                  : `linear-gradient(135deg, ${C.amberBg} 0%, #fffbeb 100%)`,
                 border: `1px solid ${urgente ? "#fca5a5" : "#fde68a"}`,
                 display: "flex", flexDirection: "column", justifyContent: "space-between",
               }}>
                 <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: urgente ? "#991b1b" : C.amberText, margin: 0 }}>
-                  {urgente ? "⚡ Parto imminente!" : "Giorni al parto"}
+                  {urgente ? "⚡ Parto imminente!" : "Conto alla rovescia"}
                 </p>
-                <div style={{ margin: "12px 0" }}>
-                  <p style={{ fontSize: 64, fontWeight: 900, lineHeight: 1, fontFamily: QS, color: urgente ? "#b91c1c" : C.amberText, margin: 0 }}>
+                <div style={{ margin: "10px 0" }}>
+                  <p style={{ fontSize: 60, fontWeight: 900, lineHeight: 1, fontFamily: QS, color: urgente ? "#b91c1c" : C.amberText, margin: 0 }}>
                     {giorni}
                   </p>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: urgente ? "#b91c1c" : C.amberText, margin: "6px 0 0" }}>
-                    giorni rimasti
+                  <p style={{ fontSize: 12, fontWeight: 600, color: urgente ? "#b91c1c" : C.amberText, margin: "4px 0 0" }}>
+                    giorni al parto
                   </p>
                 </div>
-                <div>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: urgente ? "#b91c1c" : C.amberAcc, color: C.white }}>
-                    {urgente ? "PRESTO!" : `Sett. ${sett}`}
-                  </span>
-                  {dpp && <p style={{ fontSize: 11, color: urgente ? "#b91c1c90" : C.amberText + "90", margin: "6px 0 0" }}>{formatDPP(dpp)}</p>}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div style={{ height: 6, borderRadius: 999, background: urgente ? "#fca5a522" : "#fde68a55", overflow: "hidden" }}>
+                    <div style={{ height: "100%", borderRadius: 999, width: `${Math.min(100, Math.round((sett / 40) * 100))}%`, background: urgente ? "#ef4444" : C.amber }} />
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 10, color: urgente ? "#b91c1c90" : C.amberText + "90" }}>Settimana {sett} / 40</span>
+                    {dpp && <span style={{ fontSize: 10, color: urgente ? "#b91c1c90" : C.amberText + "90" }}>{formatDPP(dpp)}</span>}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* ROW 2: Stats 4 cards */}
+            {/* ROW 2: Quick actions */}
+            <div className="grid grid-cols-4" style={{ gap: 10 }}>
+              <QuickAction href={`/dashboard/${eventoAttivo.id}`}      icon="👥" label="Partecipanti"   />
+              <QuickAction href="/dashboard/settings"                  icon="⚙️" label="Impostazioni"   />
+              <QuickAction href="/dashboard/rivelazione"               icon="🎉" label="Grande Giorno"  accent={C.primary} bg={C.priXL} />
+              <QuickAction href="/dashboard/eventi"                    icon="📋" label="Tutti gli eventi" />
+            </div>
+
+            {/* ROW 3: Stat cards */}
             <div className="grid grid-cols-2 md:grid-cols-4" style={{ gap: 12 }}>
 
-              <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: C.muted, margin: "0 0 12px" }}>Total Votes</p>
+              {/* Pronostici */}
+              <StatCard label="Pronostici" icon="🗳️">
                 <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 8 }}>
-                  <span style={{ fontSize: 34, fontWeight: 900, fontFamily: QS, color: C.onSurf, lineHeight: 1 }}>{voti}</span>
-                  {maxVoti && <span style={{ fontSize: 16, fontWeight: 600, color: C.muted }}>/{maxVoti}</span>}
+                  <span style={{ fontSize: 36, fontWeight: 900, fontFamily: QS, color: C.onSurf, lineHeight: 1 }}>{voti}</span>
+                  {maxVoti && <span style={{ fontSize: 14, fontWeight: 600, color: C.muted }}>/{maxVoti}</span>}
                 </div>
-                <Bar pct={pctVoti} color={C.primary} h={7} />
-                {maxVoti && <p style={{ fontSize: 11, color: C.muted, margin: "6px 0 0" }}>⏰ {maxVoti - voti} posti rimasti</p>}
-              </div>
+                <Bar pct={maxVoti ? pctVoti : 100} color={pctVoti >= 90 && maxVoti ? "#ef4444" : C.primary} h={7} />
+                {maxVoti
+                  ? <p style={{ fontSize: 11, color: pctVoti >= 90 ? "#ef4444" : C.muted, margin: "5px 0 0" }}>{maxVoti - voti} posti rimasti</p>
+                  : <p style={{ fontSize: 11, color: C.green, margin: "5px 0 0" }}>✓ Piano illimitato</p>
+                }
+              </StatCard>
 
-              <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px", display: "flex", flexDirection: "column" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: C.muted, margin: "0 0 10px" }}>Avg Weight</p>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1 }}>
-                  {mediaPeso
-                    ? <Donut pct={pesoPct} label={(mediaPeso / 1000).toFixed(1)} sub="kg" color={C.primary} />
-                    : <p style={{ fontSize: 13, color: C.muted }}>—</p>}
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.muted, marginTop: 4 }}>
-                  <span>2 kg</span><span>5 kg</span>
-                </div>
-              </div>
+              {/* Peso Medio */}
+              <StatCard label="Peso Previsto" icon="⚖️">
+                {mediaPeso ? (
+                  <>
+                    <p style={{ fontSize: 36, fontWeight: 900, fontFamily: QS, color: C.onSurf, lineHeight: 1, margin: "0 0 4px" }}>
+                      {(mediaPeso / 1000).toFixed(2).replace(".", ",")}
+                      <span style={{ fontSize: 16, fontWeight: 600, color: C.muted }}> kg</span>
+                    </p>
+                    <Bar pct={Math.round(((mediaPeso - 2500) / 2500) * 100)} color={C.sec} h={6} />
+                    <p style={{ fontSize: 11, color: C.muted, margin: "5px 0 0" }}>media di {pesiValidi.length} voti</p>
+                  </>
+                ) : (
+                  <p style={{ fontSize: 14, color: C.muted, margin: "8px 0 0" }}>Nessun voto ancora</p>
+                )}
+              </StatCard>
 
-              <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: C.muted, margin: "0 0 14px" }}>Team Challenge</p>
+              {/* Sesso */}
+              <StatCard label="Chi vincerà?" icon="👶">
                 {totSesso > 0 ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                         <span style={{ fontSize: 12, fontWeight: 600, color: C.sec }}>💙 Maschio</span>
                         <span style={{ fontSize: 12, fontWeight: 800, color: C.sec }}>{pctM}%</span>
                       </div>
-                      <Bar pct={pctM} color={C.sec} h={8} />
-                      <p style={{ fontSize: 10, color: C.muted, margin: "3px 0 0" }}>{maschio} voti</p>
+                      <Bar pct={pctM} color={C.sec} h={7} />
                     </div>
                     <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                         <span style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>🩷 Femmina</span>
                         <span style={{ fontSize: 12, fontWeight: 800, color: C.primary }}>{pctF}%</span>
                       </div>
-                      <Bar pct={pctF} color={C.primary} h={8} />
-                      <p style={{ fontSize: 10, color: C.muted, margin: "3px 0 0" }}>{femmina} voti</p>
+                      <Bar pct={pctF} color={C.primary} h={7} />
                     </div>
+                    <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>{maschio}M · {femmina}F su {totSesso} voti</p>
                   </div>
                 ) : (
-                  <p style={{ fontSize: 13, color: C.muted }}>Nessun voto sul sesso</p>
+                  <p style={{ fontSize: 14, color: C.muted, margin: "8px 0 0" }}>Nessun voto sul sesso</p>
                 )}
-              </div>
+              </StatCard>
 
-              <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: C.muted, margin: "0 0 12px" }}>Visite Link</p>
-                <p style={{ fontSize: 40, fontWeight: 900, fontFamily: QS, color: C.onSurf, lineHeight: 1, margin: "0 0 8px" }}>{eventoAttivo.visualizzazioniLink}</p>
-                <p style={{ fontSize: 12, color: C.muted, margin: "0 0 12px" }}>aperture del link</p>
-                {eventoAttivo.visualizzazioniLink > 0 && voti > 0 && (
+              {/* Visite */}
+              <StatCard label="Visite Link" icon="👁️">
+                <p style={{ fontSize: 36, fontWeight: 900, fontFamily: QS, color: C.onSurf, lineHeight: 1, margin: "0 0 8px" }}>
+                  {eventoAttivo.visualizzazioniLink}
+                </p>
+                {eventoAttivo.visualizzazioniLink > 0 ? (
                   <>
-                    <Bar pct={Math.round((voti / eventoAttivo.visualizzazioniLink) * 100)} color={C.amberAcc} h={6} />
-                    <p style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>
-                      {Math.round((voti / eventoAttivo.visualizzazioniLink) * 100)}% conversione
+                    <Bar pct={cvr} color={C.amber} h={6} />
+                    <p style={{ fontSize: 11, color: C.muted, margin: "5px 0 0" }}>
+                      {cvr}% conversione ({voti} voti)
                     </p>
                   </>
+                ) : (
+                  <p style={{ fontSize: 11, color: C.muted, margin: "5px 0 0" }}>Condividi il link!</p>
                 )}
-              </div>
+              </StatCard>
             </div>
 
-            {/* ROW 3: Altri eventi + Partecipazione */}
-            <div className={`grid grid-cols-1 gap-4 ${altriEventi.length > 0 ? "md:grid-cols-2" : ""}`} style={{ gap: 14 }}>
-              {altriEventi.length > 0 && (
-                <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px 24px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: 0 }}>Active Pools</p>
-                    <span style={{ fontSize: 13 }}>🚀</span>
+            {/* ROW 4: Prossimi passi + PRO upsell / altri eventi */}
+            <div className={`grid grid-cols-1 gap-4 ${(!isPremium || altriEventi.length > 0) ? "md:grid-cols-2" : ""}`} style={{ gap: 14 }}>
+
+              {/* Prossimi passi */}
+              <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 18, padding: "22px 24px" }}>
+                <p style={{ fontSize: 14, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: "0 0 16px" }}>
+                  📍 Prossimi passi
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {[
+                    { done: true,       label: "Evento creato",                    href: null },
+                    { done: voti > 0,   label: "Primi pronostici ricevuti",        href: `${eventoAttivo.codiceCondivisione}` },
+                    { done: voti >= 5,  label: "5+ partecipanti",                  href: `/dashboard/${eventoAttivo.id}` },
+                    { done: false,      label: "Rivela il risultato dopo il parto",href: "/dashboard/rivelazione" },
+                  ].map((step, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{
+                        width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                        background: step.done ? C.green : C.borderSoft,
+                        border: `2px solid ${step.done ? C.green : C.border}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 11, color: step.done ? "#fff" : C.muted,
+                      }}>
+                        {step.done ? "✓" : i + 1}
+                      </div>
+                      <span style={{ fontSize: 13, color: step.done ? C.onSurfV : C.onSurf, textDecoration: step.done ? "line-through" : "none", flex: 1 }}>
+                        {step.label}
+                      </span>
+                      {!step.done && step.href && (
+                        <Link href={step.href} style={{ fontSize: 11, fontWeight: 700, color: C.primary, textDecoration: "none" }}>Vai →</Link>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* PRO upsell (se free) */}
+              {!isPremium && (
+                <div style={{
+                  borderRadius: 18, padding: "22px 24px",
+                  background: "linear-gradient(135deg, #1a1a2e 0%, #2d1a2e 100%)",
+                  border: "1px solid rgba(244,172,183,0.15)",
+                  display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 16,
+                }}>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "#f4acb7", margin: "0 0 8px" }}>
+                      ⭐ PRO PLAN
+                    </p>
+                    <p style={{ fontSize: 16, fontWeight: 700, fontFamily: QS, color: "#fff", margin: "0 0 10px" }}>
+                      Sblocca tutto il potenziale
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {[
+                        "Partecipanti illimitati (ora max 20)",
+                        "Domande personalizzate",
+                        "PDF ricordo con grafica premium",
+                        "Statistiche avanzate",
+                      ].map((f) => (
+                        <p key={f} style={{ fontSize: 12, color: "rgba(245,234,237,0.80)", margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ color: "#f4acb7" }}>✓</span> {f}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                  <Link
+                    href="/dashboard/profilo"
+                    style={{
+                      display: "block", textAlign: "center",
+                      fontSize: 14, fontWeight: 700, color: "#fff",
+                      background: "linear-gradient(135deg, #b5352c, #874e58)",
+                      borderRadius: 12, padding: "12px 20px",
+                      textDecoration: "none",
+                      boxShadow: "0 6px 20px rgba(181,53,44,0.4)",
+                    }}
+                  >
+                    Passa a Premium →
+                  </Link>
+                </div>
+              )}
+
+              {/* Altri eventi (se premium o no pro-banner) */}
+              {(isPremium && altriEventi.length > 0) && (
+                <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 18, padding: "22px 24px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: 0 }}>Altri eventi</p>
+                    <Link href="/dashboard/eventi" style={{ fontSize: 12, fontWeight: 600, color: C.primary, textDecoration: "none" }}>Vedi tutti →</Link>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {altriEventi.slice(0, 3).map((ev, i) => {
-                      const g = calcolaGiorni(new Date(ev.dataPresuntaParto));
+                      const g    = calcolaGiorni(new Date(ev.dataPresuntaParto));
                       const nome = ev.nomeBimbo ? `Baby ${ev.nomeBimbo}` : "Bimbo/a";
-                      const pals = [{ bg: C.priXL, color: C.primary }, { bg: C.secLight, color: C.sec }, { bg: C.amberCard, color: C.amberText }];
-                      const pal = pals[i % pals.length];
+                      const pals = [{ bg: C.priXL, color: C.primary }, { bg: C.secLight, color: C.sec }, { bg: C.amberBg, color: C.amberText }];
+                      const pal  = pals[i % pals.length];
                       return (
                         <Link key={ev.id} href={`/dashboard/${ev.id}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, background: C.bg, textDecoration: "none" }}>
-                          <div style={{ width: 38, height: 38, borderRadius: "50%", flexShrink: 0, background: pal.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🍼</div>
+                          <div style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, background: pal.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🍼</div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <p style={{ fontSize: 13, fontWeight: 700, color: C.onSurf, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nome}</p>
-                            <p style={{ fontSize: 11, color: C.muted, margin: "2px 0 0" }}>{g > 0 ? `${g} giorni rimasti` : "Concluso"}</p>
+                            <p style={{ fontSize: 11, color: C.muted, margin: "2px 0 0" }}>{g > 0 ? `${g}g al parto` : "Concluso"}</p>
                           </div>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: pal.color }}>{ev._count.predictions} voti</span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: pal.color, flexShrink: 0 }}>{ev._count.predictions} voti</span>
                         </Link>
                       );
                     })}
                   </div>
                 </div>
               )}
-
-              <div style={{ borderRadius: 16, padding: "24px 28px", background: `linear-gradient(135deg, ${C.priXL} 0%, #ffe8e6 100%)`, border: `1px solid ${C.priLight}60` }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                  <div>
-                    <p style={{ fontSize: 15, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: "0 0 2px" }}>Partecipazione</p>
-                    <p style={{ fontSize: 12, color: C.onSurfV, margin: 0 }}>{maxVoti ? `${voti}/${maxVoti} posti` : `${voti} voti totali`}</p>
-                  </div>
-                  <Link href={`/dashboard/${eventoAttivo.id}`} style={{ fontSize: 12, fontWeight: 700, color: C.primary, textDecoration: "none" }}>Vedi classifica →</Link>
-                </div>
-                <div style={{ margin: "16px 0 8px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: C.onSurfV }}>{voti} partecipanti</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: C.primary }}>{maxVoti ? `${voti}/${maxVoti}` : `${voti} voti`}</span>
-                  </div>
-                  <div style={{ height: 10, borderRadius: 999, background: "rgba(181,53,44,0.12)", overflow: "hidden" }}>
-                    <div style={{ height: "100%", borderRadius: 999, width: `${maxVoti ? pctVoti : Math.min(100, voti * 5)}%`, background: `linear-gradient(to right, ${C.primary}, ${C.priLight})` }} />
-                  </div>
-                </div>
-                {maxVoti && <p style={{ fontSize: 11, color: C.onSurfV, margin: 0 }}>{pctVoti >= 100 ? "🎉 Al completo! Passa a Premium." : `${maxVoti - voti} posti disponibili`}</p>}
-              </div>
             </div>
 
           </div>
         )}
 
         {/* ── Footer ───────────────────────────────────────────────────────── */}
-        <div style={{
-          marginTop: 56, paddingTop: 20,
-          borderTop: `1px solid ${C.border}`,
-          display: "flex", justifyContent: "space-between",
-          alignItems: "center", flexWrap: "wrap", gap: 8,
-        }}>
-          <p style={{ fontSize: 13, color: C.muted, margin: 0 }}>
+        <div style={{ marginTop: 48, paddingTop: 20, borderTop: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+          <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>
             <span style={{ fontWeight: 700, color: C.primary, fontFamily: FR }}>FantaParto</span>
-            {" "}© 2024 FantaParto. Sculpted with care.
+            {" "}· Crafted with care for new families.
           </p>
-          <div style={{ display: "flex", gap: 24 }}>
-            {["Privacy", "Terms", "Support"].map((l) => (
-              <a key={l} href="#" style={{ fontSize: 13, color: C.muted, textDecoration: "none" }}>{l}</a>
+          <div style={{ display: "flex", gap: 20 }}>
+            {[["Privacy Policy", "#"], ["Termini di Servizio", "#"], ["Supporto", "#"]].map(([l, h]) => (
+              <a key={l} href={h} style={{ fontSize: 12, color: C.muted, textDecoration: "none" }}>{l}</a>
             ))}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Empty State Component ──────────────────────────────────────────────────────
+function EmptyState({ nomeMamma }: { nomeMamma: string }) {
+  const QS = "var(--font-quicksand, sans-serif)";
+  const VN = "var(--font-vietnam, sans-serif)";
+  const FR = "var(--font-fredoka, sans-serif)";
+
+  const steps = [
+    { n: "1", icon: "🎨", title: "Crea il tuo evento", desc: "Scegli le domande per gli invitati: data, sesso, peso, ora e altro." },
+    { n: "2", icon: "📲", title: "Condividi il link", desc: "Invia il link su WhatsApp. Gli amici votano dal browser, senza app." },
+    { n: "3", icon: "🏆", title: "Rivela il vincitore", desc: "Dopo il parto inserisci i dati reali e il sistema calcola la classifica." },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 32, paddingTop: 8 }}>
+
+      {/* Hero card */}
+      <div style={{
+        width: "100%", maxWidth: 660,
+        background: C.white, borderRadius: 24,
+        border: `1px solid ${C.border}`,
+        boxShadow: "0 12px 48px -12px rgba(181,53,44,0.12), 0 2px 8px -2px rgba(0,0,0,0.05)",
+        padding: "52px 48px 44px",
+        textAlign: "center",
+        display: "flex", flexDirection: "column", alignItems: "center",
+      }}>
+        {/* Illustration */}
+        <div style={{ position: "relative", marginBottom: 24, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 96, height: 96, borderRadius: "50%", background: "linear-gradient(135deg, #fde8e6, #fff0ee)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 48, boxShadow: "0 8px 32px rgba(181,53,44,0.14)" }}>
+            🍼
+          </div>
+          <span style={{ position: "absolute", top: -4, right: -8, fontSize: 20 }}>✨</span>
+          <span style={{ position: "absolute", bottom: 4, left: -10, fontSize: 14 }}>🌸</span>
+        </div>
+
+        <p style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.primary, margin: "0 0 10px" }}>
+          Ciao {nomeMamma}!
+        </p>
+        <h2 style={{ fontSize: 28, fontWeight: 800, fontFamily: FR, color: C.onSurf, margin: "0 0 14px", lineHeight: 1.2, letterSpacing: "-0.01em" }}>
+          Il tuo primo FantaParto<br />ti aspetta!
+        </h2>
+        <p style={{ fontSize: 14, color: C.onSurfV, lineHeight: 1.7, maxWidth: 400, margin: "0 0 32px" }}>
+          Crea il tuo evento personalizzato, invita amici e parenti e scopri chi indovinerà i dettagli del grande giorno.
+        </p>
+
+        <Link
+          href="/dashboard/nuovo-evento"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            fontSize: 15, fontWeight: 700, color: C.white,
+            background: `linear-gradient(135deg, ${C.primary}, #e04a40)`,
+            borderRadius: 14, padding: "14px 32px",
+            textDecoration: "none",
+            boxShadow: "0 8px 28px rgba(181,53,44,0.32)",
+            marginBottom: 14,
+            fontFamily: FR,
+          }}
+        >
+          <span style={{ fontSize: 18 }}>+</span>
+          Crea il tuo FantaParto
+        </Link>
+        <a href="#come-iniziare" style={{ fontSize: 13, fontWeight: 600, color: C.muted, textDecoration: "none" }}>
+          Come funziona? →
+        </a>
+      </div>
+
+      {/* Steps */}
+      <div id="come-iniziare" style={{ width: "100%", maxWidth: 660 }}>
+        <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: C.muted, textAlign: "center", marginBottom: 16 }}>
+          Come iniziare in 3 passi
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 12 }}>
+          {steps.map((s) => (
+            <div key={s.n} style={{ background: C.white, borderRadius: 18, padding: "24px 20px", border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.priXL, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>
+                  {s.icon}
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 800, color: C.primary, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  Passo {s.n}
+                </span>
+              </div>
+              <p style={{ fontSize: 14, fontWeight: 700, color: C.onSurf, margin: 0, fontFamily: QS }}>{s.title}</p>
+              <p style={{ fontSize: 13, color: C.onSurfV, margin: 0, lineHeight: 1.6 }}>{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Feature highlights */}
+      <div className="grid grid-cols-1 md:grid-cols-3" style={{ width: "100%", maxWidth: 660, gap: 12 }}>
+        {[
+          { icon: "🎯", title: "Pronostici social",     desc: "Sesso, peso, data, ora. Chi indovina vince.",     color: C.primary,   bg: C.priXL   },
+          { icon: "🏆", title: "Classifica automatica", desc: "I punteggi calcolati alla nascita del bimbo.",    color: C.amberText, bg: C.amberBg },
+          { icon: "📄", title: "PDF ricordo",            desc: "Un documento personalizzato da conservare.",      color: C.onSec,     bg: C.secLight },
+        ].map((f) => (
+          <div key={f.title} style={{ background: f.bg, borderRadius: 16, padding: "22px 20px", border: "1px solid rgba(0,0,0,0.04)" }}>
+            <p style={{ fontSize: 28, margin: "0 0 10px" }}>{f.icon}</p>
+            <p style={{ fontSize: 14, fontWeight: 700, fontFamily: QS, color: f.color, margin: "0 0 5px" }}>{f.title}</p>
+            <p style={{ fontSize: 12, color: C.onSurfV, margin: 0, lineHeight: 1.6 }}>{f.desc}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

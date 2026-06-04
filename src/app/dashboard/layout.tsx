@@ -12,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const [dbUser, eventi] = await Promise.all([
     prisma.user.findUnique({
       where:  { id: user.id },
-      select: { nome: true, avatarUrl: true },
+      select: { nome: true, avatarUrl: true, isPremium: true },
     }),
     prisma.event.findMany({
       where:   { userId: user.id },
@@ -29,6 +29,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           nome:      dbUser?.nome      ?? null,
           avatarUrl: dbUser?.avatarUrl ?? null,
           email:     user.email        ?? "",
+          isPremium: dbUser?.isPremium ?? false,
         }}
       />
       <div className={styles.content}>

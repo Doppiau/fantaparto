@@ -15,6 +15,7 @@ interface UserSidebar {
   nome:      string | null;
   avatarUrl: string | null;
   email:     string;
+  isPremium: boolean;
 }
 interface SidebarProps {
   eventi: EventoSidebar[];
@@ -38,15 +39,16 @@ const QS = "var(--font-quicksand, sans-serif)";
 const VN = "var(--font-vietnam, sans-serif)";
 
 const NAV = [
-  { href: "/dashboard",             icon: "dashboard",   label: "Panoramica",        disabled: false },
-  { href: "/dashboard/eventi",      icon: "event_list",  label: "Tutti gli eventi",  disabled: false },
+  { href: "/dashboard",             icon: "dashboard",   label: "Dashboard",         disabled: false },
+  { href: "/dashboard/eventi",      icon: "event_list",  label: "I miei eventi",     disabled: false },
   { href: "/dashboard/stats",       icon: "analytics",   label: "Statistiche",       disabled: true  },
-  { href: "/dashboard/invitati",    icon: "group",       label: "Invitati",          disabled: true  },
-  { href: "/dashboard/settings",    icon: "settings",    label: "Configurazione",    disabled: false },
-  { href: "/dashboard/rivelazione", icon: "celebration", label: "Rivelazione",       disabled: false },
+  { href: "/dashboard/invitati",    icon: "group",       label: "Partecipanti",      disabled: true  },
+  { href: "/dashboard/settings",    icon: "settings",    label: "Impostazioni",      disabled: false },
+  { href: "/dashboard/rivelazione", icon: "celebration", label: "Grande Giorno",     disabled: false },
 ] as const;
 
 export default function Sidebar({ eventi, user }: SidebarProps) {
+  const showProBanner = !user.isPremium;
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -218,6 +220,32 @@ export default function Sidebar({ eventi, user }: SidebarProps) {
             </div>
           )}
         </nav>
+
+        {/* ── PRO Plan upsell ─────────────────────────────────────────────── */}
+        {showProBanner && (
+          <div style={{ margin: "0 10px 10px", padding: "14px 14px 12px", borderRadius: 14, background: "linear-gradient(135deg, #2d1a2e 0%, #1f1226 100%)", border: "1px solid rgba(244,172,183,0.18)" }}>
+            <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: S.primary, margin: "0 0 6px" }}>
+              PRO PLAN
+            </p>
+            <p style={{ fontSize: 12, color: S.onSurf, lineHeight: 1.5, margin: "0 0 10px" }}>
+              Sblocca funzioni illimitate per il tuo evento.
+            </p>
+            <Link
+              href="/dashboard/profilo"
+              onClick={close}
+              style={{
+                display: "block", textAlign: "center",
+                fontSize: 12, fontWeight: 700, color: "#fff",
+                background: "linear-gradient(135deg, #b5352c, #874e58)",
+                borderRadius: 8, padding: "8px 12px",
+                textDecoration: "none",
+                boxShadow: "0 4px 12px rgba(135,78,88,0.35)",
+              }}
+            >
+              Passa a Premium
+            </Link>
+          </div>
+        )}
 
         {/* ── Bottom ──────────────────────────────────────────────────────── */}
         <div style={{ padding: "12px 12px 16px", borderTop: `1px solid ${S.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
