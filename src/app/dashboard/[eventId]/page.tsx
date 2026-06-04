@@ -681,7 +681,7 @@ export default async function EventDashboardPage({ params }: PageProps) {
                 </table>
               </div>
               {/* Mobile cards */}
-              <div className="md:hidden" style={{ display: "flex", flexDirection: "column" }}>
+              <div className="md:hidden flex flex-col">
                 {preds.map((p) => {
                   const isMasc = p.votoSesso === "MASCHIO";
                   const isLeader = p.punteggioOttenuto !== null && p === leader;
