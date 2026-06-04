@@ -246,133 +246,148 @@ export default function ProfiloClient({ eventi, emailUtente, nomeGenitore }: Pro
     await eliminaAccountAction();
   }
 
-  if (!ev) {
-    return (
-      <div style={{ textAlign: "center", padding: "64px 24px", color: "rgba(44,44,46,0.50)" }}>
-        <p style={{ fontSize: 48 }}>🍼</p>
-        <p style={{ fontSize: 15, fontWeight: 600 }}>Nessun evento trovato.</p>
-      </div>
-    );
-  }
-
-  const isConcluso = ev.stato === "CONCLUSO";
+  const isConcluso = ev?.stato === "CONCLUSO";
   const fmtDpp = (d: Date) => new Date(d).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
       {/* ── 1. Parametri evento ─────────────────────────────────────────── */}
-      <Card title="Parametri Evento" icon="🗓️">
-        <div style={{ padding: "16px 0 8px", display: "flex", flexDirection: "column", gap: 16 }}>
-          <EventSelector eventi={localEventi} selected={selectedId} onChange={selectEvento} />
+      {ev ? (
+        <Card title="Parametri Evento" icon="🗓️">
+          <div style={{ padding: "16px 0 8px", display: "flex", flexDirection: "column", gap: 16 }}>
+            <EventSelector eventi={localEventi} selected={selectedId} onChange={selectEvento} />
 
-          {/* DPP */}
-          <div>
-            <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(44,44,46,0.40)", display: "block", marginBottom: 6 }}>
-              Data Presunta Parto
-            </label>
-            <div style={{ display: "flex", gap: 10 }}>
-              <input
-                type="date" value={dpp}
-                onChange={(e) => setDpp(e.target.value)}
-                disabled={isConcluso}
-                style={{
-                  flex: 1, padding: "10px 14px", borderRadius: 12,
-                  border: "1.5px solid #F1ECE4", background: isConcluso ? "#f7f5f2" : "#fff",
-                  fontSize: 14, fontFamily: VN, color: "#2C2C2E", outline: "none",
-                }}
-              />
-              <button
-                type="button" onClick={handleDpp} disabled={isConcluso}
-                style={{
-                  padding: "10px 20px", borderRadius: 12, border: "none",
-                  background: isConcluso ? "#e0dbd6" : "#874e58", color: "#fff",
-                  fontSize: 13, fontWeight: 700, cursor: isConcluso ? "not-allowed" : "pointer",
-                  fontFamily: VN, flexShrink: 0,
-                }}
-              >
-                Salva
-              </button>
-            </div>
-            {feedback.dpp && (
-              <p style={{ fontSize: 12, marginTop: 6, color: feedback.dpp.startsWith("✓") ? "#166534" : "#b91c1c" }}>
-                {feedback.dpp}
+            {/* DPP */}
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(44,44,46,0.40)", display: "block", marginBottom: 6 }}>
+                Data Presunta Parto
+              </label>
+              <div style={{ display: "flex", gap: 10 }}>
+                <input
+                  type="date" value={dpp}
+                  onChange={(e) => setDpp(e.target.value)}
+                  disabled={isConcluso}
+                  style={{
+                    flex: 1, padding: "10px 14px", borderRadius: 12,
+                    border: "1.5px solid #F1ECE4", background: isConcluso ? "#f7f5f2" : "#fff",
+                    fontSize: 14, fontFamily: VN, color: "#2C2C2E", outline: "none",
+                  }}
+                />
+                <button
+                  type="button" onClick={handleDpp} disabled={isConcluso}
+                  style={{
+                    padding: "10px 20px", borderRadius: 12, border: "none",
+                    background: isConcluso ? "#e0dbd6" : "#874e58", color: "#fff",
+                    fontSize: 13, fontWeight: 700, cursor: isConcluso ? "not-allowed" : "pointer",
+                    fontFamily: VN, flexShrink: 0,
+                  }}
+                >
+                  Salva
+                </button>
+              </div>
+              {feedback.dpp && (
+                <p style={{ fontSize: 12, marginTop: 6, color: feedback.dpp.startsWith("✓") ? "#166534" : "#b91c1c" }}>
+                  {feedback.dpp}
+                </p>
+              )}
+              <p style={{ fontSize: 11, color: "rgba(44,44,46,0.40)", margin: "4px 0 0" }}>
+                Attuale: {fmtDpp(ev.dataPresuntaParto)}
               </p>
-            )}
-            <p style={{ fontSize: 11, color: "rgba(44,44,46,0.40)", margin: "4px 0 0" }}>
-              Attuale: {fmtDpp(ev.dataPresuntaParto)}
-            </p>
-          </div>
+            </div>
 
-          {/* Nome bimbo */}
-          <div>
-            <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(44,44,46,0.40)", display: "block", marginBottom: 6 }}>
-              Nome / Soprannome del Bimbo
-            </label>
-            <div style={{ display: "flex", gap: 10 }}>
-              <input
-                type="text" value={nomeBimbo} maxLength={60}
-                placeholder="es. Mattia, Sofì, Fagiolino…"
-                onChange={(e) => setNomeBimbo(e.target.value)}
-                style={{
-                  flex: 1, padding: "10px 14px", borderRadius: 12,
-                  border: "1.5px solid #F1ECE4", background: "#fff",
-                  fontSize: 14, fontFamily: VN, color: "#2C2C2E", outline: "none",
-                }}
-              />
-              <button
-                type="button" onClick={handleNome}
-                style={{
-                  padding: "10px 20px", borderRadius: 12, border: "none",
-                  background: "#874e58", color: "#fff",
-                  fontSize: 13, fontWeight: 700, cursor: "pointer",
-                  fontFamily: VN, flexShrink: 0,
-                }}
-              >
-                Salva
-              </button>
+            {/* Nome bimbo */}
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(44,44,46,0.40)", display: "block", marginBottom: 6 }}>
+                Nome / Soprannome del Bimbo
+              </label>
+              <div style={{ display: "flex", gap: 10 }}>
+                <input
+                  type="text" value={nomeBimbo} maxLength={60}
+                  placeholder="es. Mattia, Sofì, Fagiolino…"
+                  onChange={(e) => setNomeBimbo(e.target.value)}
+                  style={{
+                    flex: 1, padding: "10px 14px", borderRadius: 12,
+                    border: "1.5px solid #F1ECE4", background: "#fff",
+                    fontSize: 14, fontFamily: VN, color: "#2C2C2E", outline: "none",
+                  }}
+                />
+                <button
+                  type="button" onClick={handleNome}
+                  style={{
+                    padding: "10px 20px", borderRadius: 12, border: "none",
+                    background: "#874e58", color: "#fff",
+                    fontSize: 13, fontWeight: 700, cursor: "pointer",
+                    fontFamily: VN, flexShrink: 0,
+                  }}
+                >
+                  Salva
+                </button>
+              </div>
+              {feedback.nome && (
+                <p style={{ fontSize: 12, marginTop: 6, color: feedback.nome.startsWith("✓") ? "#166534" : "#b91c1c" }}>
+                  {feedback.nome}
+                </p>
+              )}
             </div>
-            {feedback.nome && (
-              <p style={{ fontSize: 12, marginTop: 6, color: feedback.nome.startsWith("✓") ? "#166534" : "#b91c1c" }}>
-                {feedback.nome}
-              </p>
-            )}
           </div>
+        </Card>
+      ) : (
+        <div style={{
+          background: "#fdf8f5", border: "1.5px dashed #e8ddd8", borderRadius: 20,
+          padding: "28px 24px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+        }}>
+          <p style={{ fontSize: 32, margin: 0 }}>🍼</p>
+          <p style={{ fontSize: 15, fontWeight: 700, color: "#2C2C2E", margin: 0 }}>Nessun evento ancora</p>
+          <p style={{ fontSize: 13, color: "rgba(44,44,46,0.50)", margin: 0 }}>Crea il tuo primo FantaParto per configurare i parametri dell&apos;evento.</p>
+          <a
+            href="/dashboard/nuovo-evento"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8, marginTop: 8,
+              fontSize: 14, fontWeight: 700, color: "#fff",
+              background: "#874e58", borderRadius: 12, padding: "11px 24px",
+              textDecoration: "none", boxShadow: "0 4px 14px rgba(135,78,88,0.28)",
+            }}
+          >
+            + Crea il tuo FantaParto
+          </a>
         </div>
-      </Card>
+      )}
 
       {/* ── 2. Privacy & Controllo Votazioni ───────────────────────────── */}
-      <Card title="Privacy & Controllo Votazioni" icon="🔒">
-        {feedback.votiBloccati && (
-          <p style={{ fontSize: 12, color: "#b91c1c", padding: "8px 0 0" }}>{feedback.votiBloccati}</p>
-        )}
-        <SwitchRow
-          label="🚫 Blocca nuovi voti"
-          description="Chiudi anticipatamente le votazioni senza rivelare i risultati. Utile se la mamma viene ricoverata. Reversibile."
-          checked={ev.votiBloccati}
-          onChange={(v) => handleSwitch("votiBloccati", v)}
-          disabled={isConcluso}
-          danger={ev.votiBloccati}
-        />
-        {feedback.classificaPrivata && (
-          <p style={{ fontSize: 12, color: "#b91c1c", padding: "8px 0 0" }}>{feedback.classificaPrivata}</p>
-        )}
-        <SwitchRow
-          label="🏆 Classifica privata"
-          description="La classifica finale sarà visibile solo a voi genitori, non tramite il link pubblico degli invitati."
-          checked={ev.classificaPrivata}
-          onChange={(v) => handleSwitch("classificaPrivata", v)}
-        />
-        {feedback.hypeSpaceAnonimo && (
-          <p style={{ fontSize: 12, color: "#b91c1c", padding: "8px 0 0" }}>{feedback.hypeSpaceAnonimo}</p>
-        )}
-        <SwitchRow
-          label="👻 Hype Space anonimo"
-          description="Gli invitati non vedranno i grafici con le scommesse degli altri. Ognuno resta 'al buio' fino alla nascita."
-          checked={ev.hypeSpaceAnonimo}
-          onChange={(v) => handleSwitch("hypeSpaceAnonimo", v)}
-        />
-      </Card>
+      {ev && (
+        <Card title="Privacy & Controllo Votazioni" icon="🔒">
+          {feedback.votiBloccati && (
+            <p style={{ fontSize: 12, color: "#b91c1c", padding: "8px 0 0" }}>{feedback.votiBloccati}</p>
+          )}
+          <SwitchRow
+            label="🚫 Blocca nuovi voti"
+            description="Chiudi anticipatamente le votazioni senza rivelare i risultati. Utile se la mamma viene ricoverata. Reversibile."
+            checked={ev.votiBloccati}
+            onChange={(v) => handleSwitch("votiBloccati", v)}
+            disabled={isConcluso}
+            danger={ev.votiBloccati}
+          />
+          {feedback.classificaPrivata && (
+            <p style={{ fontSize: 12, color: "#b91c1c", padding: "8px 0 0" }}>{feedback.classificaPrivata}</p>
+          )}
+          <SwitchRow
+            label="🏆 Classifica privata"
+            description="La classifica finale sarà visibile solo a voi genitori, non tramite il link pubblico degli invitati."
+            checked={ev.classificaPrivata}
+            onChange={(v) => handleSwitch("classificaPrivata", v)}
+          />
+          {feedback.hypeSpaceAnonimo && (
+            <p style={{ fontSize: 12, color: "#b91c1c", padding: "8px 0 0" }}>{feedback.hypeSpaceAnonimo}</p>
+          )}
+          <SwitchRow
+            label="👻 Hype Space anonimo"
+            description="Gli invitati non vedranno i grafici con le scommesse degli altri. Ognuno resta 'al buio' fino alla nascita."
+            checked={ev.hypeSpaceAnonimo}
+            onChange={(v) => handleSwitch("hypeSpaceAnonimo", v)}
+          />
+        </Card>
+      )}
 
       {/* ── 3. GDPR & Account ───────────────────────────────────────────── */}
       <Card title="Account e Privacy (GDPR)" icon="⚖️">
