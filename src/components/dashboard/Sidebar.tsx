@@ -45,6 +45,7 @@ const NAV = [
   { href: "/dashboard/invitati",    icon: "group",       label: "Partecipanti",      disabled: true  },
   { href: "/dashboard/settings",    icon: "settings",    label: "Impostazioni",      disabled: false },
   { href: "/dashboard/rivelazione", icon: "celebration", label: "Grande Giorno",     disabled: false },
+  { href: "/dashboard/profilo",     icon: "manage_accounts", label: "Gestione Profilo", disabled: false },
 ] as const;
 
 export default function Sidebar({ eventi, user }: SidebarProps) {
