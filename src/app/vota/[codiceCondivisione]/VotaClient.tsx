@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
-const C = {
+const C_BASE = {
   bg:        "#fbf9f5",
   white:     "#ffffff",
   border:    "#e8e4e1",
@@ -21,7 +21,7 @@ const C = {
   error:     "#b91c1c",
   errBg:     "#fef2f2",
   errBrd:    "#fecaca",
-} as const;
+};
 
 const QS = "var(--font-quicksand, sans-serif)";
 const VN = "var(--font-vietnam, sans-serif)";
@@ -43,14 +43,21 @@ interface Props {
   oraAttiva:      boolean;
   capelliAttivo:  boolean;
   occhiAttivo:    boolean;
+  temaColore?:    string | null;
 }
+
+const TEMA: Record<string, { primary: string; priLight: string; priXLight: string; onPri: string }> = {
+  ROSA:    { primary: "#874e58", priLight: "#f4acb7", priXLight: "#ffd9de", onPri: "#733d47" },
+  CELESTE: { primary: "#2c6e8a", priLight: "#bee1ff", priXLight: "#dff0ff", onPri: "#1a5578" },
+  NEUTRO:  { primary: "#6b5b5d", priLight: "#d6c2c3", priXLight: "#f0e8e9", onPri: "#514345" },
+};
 
 // ── Sezione card ──────────────────────────────────────────────────────────────
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div
       style={{
-        background: C.white, border: `1px solid ${C.border}`,
+        background: C_BASE.white, border: `1px solid ${C_BASE.border}`,
         borderRadius: 16, padding: "20px 24px",
         display: "flex", flexDirection: "column", gap: 14,
       }}
@@ -58,7 +65,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
       <p
         style={{
           fontSize: 11, fontWeight: 700, textTransform: "uppercase",
-          letterSpacing: "0.07em", color: C.muted, margin: 0,
+          letterSpacing: "0.07em", color: C_BASE.muted, margin: 0,
         }}
       >
         {label}
@@ -69,7 +76,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 }
 
 // ── Input pill ────────────────────────────────────────────────────────────────
-function PillInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+function PillInput({ primaryColor, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { primaryColor?: string }) {
   const [focused, setFocused] = useState(false);
   return (
     <input
@@ -78,10 +85,10 @@ function PillInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
       onBlur={(e)  => { setFocused(false); props.onBlur?.(e); }}
       style={{
         width: "100%", boxSizing: "border-box", outline: "none",
-        border: `1.5px solid ${focused ? C.primary : C.border}`,
+        border: `1.5px solid ${focused ? (primaryColor ?? C_BASE.primary) : C_BASE.border}`,
         borderRadius: 999, padding: "12px 18px",
-        fontSize: 15, fontFamily: VN, color: C.onSurf,
-        background: C.white, transition: "border-color 150ms",
+        fontSize: 15, fontFamily: VN, color: C_BASE.onSurf,
+        background: C_BASE.white, transition: "border-color 150ms",
         ...props.style,
       }}
     />
@@ -90,7 +97,7 @@ function PillInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
 
 // ── Choice button ─────────────────────────────────────────────────────────────
 function Choice({
-  selected, onClick, children, accent = C.primary, accentBg = C.priXLight,
+  selected, onClick, children, accent = C_BASE.primary, accentBg = C_BASE.priXLight,
 }: {
   selected: boolean; onClick: () => void; children: React.ReactNode;
   accent?: string; accentBg?: string;
@@ -100,11 +107,11 @@ function Choice({
       type="button"
       onClick={onClick}
       style={{
-        border: `1.5px solid ${selected ? accent : C.border}`,
-        background: selected ? accentBg : C.white,
+        border: `1.5px solid ${selected ? accent : C_BASE.border}`,
+        background: selected ? accentBg : C_BASE.white,
         borderRadius: 12, padding: "14px 12px",
         fontSize: 14, fontWeight: 600, fontFamily: VN,
-        color: selected ? accent : C.onSurfVar,
+        color: selected ? accent : C_BASE.onSurfVar,
         cursor: "pointer", transition: "all 150ms", textAlign: "center",
         boxShadow: selected ? `0 4px 12px ${accent}22` : "none",
       }}
@@ -116,26 +123,27 @@ function Choice({
 
 // ── Slider section ────────────────────────────────────────────────────────────
 function SliderField({
-  label, value, min, max, step, display,
+  label, value, min, max, step, display, primaryColor,
   onChange,
 }: {
   label: string; value: number; min: number; max: number; step: number;
-  display: string; onChange: (v: number) => void;
+  display: string; primaryColor?: string; onChange: (v: number) => void;
 }) {
+  const pc = primaryColor ?? C_BASE.primary;
   return (
     <Section label={label}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <span style={{ fontSize: 13, color: C.onSurfVar }}>Trascina per scegliere</span>
-        <span style={{ fontSize: 26, fontWeight: 700, fontFamily: QS, color: C.primary }}>
+        <span style={{ fontSize: 13, color: C_BASE.onSurfVar }}>Trascina per scegliere</span>
+        <span style={{ fontSize: 26, fontWeight: 700, fontFamily: QS, color: pc }}>
           {display}
         </span>
       </div>
       <input
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        style={{ width: "100%", accentColor: C.primary, cursor: "pointer" }}
+        style={{ width: "100%", accentColor: pc, cursor: "pointer" }}
       />
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.muted }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C_BASE.muted }}>
         <span>{min < 1000 ? `${(min / 10).toFixed(0)} cm` : `${(min / 1000).toFixed(2)} kg`}</span>
         <span>{max < 1000 ? `${(max / 10).toFixed(0)} cm` : `${(max / 1000).toFixed(2)} kg`}</span>
       </div>
@@ -148,7 +156,10 @@ export default function VotaClient({
   eventId, nomeBimbo, dataPresuntaParto,
   sessoAttivo, dataAttiva, pesoAttivo,
   lunghezzaAttiva, oraAttiva, capelliAttivo, occhiAttivo,
+  temaColore,
 }: Props) {
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  const C = { ...C_BASE, ...(TEMA[temaColore ?? "ROSA"] ?? TEMA.ROSA) };
   const [phase, setPhase]           = useState<Phase>("form");
   const [fingerprint, setFingerprint] = useState<string | null>(null);
   const [predictionId, setPredictionId] = useState<string | null>(null);
@@ -338,10 +349,12 @@ export default function VotaClient({
           {/* Chi sei */}
           <Section label="Chi sei? *">
             <PillInput
+              primaryColor={C.primary}
               type="text" placeholder="Il tuo nome *" value={nomeInvitato}
               onChange={(e) => setNome(e.target.value)} maxLength={80} required
             />
             <PillInput
+              primaryColor={C.primary}
               type="email" placeholder="Email (opzionale)" value={emailInvitato}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -354,7 +367,7 @@ export default function VotaClient({
                 <Choice selected={votoSesso === "MASCHIO"} onClick={() => setVotoSesso(votoSesso === "MASCHIO" ? "" : "MASCHIO")} accent={C.secondary} accentBg={C.secLight}>
                   💙 Maschio
                 </Choice>
-                <Choice selected={votoSesso === "FEMMINA"} onClick={() => setVotoSesso(votoSesso === "FEMMINA" ? "" : "FEMMINA")}>
+                <Choice selected={votoSesso === "FEMMINA"} onClick={() => setVotoSesso(votoSesso === "FEMMINA" ? "" : "FEMMINA")} accent={C.primary} accentBg={C.priXLight}>
                   🩷 Femmina
                 </Choice>
               </div>
@@ -365,6 +378,7 @@ export default function VotaClient({
           {dataAttiva && (
             <Section label="Quando nascerà?">
               <PillInput
+                primaryColor={C.primary}
                 type="date" value={votoData}
                 onChange={(e) => setVotoData(e.target.value)}
                 style={{ textAlign: "center", fontSize: 16, fontWeight: 600 }}
@@ -377,6 +391,7 @@ export default function VotaClient({
             <SliderField
               label="Peso alla nascita" value={votoPeso} min={1000} max={6000} step={50}
               display={`${(votoPeso / 1000).toFixed(2).replace(".", ",")} kg`}
+              primaryColor={C.primary}
               onChange={setVotoPeso}
             />
           )}
@@ -386,6 +401,7 @@ export default function VotaClient({
             <SliderField
               label="Lunghezza" value={votoLunghezza} min={300} max={700} step={5}
               display={`${(votoLunghezza / 10).toFixed(1).replace(".", ",")} cm`}
+              primaryColor={C.primary}
               onChange={setVotoLun}
             />
           )}
@@ -394,6 +410,7 @@ export default function VotaClient({
           {oraAttiva && (
             <Section label="Ora di nascita (opzionale)">
               <PillInput
+                primaryColor={C.primary}
                 type="time" value={votoOra}
                 onChange={(e) => setVotoOra(e.target.value)}
                 style={{ textAlign: "center", fontSize: 16, fontWeight: 600 }}
@@ -406,7 +423,7 @@ export default function VotaClient({
             <Section label="Capelli">
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
                 {(["LISCI", "RICCI", "CALVO"] as const).map((v) => (
-                  <Choice key={v} selected={votoCapelli === v} onClick={() => setVotoCap(votoCapelli === v ? "" : v)}>
+                  <Choice key={v} selected={votoCapelli === v} onClick={() => setVotoCap(votoCapelli === v ? "" : v)} accent={C.primary} accentBg={C.priXLight}>
                     {v === "LISCI" ? "💇 Lisci" : v === "RICCI" ? "🌀 Ricci" : "✨ Calvo"}
                   </Choice>
                 ))}
@@ -419,7 +436,7 @@ export default function VotaClient({
             <Section label="Colore occhi">
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {(["CHIARI", "SCURI"] as const).map((v) => (
-                  <Choice key={v} selected={votoOcchi === v} onClick={() => setVotoOcchi(votoOcchi === v ? "" : v)}>
+                  <Choice key={v} selected={votoOcchi === v} onClick={() => setVotoOcchi(votoOcchi === v ? "" : v)} accent={C.primary} accentBg={C.priXLight}>
                     {v === "CHIARI" ? "🔵 Chiari" : "🟤 Scuri"}
                   </Choice>
                 ))}

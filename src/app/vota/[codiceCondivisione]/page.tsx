@@ -19,6 +19,8 @@ export default async function VotaPage({ params }: PageProps) {
       nomeBimbo:       true,
       dataPresuntaParto: true,
       stato:           true,
+      // Personalizzazione
+      temaColore:      true,
       // Toggle campi attivi
       sessoAttivo:     true,
       dataAttiva:      true,
@@ -120,6 +122,7 @@ export default async function VotaPage({ params }: PageProps) {
       oraAttiva={event.oraAttiva}
       capelliAttivo={event.capelliAttivo}
       occhiAttivo={event.occhiAttivo}
+      temaColore={event.temaColore}
     />
   );
 }

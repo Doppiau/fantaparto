@@ -24,6 +24,11 @@ model User {
   nome      String?                        // nullable: Google OAuth non passa "nome" nativo
   avatarUrl String?  @map("avatar_url")   // URL foto profilo — valorizzato da Google OAuth
   isPremium Boolean  @default(false) @map("is_premium")  // premium a livello account (admin toggle)
+
+  // Piano & Coupon
+  couponRiscattato String?  @map("coupon_riscattato")  // codice coupon usato per attivare Premium
+  pianoAttivatoAt  DateTime? @map("piano_attivato_at") // data attivazione Premium
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -67,10 +72,21 @@ model Event {
   // Domande custom JSON (solo utenti Premium)
   customQuestions Json? @map("custom_questions")
 
+  // Personalizzazione visiva
+  temaColore String @default("NEUTRO") @map("tema_colore") // "ROSA" | "CELESTE" | "NEUTRO"
+
   // Privacy & controllo votazioni
   classificaPrivata Boolean @default(false) @map("classifica_privata")   // classifica visibile solo ai genitori
   hypeSpaceAnonimo  Boolean @default(false) @map("hype_space_anonimo")   // invitati non vedono grafici altrui
   votiBloccati      Boolean @default(false) @map("voti_bloccati")        // blocco manuale nuovi voti
+
+  // Archiviazione
+  archiviato Boolean @default(false)
+
+  // Notifiche
+  notificheVoto    Boolean @default(false) @map("notifiche_voto")     // email al creatore ad ogni nuovo voto
+  digestNotifiche  String  @default("DISATTIVATO") @map("digest_notifiche") // "DISATTIVATO"|"GIORNALIERO"|"SETTIMANALE"
+  avvisoDpp        Boolean @default(false) @map("avviso_dpp")          // email 7 giorni prima della DPP
 
   // Risultati reali — compilati dalla mamma post-parto
   // sesso: "MASCHIO" | "FEMMINA"

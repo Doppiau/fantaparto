@@ -98,6 +98,8 @@ const SWITCH_MAP: Record<string, string> = {
   votiBloccati:      "votiBloccati",
   classificaPrivata: "classificaPrivata",
   hypeSpaceAnonimo:  "hypeSpaceAnonimo",
+  notificheVoto:     "notificheVoto",
+  avvisoDpp:         "avvisoDpp",
 };
 
 export async function toggleSwitchEventoAction(
@@ -114,6 +116,188 @@ export async function toggleSwitchEventoAction(
       data:  { [campo]: valore },
     });
     revalidatePath(`/dashboard/${eventId}`);
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore sconosciuto" };
+  }
+}
+
+// ── 3b. Aggiorna tema colore evento ──────────────────────────────────────────
+
+const TemaColoreEnum = z.enum(["ROSA", "CELESTE", "NEUTRO"]);
+
+export async function aggiornaTemaColoreAction(eventId: string, tema: string): Promise<Result> {
+  try {
+    const { user } = await getAuthUser();
+    await verificaProprietario(eventId, user.id);
+    const parsed = TemaColoreEnum.safeParse(tema);
+    if (!parsed.success) return { success: false, error: "Tema non valido" };
+    await prisma.event.update({ where: { id: eventId }, data: { temaColore: parsed.data } });
+    revalidatePath(`/dashboard/${eventId}`);
+    revalidatePath("/dashboard/profilo");
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore sconosciuto" };
+  }
+}
+
+// ── 3c. Rinomina codice condivisione ─────────────────────────────────────────
+
+const CodiceSchema = z.string()
+  .min(3).max(40)
+  .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/, "Usa solo lettere minuscole, numeri e trattini (es. baby-sofia)");
+
+export async function aggiornaCodiceCondivisioneAction(eventId: string, codice: string): Promise<Result> {
+  try {
+    const { user } = await getAuthUser();
+    await verificaProprietario(eventId, user.id);
+    const trimmed = codice.trim().toLowerCase();
+    const parsed  = CodiceSchema.safeParse(trimmed);
+    if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "Codice non valido" };
+    const existing = await prisma.event.findUnique({ where: { codiceCondivisione: trimmed } });
+    if (existing && existing.id !== eventId) return { success: false, error: "Questo codice è già in uso" };
+    await prisma.event.update({ where: { id: eventId }, data: { codiceCondivisione: trimmed } });
+    revalidatePath(`/dashboard/${eventId}`);
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/profilo");
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore sconosciuto" };
+  }
+}
+
+// ── 3d. Archivia / Ripristina evento ─────────────────────────────────────────
+
+export async function archiviaEventoAction(eventId: string, archiviato: boolean): Promise<Result> {
+  try {
+    const { user } = await getAuthUser();
+    await verificaProprietario(eventId, user.id);
+    await prisma.event.update({ where: { id: eventId }, data: { archiviato } });
+    revalidatePath("/dashboard/eventi");
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore sconosciuto" };
+  }
+}
+
+// ── 3e. Duplica evento ───────────────────────────────────────────────────────
+
+function generaCodiceRandom() {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+export async function duplicaEventoAction(
+  eventId: string,
+): Promise<{ success: true; nuovoId: string } | { success: false; error: string }> {
+  try {
+    const { user } = await getAuthUser();
+    const orig = await verificaProprietario(eventId, user.id);
+
+    // Genera un codice univoco
+    let codice: string;
+    let tentativi = 0;
+    do {
+      codice = `copia-${generaCodiceRandom().toLowerCase()}`;
+      const dup = await prisma.event.findUnique({ where: { codiceCondivisione: codice } });
+      if (!dup) break;
+      tentativi++;
+    } while (tentativi < 10);
+
+    const nuovoEvento = await prisma.event.create({
+      data: {
+        userId:             user.id,
+        codiceCondivisione: codice!,
+        nomeBimbo:          orig.nomeBimbo,
+        dataPresuntaParto:  orig.dataPresuntaParto,
+        sessoAttivo:        orig.sessoAttivo,
+        dataAttiva:         orig.dataAttiva,
+        pesoAttivo:         orig.pesoAttivo,
+        lunghezzaAttiva:    orig.lunghezzaAttiva,
+        oraAttiva:          orig.oraAttiva,
+        capelliAttivo:      orig.capelliAttivo,
+        occhiAttivo:        orig.occhiAttivo,
+        customQuestions:    orig.customQuestions ?? undefined,
+        temaColore:         orig.temaColore,
+        classificaPrivata:  orig.classificaPrivata,
+        hypeSpaceAnonimo:   orig.hypeSpaceAnonimo,
+      },
+    });
+
+    revalidatePath("/dashboard/eventi");
+    revalidatePath("/dashboard");
+    return { success: true, nuovoId: nuovoEvento.id };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore sconosciuto" };
+  }
+}
+
+// ── 3f. Aggiorna digest notifiche ────────────────────────────────────────────
+
+const DigestEnum = z.enum(["DISATTIVATO", "GIORNALIERO", "SETTIMANALE"]);
+
+export async function aggiornaDigestNotificheAction(eventId: string, valore: string): Promise<Result> {
+  try {
+    const { user } = await getAuthUser();
+    await verificaProprietario(eventId, user.id);
+    const parsed = DigestEnum.safeParse(valore);
+    if (!parsed.success) return { success: false, error: "Valore non valido" };
+    await prisma.event.update({ where: { id: eventId }, data: { digestNotifiche: parsed.data } });
+    revalidatePath("/dashboard/profilo");
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore sconosciuto" };
+  }
+}
+
+// ── 3g. Riscatta coupon ──────────────────────────────────────────────────────
+
+export async function riscattaCouponAction(
+  codice: string,
+): Promise<{ success: true; messaggio: string } | { success: false; error: string }> {
+  try {
+    const { user } = await getAuthUser();
+
+    const coupon = await prisma.coupon.findUnique({ where: { codice: codice.trim().toUpperCase() } });
+    if (!coupon)            return { success: false, error: "Codice coupon non valido" };
+    if (!coupon.attivo)     return { success: false, error: "Questo coupon non è più attivo" };
+    if (coupon.scadenza && new Date() > coupon.scadenza)
+                            return { success: false, error: "Coupon scaduto" };
+    if (coupon.usoMax !== null && coupon.usoCorrente >= coupon.usoMax)
+                            return { success: false, error: "Coupon esaurito" };
+
+    const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { isPremium: true, couponRiscattato: true } });
+    if (dbUser?.couponRiscattato) return { success: false, error: "Hai già usato un coupon" };
+
+    if (coupon.tipo === "PREMIUM_USER") {
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: user.id },
+          data:  { isPremium: true, couponRiscattato: coupon.codice, pianoAttivatoAt: new Date() },
+        }),
+        prisma.coupon.update({
+          where: { id: coupon.id },
+          data:  { usoCorrente: { increment: 1 } },
+        }),
+      ]);
+      revalidatePath("/dashboard");
+      revalidatePath("/dashboard/profilo");
+      return { success: true, messaggio: "Account aggiornato a Premium!" };
+    }
+
+    return { success: false, error: `Tipo coupon non gestito: ${coupon.tipo}` };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore sconosciuto" };
+  }
+}
+
+// ── 3h. Disconnetti tutti i dispositivi ──────────────────────────────────────
+
+export async function disconnettiTuttiAction(): Promise<Result> {
+  try {
+    const { supabase } = await getAuthUser();
+    await supabase.auth.signOut({ scope: "global" });
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : "Errore sconosciuto" };
