@@ -275,6 +275,11 @@ export async function riscattaCouponAction(
           where: { id: user.id },
           data:  { isPremium: true, couponRiscattato: coupon.codice, pianoAttivatoAt: new Date() },
         }),
+        // Propaga il premium a tutti gli eventi esistenti dell'utente
+        prisma.event.updateMany({
+          where: { userId: user.id },
+          data:  { isPremium: true },
+        }),
         prisma.coupon.update({
           where: { id: coupon.id },
           data:  { usoCorrente: { increment: 1 } },

@@ -68,15 +68,16 @@ function toToggleMap(ev: EventoConfig): ToggleMap {
 }
 
 // ── Componente ─────────────────────────────────────────────────────────────────
-export default function MetrichePanel({ eventi }: { eventi: EventoConfig[] }) {
+export default function MetrichePanel({ eventi, userIsPremium = false }: { eventi: EventoConfig[]; userIsPremium?: boolean }) {
   const [selectedIdx, setSelectedIdx] = useState(0);
   // un array di toggleMap, uno per evento, per conservare lo stato se si cambia tab
   const [allToggles, setAllToggles] = useState<ToggleMap[]>(() => eventi.map(toToggleMap));
   const [, startTransition]         = useTransition();
 
-  const evento    = eventi[selectedIdx];
-  const toggles   = allToggles[selectedIdx];
+  const evento     = eventi[selectedIdx];
+  const toggles    = allToggles[selectedIdx];
   const isConcluso = evento.stato === "CONCLUSO";
+  const isPremium  = evento.isPremium || userIsPremium;
 
   const punteggiAttivi = METRICHE.reduce((s, m) => s + (toggles[m.key] ? m.punti : 0), 0);
   const barPct         = Math.round((punteggiAttivi / MAX_PUNTI) * 100);
@@ -316,13 +317,13 @@ export default function MetrichePanel({ eventi }: { eventi: EventoConfig[] }) {
       {/* ── Domande personalizzate (Premium) ────────────────────────────── */}
       <div style={{ position: "relative" }}>
         <div style={{
-          background: evento.isPremium
+          background: isPremium
             ? "linear-gradient(135deg, #fffbeb, #fef3c7)"
             : C.white,
-          border:       `2px solid ${evento.isPremium ? C.amberBrd : C.border}`,
+          border:       `2px solid ${isPremium ? C.amberBrd : C.border}`,
           borderRadius: 20,
           padding:      "24px 28px",
-          opacity:      evento.isPremium ? 1 : 0.65,
+          opacity:      isPremium ? 1 : 0.65,
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -336,7 +337,7 @@ export default function MetrichePanel({ eventi }: { eventi: EventoConfig[] }) {
                 </p>
               </div>
             </div>
-            {!evento.isPremium && (
+            {!isPremium && (
               <span style={{
                 fontSize: 10, fontWeight: 800, padding: "3px 10px", borderRadius: 999, flexShrink: 0,
                 background: C.amberBg, color: "#9A7000",
@@ -347,7 +348,7 @@ export default function MetrichePanel({ eventi }: { eventi: EventoConfig[] }) {
             )}
           </div>
 
-          {evento.isPremium && (
+          {isPremium && (
             <button style={{
               marginTop: 12, fontSize: 13, fontWeight: 700,
               padding: "10px 20px", borderRadius: 12,
@@ -361,7 +362,7 @@ export default function MetrichePanel({ eventi }: { eventi: EventoConfig[] }) {
         </div>
 
         {/* Frosted glass lock per non-premium */}
-        {!evento.isPremium && (
+        {!isPremium && (
           <>
             <div style={{
               position: "absolute", inset: 0, borderRadius: 20,

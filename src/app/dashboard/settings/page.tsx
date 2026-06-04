@@ -22,24 +22,29 @@ export default async function SettingsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const eventi = await prisma.event.findMany({
-    where:   { userId: user.id },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id:                true,
-      nomeBimbo:         true,
-      dataPresuntaParto: true,
-      isPremium:         true,
-      stato:             true,
-      sessoAttivo:       true,
-      dataAttiva:        true,
-      pesoAttivo:        true,
-      oraAttiva:         true,
-      lunghezzaAttiva:   true,
-      capelliAttivo:     true,
-      occhiAttivo:       true,
-    },
-  });
+  const [dbUser, eventi] = await Promise.all([
+    prisma.user.findUnique({ where: { id: user.id }, select: { isPremium: true } }),
+    prisma.event.findMany({
+      where:   { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id:                true,
+        nomeBimbo:         true,
+        dataPresuntaParto: true,
+        isPremium:         true,
+        stato:             true,
+        sessoAttivo:       true,
+        dataAttiva:        true,
+        pesoAttivo:        true,
+        oraAttiva:         true,
+        lunghezzaAttiva:   true,
+        capelliAttivo:     true,
+        occhiAttivo:       true,
+      },
+    }),
+  ]);
+
+  const userIsPremium = dbUser?.isPremium ?? false;
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: VN }}>
@@ -100,7 +105,7 @@ export default async function SettingsPage() {
             </Link>
           </div>
         ) : (
-          <MetrichePanel eventi={eventi} />
+          <MetrichePanel eventi={eventi} userIsPremium={userIsPremium} />
         )}
       </div>
     </div>

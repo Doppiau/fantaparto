@@ -124,7 +124,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         dataPresuntaParto,
         codiceCondivisione,
         stato: "IN_CORSO",
-        isPremium: false,    // il piano si attiva solo via coupon o admin toggle
+        isPremium: userIsPremium,
         ...metricheFinali,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         customQuestions: (userIsPremium ? customQuestions : undefined) as any ?? undefined,
