@@ -412,3 +412,28 @@ html, body {
 
 .fp-evento-card { transition: border-color 150ms, box-shadow 150ms; }
 .fp-evento-card:hover { border-color: rgba(135,78,88,0.25) !important; box-shadow: 0 4px 16px rgba(135,78,88,0.08); }
+
+/* ── Page transitions (View Transitions API) ─────────────────────────── */
+@keyframes fp-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+@keyframes fp-fade-out {
+  from { opacity: 1; transform: translateY(0);    }
+  to   { opacity: 0; transform: translateY(-4px); }
+}
+
+::view-transition-old(root) {
+  animation: 180ms ease-in fp-fade-out;
+}
+::view-transition-new(root) {
+  animation: 260ms ease-out fp-fade-in;
+}
+
+/* Preferisce ridurre il movimento se l'utente lo ha impostato */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
