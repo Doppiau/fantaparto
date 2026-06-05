@@ -384,16 +384,17 @@ export default function MetrichePanel({ eventi, userIsPremium = false }: { event
               }}>
                 👑
               </div>
-              <button style={{
+              <a href="/dashboard/upgrade" style={{
                 display: "flex", alignItems: "center", gap: 8,
                 padding: "10px 24px", borderRadius: 14,
                 border: "none", cursor: "pointer",
                 fontSize: 14, fontWeight: 700, color: "#fff",
                 background: "linear-gradient(100deg, #D4AF37 0%, #C08A3E 100%)",
                 boxShadow: "0 10px 24px -6px rgba(212,175,55,0.45)",
+                textDecoration: "none",
               }}>
-                Sblocca Premium · €2,99
-              </button>
+                ⭐ Sblocca Premium
+              </a>
             </div>
           </>
         )}

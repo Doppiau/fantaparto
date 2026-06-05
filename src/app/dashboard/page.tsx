@@ -403,7 +403,7 @@ export default async function DashboardPage() {
                     </div>
                   </div>
                   <Link
-                    href="/dashboard/profilo"
+                    href="/dashboard/upgrade"
                     style={{
                       display: "block", textAlign: "center",
                       fontSize: 14, fontWeight: 700, color: "#fff",

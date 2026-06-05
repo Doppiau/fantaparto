@@ -52,7 +52,7 @@ function UpsellModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         <a
-          href="/dashboard/profilo"
+          href="/dashboard/upgrade"
           style={{ border: "none", cursor: "pointer", background: C.primary, color: C.white, borderRadius: 999, padding: "13px 24px", fontSize: 14, fontWeight: 700, fontFamily: VN, boxShadow: "0 4px 14px rgba(181,53,44,0.25)", textDecoration: "none", display: "block" }}
         >
           Sblocca Premium →

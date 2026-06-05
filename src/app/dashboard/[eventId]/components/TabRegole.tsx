@@ -154,15 +154,17 @@ export default function TabRegole({
               >
                 👑
               </div>
-              <button
+              <a
+                href="/dashboard/upgrade"
                 className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-[14px] text-white transition-all active:scale-95"
                 style={{
                   background: "linear-gradient(100deg, #D4AF37 0%, #C08A3E 100%)",
                   boxShadow: "0 12px 28px -8px rgba(212,175,55,0.45)",
+                  textDecoration: "none",
                 }}
               >
-                Sblocca Premium · €2,99
-              </button>
+                ⭐ Sblocca Premium
+              </a>
             </div>
           </>
         )}

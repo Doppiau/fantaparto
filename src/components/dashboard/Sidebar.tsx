@@ -232,7 +232,7 @@ export default function Sidebar({ eventi, user }: SidebarProps) {
               Sblocca funzioni illimitate per il tuo evento.
             </p>
             <Link
-              href="/dashboard/profilo"
+              href="/dashboard/upgrade"
               onClick={close}
               style={{
                 display: "block", textAlign: "center",

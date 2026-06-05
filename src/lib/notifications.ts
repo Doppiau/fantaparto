@@ -49,7 +49,7 @@ export async function notificaLimiteRaggiunto(
         Passa a <strong>Premium</strong> per sbloccare partecipanti illimitati, metriche
         avanzate e il PDF ricordo con grafica premium.
       </p>
-      <a href="https://fantaparto.com/dashboard/profilo"
+      <a href="https://fantaparto.com/dashboard/upgrade"
          style="display: inline-block; background: #874e58; color: #fff; font-weight: 700;
                 font-size: 15px; text-decoration: none; padding: 14px 28px;
                 border-radius: 999px; margin-top: 16px;">
