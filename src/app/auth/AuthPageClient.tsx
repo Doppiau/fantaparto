@@ -304,12 +304,12 @@ export default function AuthPageClient({ initialTab }: { initialTab: "signup" | 
     >
       {/* ── Left col ─────────────────────────────────────────────────────── */}
       <div
+        className="hidden lg:flex flex-col justify-center"
         style={{
-          flex: 1, display: "flex", flexDirection: "column", justifyContent: "center",
+          flex: 1,
           padding: "60px 64px", background: C.priXLight,
           borderRight: `1px solid ${C.border}`,
         }}
-        className="hidden lg:flex"
       >
         {/* Brand */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 48 }}>
