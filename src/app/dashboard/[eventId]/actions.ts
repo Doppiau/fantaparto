@@ -85,6 +85,76 @@ export async function eliminaPredictionAction(
   }
 }
 
+// ── Aggiungi voto manuale ─────────────────────────────────────────────────────
+
+const VotoManualeSchema = z.object({
+  nomeInvitato:   z.string().trim().min(2).max(80),
+  emailInvitato:  z.string().trim().email().optional().or(z.literal("")),
+  votoSesso:      z.enum(["MASCHIO", "FEMMINA"]).optional(),
+  votoData:       z.coerce.date().optional(),
+  votoPeso:       z.number().int().min(1000).max(6000).optional(),
+  votoLunghezza:  z.number().int().min(300).max(700).optional(),
+  votoOra:        z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional().or(z.literal("")),
+  votoCapelli:    z.enum(["LISCI", "RICCI", "CALVO"]).optional(),
+  votoOcchi:      z.enum(["CHIARI", "SCURI"]).optional(),
+});
+
+export async function aggiungiVotoManualeAction(
+  eventId: string,
+  raw: unknown,
+): Promise<{ success: true } | { success: false; error: string }> {
+  try {
+    const userId = await getAuthUserId();
+    const evento = await verificaProprietario(eventId, userId);
+
+    if (evento.stato !== "IN_CORSO") {
+      return { success: false, error: "L'evento non è in corso." };
+    }
+    if (evento.votiBloccati) {
+      return { success: false, error: "Le votazioni sono bloccate." };
+    }
+
+    // Rispetta il limite Free (20 voti)
+    if (!evento.isPremium) {
+      const totale = await prisma.prediction.count({ where: { eventId } });
+      if (totale >= 20) {
+        return { success: false, error: "Limite di 20 partecipanti del piano Free raggiunto." };
+      }
+    }
+
+    const parsed = VotoManualeSchema.safeParse(raw);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? "Dati non validi" };
+    }
+
+    const { nomeInvitato, emailInvitato, votoSesso, votoData, votoPeso, votoLunghezza, votoOra, votoCapelli, votoOcchi } = parsed.data;
+
+    // Fingerprint univoco per i voti manuali — non entra in conflitto con dispositivi reali
+    const fingerprint = `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    await prisma.prediction.create({
+      data: {
+        eventId,
+        nomeInvitato,
+        emailInvitato:    emailInvitato || undefined,
+        deviceFingerprint: fingerprint,
+        votoSesso:         votoSesso ?? undefined,
+        votoData:          votoData  ?? undefined,
+        votoPeso:          votoPeso  ?? undefined,
+        votoLunghezza:     votoLunghezza ?? undefined,
+        votoOra:           votoOra   || undefined,
+        votoCapelli:       votoCapelli ?? undefined,
+        votoOcchi:         votoOcchi ?? undefined,
+      },
+    });
+
+    revalidatePath(`/dashboard/${eventId}`);
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Errore sconosciuto" };
+  }
+}
+
 // ── Inserisci risultati reali + calcolo classifica (atomico) ──────────────────
 
 const RisultatiSchema = z.object({

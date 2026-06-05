@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import ModerateButton from "@/components/dashboard/ModerateButton";
 import CopyLinkButton from "@/components/dashboard/CopyLinkButton";
 import EliminaEventoButton from "@/components/dashboard/EliminaEventoButton";
+import AggiungiVotoButton from "./components/AggiungiVotoButton";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -195,6 +196,7 @@ export default async function EventDashboardPage({ params }: PageProps) {
             id: true, nomeInvitato: true, emailInvitato: true,
             votoSesso: true, votoPeso: true, votoData: true,
             punteggioOttenuto: true, messaggioAugurio: true, createdAt: true,
+            deviceFingerprint: true,
           },
         },
       },
@@ -605,17 +607,33 @@ export default async function EventDashboardPage({ params }: PageProps) {
 
         {/* ROW 4: Predictions table */}
         <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden" }}>
-          <div style={{ padding: "20px 28px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ padding: "20px 28px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <div>
               <p style={{ fontSize: 15, fontWeight: 700, fontFamily: QS, color: C.onSurf, margin: "0 0 2px" }}>Previsioni</p>
               <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>{totVoti} partecipant{totVoti === 1 ? "e" : "i"}</p>
             </div>
-            {totVoti === 0 && (
-              <a href={`/vota/${evento.codiceCondivisione}`} target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: 13, fontWeight: 700, color: C.white, background: C.primary, borderRadius: 999, padding: "8px 18px", textDecoration: "none" }}>
-                Apri pagina voto →
-              </a>
-            )}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {!CONCLUSO && (
+                <AggiungiVotoButton
+                  eventId={evento.id}
+                  dppIso={evento.dataPresuntaParto.toISOString()}
+                  sessoAttivo={evento.sessoAttivo}
+                  dataAttiva={evento.dataAttiva}
+                  pesoAttivo={evento.pesoAttivo}
+                  lunghezzaAttiva={evento.lunghezzaAttiva}
+                  oraAttiva={evento.oraAttiva}
+                  capelliAttivo={evento.capelliAttivo}
+                  occhiAttivo={evento.occhiAttivo}
+                  isPremium={evento.isPremium}
+                />
+              )}
+              {totVoti === 0 && (
+                <a href={`/vota/${evento.codiceCondivisione}`} target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: 13, fontWeight: 700, color: C.white, background: C.primary, borderRadius: 999, padding: "8px 18px", textDecoration: "none" }}>
+                  Apri pagina voto →
+                </a>
+              )}
+            </div>
           </div>
           {totVoti === 0 ? (
             <div style={{ padding: "48px 28px", textAlign: "center" }}>
@@ -637,17 +655,21 @@ export default async function EventDashboardPage({ params }: PageProps) {
                   </thead>
                   <tbody>
                     {preds.map((p, idx) => {
-                      const isMasc = p.votoSesso === "MASCHIO";
-                      const isLeader = p.punteggioOttenuto !== null && p === leader;
+                      const isMasc    = p.votoSesso === "MASCHIO";
+                      const isLeader  = p.punteggioOttenuto !== null && p === leader;
+                      const isManuale = p.deviceFingerprint.startsWith("manual-");
                       return (
                         <tr key={p.id} style={{ borderTop: `1px solid ${C.border}`, background: isLeader ? `${C.amberCard}60` : "transparent" }}>
                           <td style={{ padding: "14px 18px" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                              <div style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, background: C.priXL, color: C.primary, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800 }}>
-                                {iniziali(p.nomeInvitato)}
+                              <div style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, background: isManuale ? "#f0fdf4" : C.priXL, color: isManuale ? "#166534" : C.primary, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800 }}>
+                                {isManuale ? "✏️" : iniziali(p.nomeInvitato)}
                               </div>
                               <div>
-                                <p style={{ fontSize: 14, fontWeight: 600, color: C.onSurf, margin: 0 }}>{p.nomeInvitato}</p>
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                  <p style={{ fontSize: 14, fontWeight: 600, color: C.onSurf, margin: 0 }}>{p.nomeInvitato}</p>
+                                  {isManuale && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 6px", borderRadius: 999, background: "#dcfce7", color: "#166534", border: "1px solid #bbf7d0" }}>manuale</span>}
+                                </div>
                                 {p.emailInvitato && <p style={{ fontSize: 10, color: C.muted, margin: "1px 0 0" }}>{p.emailInvitato}</p>}
                               </div>
                             </div>
@@ -683,16 +705,20 @@ export default async function EventDashboardPage({ params }: PageProps) {
               {/* Mobile cards */}
               <div className="md:hidden flex flex-col">
                 {preds.map((p) => {
-                  const isMasc = p.votoSesso === "MASCHIO";
-                  const isLeader = p.punteggioOttenuto !== null && p === leader;
+                  const isMasc    = p.votoSesso === "MASCHIO";
+                  const isLeader  = p.punteggioOttenuto !== null && p === leader;
+                  const isManuale = p.deviceFingerprint.startsWith("manual-");
                   return (
                     <div key={p.id} style={{ padding: "14px 20px", borderTop: `1px solid ${C.border}`, background: isLeader ? `${C.amberCard}60` : "transparent" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.priXL, color: C.primary, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>
-                            {iniziali(p.nomeInvitato)}
+                          <div style={{ width: 32, height: 32, borderRadius: "50%", background: isManuale ? "#f0fdf4" : C.priXL, color: isManuale ? "#166534" : C.primary, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>
+                            {isManuale ? "✏️" : iniziali(p.nomeInvitato)}
                           </div>
-                          <p style={{ fontSize: 14, fontWeight: 600, color: C.onSurf, margin: 0 }}>{p.nomeInvitato}</p>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <p style={{ fontSize: 14, fontWeight: 600, color: C.onSurf, margin: 0 }}>{p.nomeInvitato}</p>
+                            {isManuale && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 6px", borderRadius: 999, background: "#dcfce7", color: "#166534", border: "1px solid #bbf7d0" }}>manuale</span>}
+                          </div>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           {p.punteggioOttenuto !== null && <span style={{ fontSize: 13, fontWeight: 800, color: isLeader ? C.amberText : C.primary }}>{p.punteggioOttenuto}pt</span>}
