@@ -63,12 +63,13 @@ export default function LandingPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div
             style={{
-              width: 32, height: 32, borderRadius: "50%",
-              background: `linear-gradient(135deg, ${C.priLight}, ${C.primary})`,
+              width: 32, height: 32, borderRadius: 8, overflow: "hidden",
+              background: C.white, flexShrink: 0,
               display: "flex", alignItems: "center", justifyContent: "center",
             }}
           >
-            <span style={{ color: C.white, fontWeight: 900, fontSize: 14, fontFamily: QS }}>F</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="FantaParto" width={32} height={32} style={{ display: "block" }} />
           </div>
           <span style={{ fontSize: 18, fontWeight: 700, color: C.primary, fontFamily: QS }}>
             FantaParto

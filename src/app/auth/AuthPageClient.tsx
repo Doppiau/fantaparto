@@ -315,13 +315,14 @@ export default function AuthPageClient({ initialTab }: { initialTab: "signup" | 
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 48 }}>
           <div
             style={{
-              width: 44, height: 44, borderRadius: "50%",
-              background: `linear-gradient(135deg, ${C.priLight}, ${C.primary})`,
-              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 44, height: 44, borderRadius: 12, overflow: "hidden",
+              background: C.white, flexShrink: 0,
               boxShadow: "0 8px 20px rgba(135,78,88,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "center",
             }}
           >
-            <span style={{ color: C.white, fontWeight: 900, fontSize: 18, fontFamily: QS }}>F</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="FantaParto" width={44} height={44} style={{ display: "block" }} />
           </div>
           <span style={{ fontSize: 22, fontWeight: 700, color: C.primary, fontFamily: QS }}>
             FantaParto

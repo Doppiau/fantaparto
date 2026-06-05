@@ -80,8 +80,9 @@ export default function Step4Anteprima({ data, onGoToStep }: Props) {
             <div style={{ transform: "scale(0.62)", transformOrigin: "top left", width: "161%", pointerEvents: "none", userSelect: "none" }}>
               <div style={{ background: C.white, padding: "24px 28px", fontFamily: VN }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <div style={{ width: 26, height: 26, borderRadius: "50%", background: `linear-gradient(135deg, ${C.priLight}, ${C.primary})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ color: C.white, fontSize: 12, fontWeight: 900, fontFamily: QS }}>F</span>
+                  <div style={{ width: 26, height: 26, borderRadius: 6, overflow: "hidden", background: C.white, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/logo.png" alt="FantaParto" width={26} height={26} style={{ display: "block" }} />
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 700, color: C.primary, fontFamily: QS }}>FantaParto</span>
                 </div>
