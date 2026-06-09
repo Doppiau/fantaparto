@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 const C_BASE = {
@@ -178,7 +179,18 @@ export default function VotaClient({
   const [error, setError]           = useState<string | null>(null);
   const [honeypot, setHoneypot]     = useState("");
 
+  const router = useRouter();
   const nomeDisplay = nomeBimbo ? `Baby ${nomeBimbo}` : "Fagiolino 🫘";
+
+  // Redirect automatico all'Hype Space dopo il voto
+  useEffect(() => {
+    if (phase === "success") {
+      const t = setTimeout(() => {
+        router.push(`/vota/${codiceCondivisione}/hype`);
+      }, 2000);
+      return () => clearTimeout(t);
+    }
+  }, [phase, codiceCondivisione, router]);
   const dppFormatted = new Date(dataPresuntaParto).toLocaleDateString("it-IT", {
     day: "numeric", month: "long", year: "numeric",
   });
