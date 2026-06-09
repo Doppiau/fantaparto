@@ -259,6 +259,42 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 }
 
+export async function PATCH(req: NextRequest): Promise<NextResponse> {
+  const user = await getAuthUser(req);
+  if (!user) return withCors(NextResponse.json({ success: false, error: "Non autorizzato" }, { status: 401 }));
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) return withCors(NextResponse.json({ success: false, error: "Parametro id mancante" }, { status: 400 }));
+
+  const evento = await prisma.event.findUnique({ where: { id }, select: { userId: true } });
+  if (!evento || evento.userId !== user.id)
+    return withCors(NextResponse.json({ success: false, error: "Evento non trovato" }, { status: 404 }));
+
+  let body: unknown;
+  try { body = await req.json(); } catch { return withCors(NextResponse.json({ success: false, error: "JSON non valido" }, { status: 400 })); }
+
+  const PatchSchema = z.object({
+    nomeBimbo: z.string().max(50).nullable().optional(),
+    dataPresuntaParto: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    sessoAttivo: z.boolean().optional(),
+    dataAttiva: z.boolean().optional(),
+    pesoAttivo: z.boolean().optional(),
+    oraAttiva: z.boolean().optional(),
+  });
+  const parsed = PatchSchema.safeParse(body);
+  if (!parsed.success) return withCors(NextResponse.json({ success: false, error: "Dati non validi" }, { status: 400 }));
+
+  const updated = await prisma.event.update({
+    where: { id },
+    data: parsed.data,
+    select: { id: true, nomeBimbo: true, dataPresuntaParto: true, stato: true, isPremium: true,
+      sessoAttivo: true, dataAttiva: true, pesoAttivo: true, lunghezzaAttiva: true,
+      oraAttiva: true, capelliAttivo: true, occhiAttivo: true, codiceCondivisione: true, createdAt: true }
+  });
+  return withCors(NextResponse.json({ success: true, data: updated }));
+}
+
 export async function DELETE(req: NextRequest): Promise<NextResponse> {
   const user = await getAuthUser(req);
   if (!user) {
