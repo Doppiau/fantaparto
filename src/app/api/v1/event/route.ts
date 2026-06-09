@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { CreateEventSchema } from "@/lib/validations";
 import { isPrismaError } from "@/lib/prisma-errors";
+import { getUserFromRequest } from "@/lib/auth-request";
+import { withCors, optionsResponse } from "@/lib/cors";
 
 // Charset senza caratteri ambigui (0/O, 1/l/I) per leggibilità su WhatsApp
 const CODICE_CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -22,15 +24,77 @@ const PostBodySchema = CreateEventSchema.extend({
   nomeMamma: z.string().min(2).max(50).optional(),
 });
 
-export async function POST(req: NextRequest): Promise<NextResponse> {
-  // ── 0. Auth ──────────────────────────────────────────────────────────────────
+// ── Auth helper: accetta sia cookie (web) che Bearer token (app) ──────────────
+async function getAuthUser(req: NextRequest): Promise<{ id: string; email: string } | null> {
+  // Prova prima Bearer token (app mobile)
+  const authHeader = req.headers.get("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const result = await getUserFromRequest(req);
+    if (result && !("reason" in result)) return result;
+  }
+  // Fallback: cookie Supabase (web)
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  if (user) return { id: user.id, email: user.email ?? "" };
+  return null;
+}
+
+async function getAuthError(req: NextRequest): Promise<string> {
+  const result = await getUserFromRequest(req);
+  if (!result) return "nessun risultato";
+  if ("reason" in result) return result.reason;
+  return "ok";
+}
+
+export async function OPTIONS() {
+  return optionsResponse();
+}
+
+export async function GET(req: NextRequest): Promise<NextResponse> {
+  const user = await getAuthUser(req);
   if (!user) {
-    return NextResponse.json(
+    const reason = await getAuthError(req);
+    return withCors(NextResponse.json({ success: false, error: `Non autorizzato: ${reason}` }, { status: 401 }));
+  }
+
+  try {
+    const eventi = await prisma.event.findMany({
+      where: { userId: user.id, archiviato: false },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        nomeBimbo: true,
+        codiceCondivisione: true,
+        dataPresuntaParto: true,
+        stato: true,
+        isPremium: true,
+        sessoAttivo: true,
+        dataAttiva: true,
+        pesoAttivo: true,
+        lunghezzaAttiva: true,
+        oraAttiva: true,
+        capelliAttivo: true,
+        occhiAttivo: true,
+        createdAt: true,
+        _count: { select: { predictions: true } },
+      },
+    });
+    const eventiMapped = eventi.map(({ _count, ...e }) => ({ ...e, count: _count }));
+    return withCors(NextResponse.json({ success: true, data: eventiMapped }));
+  } catch (err) {
+    console.error("[GET /api/v1/event]", err);
+    return withCors(NextResponse.json({ success: false, error: "Errore interno" }, { status: 500 }));
+  }
+}
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  // ── 0. Auth ──────────────────────────────────────────────────────────────────
+  const user = await getAuthUser(req);
+  if (!user) {
+    return withCors(NextResponse.json(
       { success: false, error: "Non autorizzato" },
       { status: 401 }
-    );
+    ));
   }
 
   // ── 1. Parse e validazione input ────────────────────────────────────────────
@@ -147,39 +211,48 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       },
     });
 
-    return NextResponse.json(
+    return withCors(NextResponse.json(
       { success: true, data: evento },
       { status: 201 }
-    );
+    ));
   } catch (err) {
-    // P2002: race condition sul codice condivisione unico
     if (isPrismaError(err, "P2002")) {
-      return NextResponse.json(
+      return withCors(NextResponse.json(
         { success: false, error: "Errore interno del server. Riprova tra qualche istante." },
         { status: 500 }
-      );
+      ));
     }
-
-    // P2003: userId non esiste in users (FK violation — utente non autenticato correttamente)
     if (isPrismaError(err, "P2003")) {
-      return NextResponse.json(
+      return withCors(NextResponse.json(
         { success: false, error: "Utente non trovato. Autenticati nuovamente." },
         { status: 401 }
-      );
+      ));
     }
-
     console.error("[POST /api/v1/event]", err);
-    return NextResponse.json(
+    return withCors(NextResponse.json(
       { success: false, error: "Errore interno del server. Riprova tra qualche istante." },
       { status: 500 }
-    );
+    ));
   }
 }
 
-export async function GET(_req: NextRequest): Promise<NextResponse> {
-  // TODO Fase 6: lista eventi dell'utente autenticato (richiede Supabase Auth JWT)
-  return NextResponse.json(
-    { success: false, error: "Non implementato" },
-    { status: 501 }
-  );
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
+  const user = await getAuthUser(req);
+  if (!user) {
+    return withCors(NextResponse.json({ success: false, error: "Non autorizzato" }, { status: 401 }));
+  }
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) {
+    return withCors(NextResponse.json({ success: false, error: "Parametro id mancante" }, { status: 400 }));
+  }
+
+  const evento = await prisma.event.findUnique({ where: { id }, select: { userId: true } });
+  if (!evento || evento.userId !== user.id) {
+    return withCors(NextResponse.json({ success: false, error: "Evento non trovato" }, { status: 404 }));
+  }
+
+  await prisma.event.delete({ where: { id } });
+  return withCors(NextResponse.json({ success: true }));
 }

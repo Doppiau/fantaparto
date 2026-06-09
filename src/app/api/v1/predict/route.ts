@@ -9,6 +9,74 @@ import {
 } from "@/lib/ratelimit";
 import { checkVpn } from "@/lib/vpn";
 import { notificaLimiteRaggiunto } from "@/lib/notifications";
+import { getUserFromRequest } from "@/lib/auth-request";
+import { withCors, optionsResponse } from "@/lib/cors";
+import { createClient } from "@/lib/supabase/server";
+
+async function getAuthUser(req: NextRequest): Promise<{ id: string; email: string } | null> {
+  const authHeader = req.headers.get("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const result = await getUserFromRequest(req);
+    if (result && !("reason" in result)) return result;
+  }
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) return { id: user.id, email: user.email ?? "" };
+  return null;
+}
+
+export async function OPTIONS() {
+  return optionsResponse();
+}
+
+export async function GET(req: NextRequest): Promise<NextResponse> {
+  const user = await getAuthUser(req);
+  if (!user) {
+    return withCors(NextResponse.json({ success: false, error: "Non autorizzato" }, { status: 401 }));
+  }
+  const { searchParams } = new URL(req.url);
+  const eventId = searchParams.get("eventId");
+  if (!eventId) {
+    return withCors(NextResponse.json({ success: false, error: "Parametro eventId mancante" }, { status: 400 }));
+  }
+  const evento = await prisma.event.findUnique({ where: { id: eventId }, select: { userId: true } });
+  if (!evento || evento.userId !== user.id) {
+    return withCors(NextResponse.json({ success: false, error: "Evento non trovato" }, { status: 404 }));
+  }
+  const predictions = await prisma.prediction.findMany({
+    where: { eventId },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true, nomeInvitato: true, emailInvitato: true, messaggioAugurio: true,
+      votoSesso: true, votoData: true, votoPeso: true, votoLunghezza: true,
+      votoOra: true, votoCapelli: true, votoOcchi: true,
+      punteggioOttenuto: true, vpnFlag: true, flagSospetto: true,
+      deviceFingerprint: true, createdAt: true,
+    },
+  });
+  return withCors(NextResponse.json({ success: true, data: predictions }));
+}
+
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
+  const user = await getAuthUser(req);
+  if (!user) {
+    return withCors(NextResponse.json({ success: false, error: "Non autorizzato" }, { status: 401 }));
+  }
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) {
+    return withCors(NextResponse.json({ success: false, error: "Parametro id mancante" }, { status: 400 }));
+  }
+  const prediction = await prisma.prediction.findUnique({
+    where: { id },
+    select: { event: { select: { userId: true } } },
+  });
+  if (!prediction || prediction.event.userId !== user.id) {
+    return withCors(NextResponse.json({ success: false, error: "Voto non trovato" }, { status: 404 }));
+  }
+  await prisma.prediction.delete({ where: { id } });
+  return withCors(NextResponse.json({ success: true }));
+}
 
 const FREE_LIMIT = 20;
 
