@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 const C_BASE = {
@@ -179,18 +178,7 @@ export default function VotaClient({
   const [error, setError]           = useState<string | null>(null);
   const [honeypot, setHoneypot]     = useState("");
 
-  const router = useRouter();
   const nomeDisplay = nomeBimbo ? `Baby ${nomeBimbo}` : "Fagiolino 🫘";
-
-  // Redirect automatico all'Hype Space dopo il voto
-  useEffect(() => {
-    if (phase === "success") {
-      const t = setTimeout(() => {
-        router.push(`/vota/${codiceCondivisione}/hype`);
-      }, 2000);
-      return () => clearTimeout(t);
-    }
-  }, [phase, codiceCondivisione, router]);
   const dppFormatted = new Date(dataPresuntaParto).toLocaleDateString("it-IT", {
     day: "numeric", month: "long", year: "numeric",
   });
@@ -318,20 +306,6 @@ export default function VotaClient({
           <p style={{ fontSize: 14, color: C.onSurfVar, lineHeight: 1.65 }}>
             Il tuo voto per <strong>{nomeDisplay}</strong> è salvato. Tornerai qui dopo la nascita per scoprire chi ha indovinato!
           </p>
-          {/* CTA principale: Hype Space */}
-          <Link
-            href={`/vota/${codiceCondivisione}/hype`}
-            style={{
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              fontSize: 15, fontWeight: 700, color: C.white,
-              background: `linear-gradient(135deg, ${C.primary}, ${C.priLight}bb)`,
-              borderRadius: 999, padding: "14px 28px",
-              textDecoration: "none", boxShadow: `0 8px 24px ${C.primary}40`,
-            }}
-          >
-            📊 Vedi l&apos;Hype Space!
-          </Link>
-
           {predictionId && (
             <a
               href={`/api/og/voto/${predictionId}`}
