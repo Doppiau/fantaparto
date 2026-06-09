@@ -79,7 +79,30 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         _count: { select: { predictions: true } },
       },
     });
-    const eventiMapped = eventi.map(({ _count, ...e }) => ({ ...e, count: _count }));
+
+    // Sesso stats per tutte le card dashboard
+    const eventIds = eventi.map(e => e.id);
+    const sessoGroups = eventIds.length > 0
+      ? await prisma.prediction.groupBy({
+          by: ["eventId", "votoSesso"],
+          where: { eventId: { in: eventIds }, votoSesso: { not: null } },
+          _count: { votoSesso: true },
+        })
+      : [];
+
+    const sessoMap = new Map<string, { maschio: number; femmina: number }>();
+    for (const g of sessoGroups) {
+      if (!sessoMap.has(g.eventId)) sessoMap.set(g.eventId, { maschio: 0, femmina: 0 });
+      const entry = sessoMap.get(g.eventId)!;
+      if (g.votoSesso === "MASCHIO") entry.maschio += g._count.votoSesso;
+      else if (g.votoSesso === "FEMMINA") entry.femmina += g._count.votoSesso;
+    }
+
+    const eventiMapped = eventi.map(({ _count, ...e }) => ({
+      ...e,
+      count: _count,
+      sessoStats: sessoMap.get(e.id) ?? { maschio: 0, femmina: 0 },
+    }));
     return withCors(NextResponse.json({ success: true, data: eventiMapped }));
   } catch (err) {
     console.error("[GET /api/v1/event]", err);
