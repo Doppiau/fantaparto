@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth-request";
 import { createClient } from "@/lib/supabase/server";
 import { calcolaPunteggio } from "@/lib/scoring";
+import { notificaEnatoAi } from "@/lib/notifications";
 import { withCors, optionsResponse } from "@/lib/cors";
 
 async function getAuthUser(req: NextRequest): Promise<{ id: string; email: string } | null> {
@@ -123,6 +124,26 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         .sort((a, b) => b.punteggioOttenuto - a.punteggioOttenuto)
         .map((e, i) => ({ ...e, posizione: i + 1 }));
     });
+
+    // Email "È nato/a!" agli invitati — fire-and-forget
+    prisma.prediction.findMany({
+      where: { eventId, emailInvitato: { not: null } },
+      select: { emailInvitato: true, nomeInvitato: true, punteggioOttenuto: true },
+    }).then((preds) => {
+      const sorted = [...preds].sort((a, b) => (b.punteggioOttenuto ?? 0) - (a.punteggioOttenuto ?? 0));
+      const invitati = sorted
+        .filter((p) => p.emailInvitato)
+        .map((p, i) => ({
+          email:     p.emailInvitato!,
+          nome:      p.nomeInvitato,
+          posizione: i + 1,
+          punteggio: p.punteggioOttenuto ?? 0,
+        }));
+      if (invitati.length > 0) {
+        notificaEnatoAi(invitati, evento.nomeBimbo, realeSesso === "FEMMINA", evento.codiceCondivisione)
+          .catch(console.error);
+      }
+    }).catch(console.error);
 
     return withCors(NextResponse.json({ success: true, data: classifica }));
   } catch (e) {

@@ -101,11 +101,10 @@ export default function NuovoEventoWizard({ isPremium }: Props) {
           nomeMamma: formData.nomeMamma,
           sessoAttivo: formData.metriche.sesso, dataAttiva: formData.metriche.data,
           pesoAttivo: formData.metriche.peso,
-          // Metriche avanzate: inviate solo se l'utente è Premium (il server le ignorerà comunque)
-          oraAttiva:       isPremium ? formData.metriche.ora       : false,
-          lunghezzaAttiva: isPremium ? formData.metriche.lunghezza : false,
-          capelliAttivo:   isPremium ? formData.metriche.capelli   : false,
-          occhiAttivo:     isPremium ? formData.metriche.occhi     : false,
+          oraAttiva:       formData.metriche.ora,
+          lunghezzaAttiva: formData.metriche.lunghezza,
+          capelliAttivo:   formData.metriche.capelli,
+          occhiAttivo:     formData.metriche.occhi,
         }),
       });
       const json = await res.json();

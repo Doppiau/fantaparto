@@ -57,6 +57,7 @@ export default async function VotaPage({ params }: PageProps) {
   if (event.stato === "CONCLUSO") {
     return (
       <ClassificaView
+        codiceCondivisione={codiceCondivisione}
         evento={{
           nomeBimbo:       event.nomeBimbo,
           sessoAttivo:     event.sessoAttivo,

@@ -21,8 +21,9 @@ interface EventoConcluso extends RisultatiReali, EventToggle {
 }
 
 interface Props {
-  evento:      EventoConcluso;
-  predictions: Prediction[];
+  evento:               EventoConcluso;
+  predictions:          Prediction[];
+  codiceCondivisione?:  string;
 }
 
 // ── Helper ────────────────────────────────────────────────────────────────────
@@ -44,7 +45,7 @@ function formatLunghezza(mm: number | null | undefined): string {
 
 // ── Componente principale ─────────────────────────────────────────────────────
 
-export default function ClassificaView({ evento, predictions }: Props) {
+export default function ClassificaView({ evento, predictions, codiceCondivisione }: Props) {
   // Ordina per punteggio (usa punteggioOttenuto salvato in DB)
   const classifica = [...predictions]
     .map((p) => ({
@@ -190,6 +191,48 @@ export default function ClassificaView({ evento, predictions }: Props) {
             </div>
           </div>
         )}
+
+        {/* ── Bottone PDF ────────────────────────────────────────────────── */}
+        {codiceCondivisione && (
+          <a
+            href={`/api/v1/keepsake?codice=${codiceCondivisione}`}
+            download
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              background: "#1a1a2e", color: "#ffffff", fontWeight: 700, fontSize: 14,
+              textDecoration: "none", padding: "13px 24px", borderRadius: 999,
+              boxShadow: "0 8px 20px rgba(26,26,46,0.15)",
+            }}
+          >
+            📄 Scarica il ricordo PDF
+          </a>
+        )}
+
+        {/* ── CTA "Crea il tuo FantaParto" ──────────────────────────────── */}
+        <div
+          className="fp-card p-6 text-center space-y-4"
+          style={{ background: "linear-gradient(135deg, #fde8e6 0%, #f9f5ef 100%)", border: "1px solid #f4acb7" }}
+        >
+          <p className="text-2xl select-none">🍼</p>
+          <div>
+            <p className="text-base font-black" style={{ color: "var(--ink)", fontFamily: "var(--font-fredoka, sans-serif)" }}>
+              Aspetti anche tu un bimbo?
+            </p>
+            <p className="text-sm mt-1" style={{ color: "var(--ink-60)" }}>
+              Crea il tuo FantaParto gratis in 2 minuti e sfida i tuoi amici!
+            </p>
+          </div>
+          <a
+            href="https://fantaparto.com"
+            style={{
+              display: "inline-block", background: "#874e58", color: "#fff",
+              fontWeight: 700, fontSize: 14, textDecoration: "none",
+              padding: "12px 28px", borderRadius: 999,
+            }}
+          >
+            Crea il tuo FantaParto gratis →
+          </a>
+        </div>
 
         {/* Footer */}
         <p className="text-center text-xs pb-4 font-semibold" style={{ color: "rgba(44,44,46,0.30)" }}>

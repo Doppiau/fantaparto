@@ -30,6 +30,56 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
 
 // ── Templates ─────────────────────────────────────────────────────────────────
 
+export async function notificaEnatoAi(
+  invitati: Array<{ email: string; nome: string; posizione: number; punteggio: number }>,
+  nomeBimbo: string | null,
+  isFemmina: boolean,
+  codiceCondivisione: string,
+): Promise<void> {
+  const nome = nomeBimbo ?? (isFemmina ? "la piccola" : "il piccolo");
+  const titolo = isFemmina ? `${nome} è nata! 🩷` : `${nome} è nato! 💙`;
+  const classificaUrl = `https://fantaparto.com/vota/${codiceCondivisione}`;
+
+  await Promise.allSettled(
+    invitati.map(({ email, nome: nomeInvitato, posizione, punteggio }) => {
+      const subject = `🎉 ${titolo} — Ecco il tuo punteggio nel FantaParto`;
+      const medaglia = posizione === 1 ? "🥇" : posizione === 2 ? "🥈" : posizione === 3 ? "🥉" : `#${posizione}`;
+      const html = `
+        <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px;">
+          <div style="text-align: center; font-size: 56px; margin-bottom: 16px;">${isFemmina ? "🩷" : "💙"}</div>
+          <h1 style="font-size: 24px; color: #1a1a2e; text-align: center; margin: 0 0 8px;">
+            ${titolo}
+          </h1>
+          <p style="color: #5a4e50; font-size: 15px; line-height: 1.6; text-align: center; margin: 0 0 24px;">
+            Ciao <strong>${nomeInvitato}</strong>! ${nome} è arrivat${isFemmina ? "a" : "o"} e la classifica è pronta.
+          </p>
+          <div style="background: #fbf9f5; border: 1px solid #f0e8e6; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 24px;">
+            <p style="font-size: 36px; margin: 0 0 4px;">${medaglia}</p>
+            <p style="font-size: 28px; font-weight: 800; color: #874e58; margin: 0 0 4px;">${punteggio} pt</p>
+            <p style="font-size: 14px; color: #a89a9b; margin: 0;">Posizione ${posizione} in classifica</p>
+          </div>
+          <a href="${classificaUrl}"
+             style="display: block; background: #874e58; color: #fff; font-weight: 700;
+                    font-size: 15px; text-decoration: none; padding: 14px 28px; text-align: center;
+                    border-radius: 999px; margin-bottom: 16px;">
+            Vedi la classifica completa →
+          </a>
+          <a href="https://fantaparto.com"
+             style="display: block; color: #874e58; font-weight: 600; font-size: 13px;
+                    text-decoration: none; text-align: center; margin-bottom: 32px;">
+            Crea il tuo FantaParto gratis →
+          </a>
+          <hr style="border: none; border-top: 1px solid #f0e8e6; margin: 0 0 16px;" />
+          <p style="font-size: 12px; color: #a89a9b; text-align: center; margin: 0;">
+            FantaParto · La Gioiosa Attesa
+          </p>
+        </div>
+      `;
+      return sendEmail(email, subject, html);
+    }),
+  );
+}
+
 export async function notificaLimiteRaggiunto(
   emailGenitore: string,
   nomeBimbo: string | null,

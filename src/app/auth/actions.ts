@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const LoginSchema = z.object({
@@ -59,7 +60,7 @@ export async function signupAction(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { error, data } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
@@ -72,6 +73,16 @@ export async function signupAction(
       return { error: "Email già registrata. Prova ad accedere." };
     }
     return { error: "Errore durante la registrazione. Riprova." };
+  }
+
+  // Crea il record Prisma — la signup action bypassa la callback Google
+  // quindi il trigger DB non scatta. L'upsert è idempotente.
+  if (data.user) {
+    await prisma.user.upsert({
+      where:  { id: data.user.id },
+      create: { id: data.user.id, email: parsed.data.email, nome: parsed.data.nome },
+      update: {},
+    }).catch(() => { /* ignora: utente già esistente */ });
   }
 
   revalidatePath("/", "layout");
