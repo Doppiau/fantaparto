@@ -287,7 +287,99 @@ Dalla dashboard evento (`/dashboard/[eventId]`), bottone "✏️ Aggiungi manual
 
 ---
 
-## 13. Regole Critiche per Sessioni Future
+## 13. App Android (FantaPartoAndroid)
+
+### Stack
+- Kotlin + Jetpack Compose (Material3)
+- Retrofit + OkHttp + Gson (`GsonBuilder().serializeNulls()`) per le API call
+- ViewModel + StateFlow per lo stato UI
+- Navigation Compose con `NavHost` in `AppNavigation.kt`
+- Supabase Auth JWT — Bearer token per tutte le API call mobili
+
+### Repo
+`C:\Users\User\Desktop\Project\App\FantaPartoAndroid`
+
+### Struttura chiave
+```
+app/src/main/java/com/fantaparto/app/
+├── data/api/
+│   ├── ApiClient.kt          ← Retrofit singleton (serializeNulls!)
+│   ├── ApiService.kt         ← interfaccia endpoint
+│   └── models/Models.kt      ← data class per request/response
+├── viewmodel/
+│   ├── AuthViewModel.kt
+│   ├── DashboardViewModel.kt ← condiviso tra Dashboard + EventoDetail
+│   ├── EventoViewModel.kt    ← predictions per EventoDetailScreen
+│   └── GrandeGiornoViewModel.kt ← condiviso in AppNavigation per classifica
+├── ui/
+│   ├── navigation/AppNavigation.kt
+│   ├── theme/Fp.kt           ← design tokens (colori, gradienti)
+│   └── screens/
+│       ├── dashboard/DashboardScreen.kt
+│       ├── evento/EventoDetailScreen.kt
+│       ├── evento/NuovoEventoScreen.kt
+│       ├── grandgiorno/GrandeGiornoScreen.kt
+│       └── classifica/ClassificaScreen.kt
+```
+
+### Pattern critici Android
+- **ViewModel condiviso**: `viewModel()` in Compose crea istanze per-destination. Per condividere stato tra schermate (Dashboard ↔ EventoDetail, GrandeGiorno ↔ Classifica), creare il ViewModel in `AppNavigation` e passarlo come parametro.
+- **serializeNulls**: `GsonBuilder().serializeNulls()` attivo → i null Kotlin diventano `null` JSON. I `UpdateEventRequest` devono contenere SOLO i campi che il backend si aspetta nullable (non optional). Zod `.optional()` ≠ `.nullable()`.
+- **`remember` dentro `if`**: stati UI critici (es. `editError`) vanno dichiarati FUORI dai blocchi condizionali — dentro vengono resettati ad ogni recomposition.
+- **Inset di sistema**: `statusBarsPadding()` in top bar, `navigationBarsPadding()` in bottom bar.
+
+### Route di navigazione
+| Route | Schermata |
+|---|---|
+| `splash` | SplashScreen |
+| `onboarding` | OnboardingScreen |
+| `login` / `signup` | Auth screens |
+| `dashboard` | DashboardScreen |
+| `nuovo_evento` | NuovoEventoScreen |
+| `evento/{eventId}/{codice}` | EventoDetailScreen |
+| `grande_giorno/{eventId}` | GrandeGiornoScreen |
+| `classifica` | ClassificaScreen (legge da GrandeGiornoViewModel) |
+| `profilo` | ProfiloScreen |
+
+---
+
+## 13b. API REST Mobile (v1)
+
+Tutti gli endpoint sotto `https://fantaparto.com/api/v1/` accettano:
+- **Bearer token** (app mobile) → `Authorization: Bearer <supabase_jwt>`
+- **Cookie Supabase** (web) → fallback automatico
+- Risposta sempre `{ success: boolean, data?: T, error?: string }`
+
+| Method | Endpoint | Scopo |
+|---|---|---|
+| GET | `/event` | Lista eventi dell'utente (con sessoStats) |
+| POST | `/event` | Crea evento (rispetta isPremium, metriche Free) |
+| PATCH | `/event?id=` | Modifica nomeBimbo / dataPresuntaParto |
+| DELETE | `/event?id=` | Elimina evento + predictions |
+| GET | `/predict?eventId=` | Lista predictions di un evento |
+| DELETE | `/predict?id=` | Elimina prediction |
+| POST | `/results?eventId=` | **Grande Giorno** — inserisce risultati reali, calcola classifica, ritorna `ClassificaEntry[]` |
+
+### `POST /api/v1/results`
+Body:
+```json
+{
+  "realeSesso": "MASCHIO" | "FEMMINA",
+  "realeData": "YYYY-MM-DD",
+  "realePeso": 3200,        // grammi, nullable
+  "realeLunghezza": 500,    // mm, nullable
+  "realeOra": "14:30",      // HH:MM, nullable
+  "realeCapelli": "LISCI" | "RICCI" | "CALVO",  // nullable
+  "realeOcchi": "CHIARI" | "SCURI"              // nullable
+}
+```
+- Usa lock ottimistico `updateMany WHERE stato='IN_CORSO'` → se count=0 l'evento è già CONCLUSO
+- Calcola punteggi con `calcolaPunteggio()` da `src/lib/scoring.ts`
+- Ritorna classifica ordinata per `punteggioOttenuto` decrescente
+
+---
+
+## 14. Regole Critiche per Sessioni Future
 
 1. **NON usare Clerk** — solo Supabase Auth
 2. **Zod v4**: `.issues[0].message`, non `.errors[0].message`
@@ -303,7 +395,7 @@ Dalla dashboard evento (`/dashboard/[eventId]`), bottone "✏️ Aggiungi manual
 
 ---
 
-## 14. Variabili d'Ambiente Necessarie
+## 15. Variabili d'Ambiente Necessarie
 
 ```env
 # Supabase
