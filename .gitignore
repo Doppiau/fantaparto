@@ -43,9 +43,10 @@ next-env.d.ts
 coverage/
 
 # ============================================================
-# Claude Code — memoria locale, non committare
+# Claude Code — memoria locale, non committare (tranne le skill condivise)
 # ============================================================
-.claude/
+.claude/*
+!.claude/skills/
 
 # ============================================================
 # OS e Editor
